@@ -334,6 +334,27 @@ button:focus-visible {
 	opacity: 0.9;
 }
 
+/* a note pinned on the map (lib/map/notesLayer.ts) */
+.sticky-note {
+	z-index: 3; /* above the photo stacks it was pinned to */
+	max-width: 150px;
+	padding: 5px 8px 6px;
+	border: 0;
+	border-radius: 2px 2px 8px 2px;
+	background: #fde68a;
+	color: #422006;
+	font: 600 12px/1.25 system-ui, sans-serif;
+	text-align: left;
+	box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
+	transform: rotate(var(--tilt, -2deg));
+	cursor: pointer;
+	white-space: normal;
+}
+.sticky-note::before {
+	content: '📌';
+	margin-right: 3px;
+}
+
 /* ✈ in the middle of a flight arc on the "where I've been" globe */
 .flight-marker {
 	width: 30px;

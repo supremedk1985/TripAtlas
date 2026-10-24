@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
-from .api import auth, avatars, imports, photos, setup, trackers, trips, users
+from .api import auth, avatars, imports, notes, photos, setup, trackers, trips, users
 from .config import get_config
 from .db.session import migrate
 from .integrations.immich import ImmichError
@@ -49,7 +49,7 @@ def create_app(start_jobs: bool = True) -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=2048)
 
     for r in (setup.router, auth.router, users.router, trackers.router, trips.router, photos.router, imports.router,
-              avatars.router):
+              avatars.router, notes.router):
         app.include_router(r)
 
     @app.get("/api/health", tags=["meta"])

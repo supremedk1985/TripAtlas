@@ -13,6 +13,7 @@
 		times = {},
 		videos,
 		overview = false,
+		onnote,
 		onclose
 	}: {
 		ids: string[];
@@ -22,6 +23,8 @@
 		videos?: Set<string>;
 		/** start with the grid of all entries (stacks, "all photos of a place") instead of the first photo */
 		overview?: boolean;
+		/** offered in the overview when set: pin a note to the place of these photos */
+		onnote?: (photoId: string) => void;
 		onclose: () => void;
 	} = $props();
 
@@ -125,6 +128,9 @@
 	}}
 >
 	<button class="close icon-btn" onclick={onclose} aria-label={t('close')}>✕</button>
+	{#if onnote && !grid}
+		<button class="note-fab" onclick={() => onnote(ids[index])} title={t('note_pin')} aria-label={t('note_pin')}>📌</button>
+	{/if}
 	{#if ids.length > 1}
 		<button class="grid-btn icon-btn" class:active={grid} onclick={() => (grid ? (grid = false) : showGrid())}
 			aria-label={t('photos_overview')} title={t('photos_overview')}>
@@ -135,6 +141,9 @@
 		<div class="grid" bind:this={gridEl}>
 			<div class="grid-head">
 				<span>{t('photos_count', { n: ids.length })}</span>
+				{#if onnote}
+					<button class="note-btn" onclick={() => onnote(ids[index])} title={t('note_pin')}>📌 {t('note_label')}</button>
+				{/if}
 				<div class="cols" role="group" aria-label={t('photos_columns')}>
 					{#each [3, 2, 1] as n (n)}
 						<button class:on={cols === n} onclick={() => setCols(n)} aria-pressed={cols === n}
@@ -229,6 +238,31 @@
 		max-width: 1100px;
 		margin: 0 auto 10px;
 		font-size: 0.9em;
+	}
+	.note-fab {
+		position: absolute;
+		top: 12px;
+		right: 60px;
+		z-index: 3;
+		border: 0;
+		border-radius: 50%;
+		width: 36px;
+		height: 36px;
+		background: #fde68a;
+		cursor: pointer;
+		font-size: 16px;
+	}
+	.note-btn {
+		white-space: nowrap;
+		margin-left: auto;
+		border: 0;
+		border-radius: 999px;
+		padding: 5px 12px;
+		background: #fde68a;
+		color: #422006;
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
 	}
 	.cols {
 		display: flex;

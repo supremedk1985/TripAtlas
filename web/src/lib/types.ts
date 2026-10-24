@@ -154,3 +154,13 @@ export interface Visited {
 	flights: Flight[];
 	countries: { country: string; places: number; photos: number; nights: number }[];
 }
+
+export interface MapNote {
+	id: number;
+	lat: number;
+	lon: number;
+	text: string;
+	photo_id: string | null;
+	created_at: string;
+	author: string | null;
+}

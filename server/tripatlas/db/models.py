@@ -170,6 +170,20 @@ class Stay(Base):
     trip: Mapped[Trip] = relationship(back_populates="stays")
 
 
+class MapNote(Base):
+    """A sticky note on the map, e.g. on a photo stack: "our first campsite". Shared by the household."""
+
+    __tablename__ = "map_notes"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lat: Mapped[float] = mapped_column(Float)
+    lon: Mapped[float] = mapped_column(Float)
+    text: Mapped[str] = mapped_column(String(500))
+    # the photo the note was made on: its date tells when, and it opens the photos of that place
+    photo_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
 class Annotation(Base):
     """Custom title and rich-text note for a trip or a stay, keyed by tracker + kind + local start day."""
 

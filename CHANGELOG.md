@@ -8,6 +8,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ### Added
 - Tracker kind *Bicycle*: every ride counts, also without a night away ("day ride"); bike pictogram on the map
 - Tracker kind can be chosen in *Settings → Trackers*
+- Notes on the map: pin a note to the place of a photo ("our first campsite"); everyone sees them, children
+  cannot change them; *Photos from here* opens the photos around a note
 
 ### Changed
 - GPX is imported as a stream (files of several hundred MB, e.g. a bike app's export of all rides)

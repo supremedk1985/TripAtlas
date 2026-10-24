@@ -12,7 +12,7 @@ docker compose up -d
 ```
 
 `build_demo.py` needs Python 3 with Pillow (`pip install pillow`). Without pip on the machine, run it in a container:
-`docker run --rm -u $(id -u) -v "$PWD":/demo -w /demo python:3.12-slim sh -c "pip -q install pillow && python build_demo.py"`.
+`docker run --rm -u $(id -u) -e HOME=/tmp -v "$PWD":/demo -w /demo python:3.12-slim sh -c "pip -q install pillow && python build_demo.py"`.
 Without the photos the demo works too, just with empty photo stacks.
 
 The fake Traccar and Immich install their Python packages at every start: they need internet and take about a

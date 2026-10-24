@@ -194,6 +194,8 @@ class PlaceLookup:
 _IPA = re.compile(r"\s*\[[^\]]*\]")             # pronunciation: [ˈɪnsbʁʊk]
 _EMPTY = re.compile(r"\s*\(\s*[;,]?\s*\)")      # what remains of a removed audio link: (), (;)
 _BARE_LABEL = re.compile(r"\b[A-Z][\w-]*:\s*(?=[;,)])")  # "German: " whose value was removed
+# Other names right after the name the text begins with: "Innsbruck (Bavarian: Innschbruck; Tyrolean: …) is …"
+_LEAD_NAMES = re.compile(r"^((?:[A-ZÄÖÜ][\w.'-]*\s?){1,4})\(([^()]*[:;][^()]*)\)\s*")
 
 
 def clean_text(text: str | None) -> str | None:
@@ -206,5 +208,6 @@ def clean_text(text: str | None) -> str | None:
         text = re.sub(r"\(\s*[;,]\s*", "(", text)
         text = re.sub(r"\s*[;,]\s*\)", ")", text)
         text = _EMPTY.sub("", text)
+    text = _LEAD_NAMES.sub(lambda m: m.group(1).rstrip() + " ", text, count=1)
     return re.sub(r"[ \t]{2,}", " ", text).strip()
 

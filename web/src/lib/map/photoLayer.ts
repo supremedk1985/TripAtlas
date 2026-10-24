@@ -20,7 +20,7 @@ export class PhotoLayer {
 
 	constructor(
 		private map: maplibregl.Map,
-		private onOpen: (ids: string[], index: number) => void
+		private onOpen: (ids: string[], index: number, at: { lat: number; lon: number }) => void
 	) {
 		map.on('moveend', this.refresh);
 		map.on('sourcedata', this.onSourceData);
@@ -41,6 +41,19 @@ export class PhotoLayer {
 		// MapLibre only loads a source that some layer uses — this invisible one; the visible part are HTML thumbnails.
 		map.addLayer({ id: 'photo-anchor', type: 'circle', source: SOURCE, paint: { 'circle-radius': 0, 'circle-opacity': 0 } });
 		this.updateMarkers();
+	}
+
+	/** Where a photo was taken, if it is on the map. */
+	position(id: string): { lat: number; lon: number } | null {
+		const p = this.photos.find((x) => x.id === id);
+		return p ? { lat: p.lat, lon: p.lon } : null;
+	}
+
+	/** Photos within `km` of a place (for "photos from here" on a note). */
+	photosNear(lat: number, lon: number, km = 0.3): string[] {
+		const dLat = km / 111;
+		const dLon = km / (111 * Math.cos((lat * Math.PI) / 180));
+		return this.photos.filter((p) => Math.abs(p.lat - lat) <= dLat && Math.abs(p.lon - lon) <= dLon).map((p) => p.id);
 	}
 
 	setPhotos(photos: PhotoPoint[]) {
@@ -122,13 +135,17 @@ export class PhotoLayer {
 
 	private async open(clusterId: number | null, index: number) {
 		if (clusterId === null) {
-			this.onOpen([this.photos[index].id], 0);
+			const p = this.photos[index];
+			this.onOpen([p.id], 0, { lat: p.lat, lon: p.lon });
 			return;
 		}
 		const src = this.map.getSource(SOURCE) as GeoJSONSource;
 		const leaves = await src.getClusterLeaves(clusterId, 2000, 0);
-		const ids = leaves.map((l) => this.photos[l.properties!.i as number].id);
-		this.onOpen(ids, Math.max(0, ids.indexOf(this.photos[index].id)));
+		const pts = leaves.map((l) => this.photos[l.properties!.i as number]);
+		const ids = pts.map((p) => p.id);
+		// the middle of the stack's photos: where a note made on this stack is pinned
+		const at = { lat: pts.reduce((s, p) => s + p.lat, 0) / pts.length, lon: pts.reduce((s, p) => s + p.lon, 0) / pts.length };
+		this.onOpen(ids, Math.max(0, ids.indexOf(this.photos[index].id)), at);
 	}
 }
 

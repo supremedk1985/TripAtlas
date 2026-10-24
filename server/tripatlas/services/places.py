@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_config
 from ..db.models import Place, utcnow
-from ..integrations.places import PlaceLookup
+from ..integrations.places import PlaceLookup, clean_text
 
 log = logging.getLogger(__name__)
 
@@ -67,14 +67,14 @@ def place_dict(p: Place | None, kids: bool = False) -> dict | None:
     if kids:
         # the children's source may describe the region instead (no article for the village): say which
         title = urllib.parse.unquote(p.kids_url.rsplit("/", 1)[-1]).replace("_", " ") if p.kids_url else None
-        d.update(summary=p.kids_summary, url=p.kids_url, title=title, thumbnail_url=p.thumbnail_url)
+        d.update(summary=clean_text(p.kids_summary), url=p.kids_url, title=title, thumbnail_url=p.thumbnail_url)
     else:
         d.update(
-            summary=p.summary,
+            summary=clean_text(p.summary),  # also texts cached before the clean-up existed
             url=p.article_url,
             title=p.article_title,
             thumbnail_url=p.thumbnail_url,
-            kids_summary=p.kids_summary,
+            kids_summary=clean_text(p.kids_summary),
             sights=p.sights or [],
         )
     return d

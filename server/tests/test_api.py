@@ -348,3 +348,23 @@ def test_bike_gpx_import_thinned_deduplicated_and_rides_recognised(client):
         trips = list(db.scalars(select(Trip).where(Trip.tracker_id == bike["id"]).order_by(Trip.start)))
     assert [t.nights for t in trips] == [0, 0]
     assert [t.day_key for t in trips] == ["2026-06-03", "2026-06-05"]
+
+
+def test_map_notes_editors_write_children_read(client):
+    setup_household(client)
+    photo = "a" * 8 + "-0000-0000-0000-" + "0" * 12
+    body = {"lat": 51.3, "lon": 9.5, "text": "  Erster Campingplatz ", "photo_id": photo}
+    n = client.post("/api/notes", json=body).json()
+    assert n["text"] == "Erster Campingplatz" and n["author"] == "Admin" and n["photo_id"] == photo
+    changed = client.patch(f"/api/notes/{n['id']}", json={"text": "Erster Campingplatz 🚐"}).json()
+    assert changed["text"] == "Erster Campingplatz 🚐"
+    assert client.post("/api/notes", json={"lat": 51, "lon": 9, "text": ""}).status_code == 422
+    kid = {"username": "kid", "display_name": "Kid", "password": "kid-password", "role": "child"}
+    client.post("/api/users", json=kid)
+    login(client, "kid", "kid-password")
+    assert [x["text"] for x in client.get("/api/notes").json()] == ["Erster Campingplatz 🚐"]
+    assert client.post("/api/notes", json={"lat": 51, "lon": 9, "text": "x"}).status_code == 403
+    assert client.delete(f"/api/notes/{n['id']}").status_code == 403
+    login(client, "admin", ADMIN["password"])
+    assert client.delete(f"/api/notes/{n['id']}").status_code == 204
+    assert client.get("/api/notes").json() == []

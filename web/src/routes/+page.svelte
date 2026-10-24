@@ -9,14 +9,17 @@
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import TripPanel from '$lib/components/TripPanel.svelte';
-	import { dateRange, flag, km, tripTitle } from '$lib/format';
+	import { dateRange, dateTime, flag, km, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import type { MapControl } from '$lib/map/control';
 	import MapView from '$lib/map/MapView.svelte';
 	import { PhotoLayer } from '$lib/map/photoLayer';
+	import { NotesLayer } from '$lib/map/notesLayer';
+	import { confirmDialog, promptDialog } from '$lib/stores/dialog.svelte';
+	import { canEdit } from '$lib/stores/session.svelte';
 	import { MAP_STYLES, preferredStyle, rememberStyle, type MapStyleId } from '$lib/map/styles';
 	import { boundsOf, positionAt, TrackLayer } from '$lib/map/trackLayer';
-	import type { Photo, Tracker, TrackPoint, TripSummary } from '$lib/types';
+	import type { MapNote, Photo, Tracker, TrackPoint, TripSummary } from '$lib/types';
 
 	let map = $state<maplibregl.Map>();
 	// $state so effects that use the layers re-run once the map has created them
@@ -28,12 +31,24 @@
 	let trips = $state<TripSummary[]>([]);
 	let hidden = $state<Set<number>>(new Set());
 	let showPhotos = $state(true);
+	let showNotes = $state(true);
+	let notes = $state<MapNote[]>([]);
+	let notesLayer: NotesLayer | undefined;
+	let note = $state<MapNote | null>(null);   // the note whose card is open
 	let showTracks = $state(true);
 	let style = $state<MapStyleId>(preferredStyle());
 	let allMarkers = $state<[string, number, number][]>([]);
 	let photoNote = $state('');
 	let tracks = new Map<number, TrackPoint[]>();
-	let viewer = $state<{ ids: string[]; index: number; times: Record<string, number>; videos?: Set<string>; overview?: boolean } | null>(null);
+	let viewer = $state<{
+		ids: string[];
+		index: number;
+		times: Record<string, number>;
+		videos?: Set<string>;
+		overview?: boolean;
+		/** where the photos are: a note made in the viewer is pinned here */
+		at?: { lat: number; lon: number };
+	} | null>(null);
 	let selectedPoints: TrackPoint[] = [];
 	let selectedStays: { lat: number; lon: number }[] = [];
 
@@ -52,6 +67,47 @@
 
 	let loaded = $state(false);
 	let busy = $state(false);
+
+	async function loadNotes() {
+		notes = await api.get<MapNote[]>('/api/notes').catch(() => []);
+		notesLayer?.setNotes(notes);
+	}
+
+	$effect(() => notesLayer?.setVisible(showNotes));
+
+	/** Pin a note to the place of the photos in the viewer ("our first campsite"). */
+	async function pinNote(photoId: string) {
+		// pinned where the photo shown was taken — the middle of a big stack (zoomed out) can be nowhere
+		const at = photoLayer?.position(photoId) ?? viewer?.at;
+		if (!at) return;
+		const text = await promptDialog(t('note_pin_title'), { text: t('note_pin_hint'), confirmLabel: t('note_pin') });
+		if (!text?.trim()) return;
+		await api.post('/api/notes', { lat: at.lat, lon: at.lon, text: text.trim(), photo_id: photoId });
+		viewer = null;
+		await loadNotes();
+	}
+
+	async function editNote(n: MapNote) {
+		const text = await promptDialog(t('note_edit'), { value: n.text, confirmLabel: t('save') });
+		if (!text?.trim()) return;
+		await api.patch(`/api/notes/${n.id}`, { text: text.trim() });
+		note = null;
+		await loadNotes();
+	}
+
+	async function deleteNote(n: MapNote) {
+		if (!(await confirmDialog(t('note_delete_confirm', { text: n.text }), { danger: true, confirmLabel: t('delete') }))) return;
+		await api.del(`/api/notes/${n.id}`);
+		note = null;
+		await loadNotes();
+	}
+
+	function notePhotos(n: MapNote) {
+		const ids = photoLayer?.photosNear(n.lat, n.lon) ?? [];
+		const start = n.photo_id ? Math.max(0, ids.indexOf(n.photo_id)) : 0;
+		if (ids.length) viewer = { ids, index: start, times: {}, overview: ids.length > 1, at: { lat: n.lat, lon: n.lon } };
+		note = null;
+	}
 
 	async function loadData() {
 		[trackers, trips] = await Promise.all([api.get<Tracker[]>('/api/trackers'), api.get<TripSummary[]>('/api/trips')]);
@@ -122,7 +178,9 @@
 
 	function onReady(m: maplibregl.Map) {
 		map = m;
-		photoLayer = new PhotoLayer(m, (ids, index) => (viewer = { ids, index, times: {}, overview: true }));
+		photoLayer = new PhotoLayer(m, (ids, index, at) => (viewer = { ids, index, times: {}, overview: true, at }));
+		notesLayer = new NotesLayer(m, (n) => (note = n));
+		loadNotes();
 		trackLayer = new TrackLayer(m, (id) => selectTrip(id));
 		installLayers(m);
 		loadData().then(() => {
@@ -250,6 +308,7 @@
 				<div class="row layers">
 					<label class="chip" class:on={showTracks}><input type="checkbox" hidden bind:checked={showTracks} />{t('layer_routes')}</label>
 					<label class="chip" class:on={showPhotos}><input type="checkbox" hidden bind:checked={showPhotos} />{t('layer_photos')}</label>
+					{#if notes.length}<label class="chip" class:on={showNotes}><input type="checkbox" hidden bind:checked={showNotes} />{t('layer_notes')}</label>{/if}
 					<span class="spacer"></span>
 					<select bind:value={style} onchange={() => rememberStyle(style)} aria-label={t('map_style')}>
 						{#each MAP_STYLES as s (s.id)}<option value={s.id}>{t(s.label)}</option>{/each}
@@ -307,8 +366,26 @@
 	</main>
 </div>
 
+{#if note}
+	<div class="note-card card" role="dialog" aria-label={t('note_label')}>
+		<button class="close icon-btn" onclick={() => (note = null)} aria-label={t('close')}>✕</button>
+		<p class="note-text">📌 {note.text}</p>
+		<p class="muted small">{note.author ? note.author + ' · ' : ''}{dateTime(new Date(note.created_at).getTime() / 1000)}</p>
+		<div class="row">
+			{#if photoLayer?.photosNear(note.lat, note.lon).length}
+				<button class="btn small primary" onclick={() => notePhotos(note!)}>{t('note_photos')}</button>
+			{/if}
+			{#if canEdit()}
+				<button class="btn small" onclick={() => editNote(note!)}>{t('note_edit')}</button>
+				<button class="btn small danger" onclick={() => deleteNote(note!)}>{t('delete')}</button>
+			{/if}
+		</div>
+	</div>
+{/if}
+
 {#if viewer}
-	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} overview={viewer.overview} onclose={() => (viewer = null)} />
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} overview={viewer.overview}
+		onnote={viewer.at && canEdit() ? pinNote : undefined} onclose={() => (viewer = null)} />
 {/if}
 
 <style>
@@ -331,6 +408,33 @@
 	main {
 		position: relative;
 		min-height: 0;
+	}
+	.note-card {
+		position: fixed;
+		left: 50%;
+		bottom: 16px;
+		transform: translateX(-50%);
+		z-index: 60;
+		width: min(380px, calc(100% - 32px));
+		padding: 14px 16px 12px;
+		background: #fef3c7;
+		color: #422006;
+		box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+	}
+	.note-card .close {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+	}
+	.note-text {
+		margin: 0 32px 6px 0;
+		font-size: 1.05em;
+		font-weight: 600;
+		white-space: pre-wrap;
+	}
+	.note-card .muted {
+		color: #78350f;
+		margin: 0 0 10px;
 	}
 	.full-btn {
 		position: absolute;
