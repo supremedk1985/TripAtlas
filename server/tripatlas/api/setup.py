@@ -153,13 +153,18 @@ class TraccarIn(BaseModel):
 
 
 def _merged_traccar(db: Session, body: TraccarIn) -> TraccarSettings:
+    """New settings from a form. Secrets are never sent back to the browser, so an empty secret means "keep":
+    - neither token nor e-mail given → only the URL changes, stored credentials stay;
+    - token given → token mode;
+    - e-mail given → e-mail mode; an empty password keeps the stored one if the e-mail is unchanged."""
     old = settings.traccar(db)
-    return TraccarSettings(
-        url=body.url.strip(),
-        email=body.email.strip(),
-        token=body.token or (old.token if not body.email else ""),
-        password=body.password or (old.password if body.email == old.email else ""),
-    )
+    url = body.url.strip()
+    if not body.token and not body.email.strip():
+        return old.model_copy(update={"url": url})
+    if body.token:
+        return TraccarSettings(url=url, token=body.token)
+    email = body.email.strip()
+    return TraccarSettings(url=url, email=email, password=body.password or (old.password if email == old.email else ""))
 
 
 @router.get("/api/settings/traccar")

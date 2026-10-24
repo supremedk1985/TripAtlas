@@ -63,8 +63,9 @@
 		place-items: center;
 	}
 	.photo {
-		max-width: 100vw;
-		max-height: calc(100vh - 60px);
+		/* % of the fixed viewer, not vh — viewport units can be 0 in an Android WebView */
+		max-width: 100%;
+		max-height: calc(100% - 60px);
 		object-fit: contain;
 		background: center / contain no-repeat;
 	}

@@ -260,11 +260,12 @@
 {/if}
 
 <style>
+	/* Pinned to the window instead of 100vh/100dvh: in an Android WebView the viewport units resolved to 0. */
 	.layout {
+		position: fixed;
+		inset: 0;
 		display: grid;
 		grid-template-columns: var(--sidebar) 1fr;
-		height: 100vh;
-		height: 100dvh;
 	}
 	aside {
 		overflow-y: auto;
@@ -363,7 +364,7 @@
 	@media (max-width: 860px) {
 		.layout {
 			grid-template-columns: 1fr;
-			grid-template-rows: 46vh 1fr;
+			grid-template-rows: minmax(240px, 46%) 1fr;
 			grid-template-areas: 'map' 'side';
 		}
 		main {

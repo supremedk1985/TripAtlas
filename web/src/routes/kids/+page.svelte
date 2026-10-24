@@ -76,7 +76,7 @@
 	}
 	.globe {
 		position: relative;
-		height: min(62vh, 560px);
+		height: clamp(340px, 110vw, 560px); /* not vh: 0 in an Android WebView */
 		overflow: hidden;
 		border-radius: 24px;
 	}

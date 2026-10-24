@@ -54,9 +54,8 @@
 
 <style>
 	.page {
-		position: relative;
-		height: 100vh;
-		height: 100dvh;
+		position: fixed;
+		inset: 0;
 		overflow: hidden;
 	}
 	.stats {
@@ -119,11 +118,11 @@
 		.stats {
 			top: auto;
 			bottom: 12px;
-			max-height: 34vh;
+			max-height: 34%;
 		}
 		.detail {
 			top: 64px;
-			max-height: 52vh;
+			max-height: 52%;
 		}
 	}
 </style>

@@ -34,6 +34,8 @@ async def lifespan(_: FastAPI):
 def create_app(start_jobs: bool = True) -> FastAPI:
     cfg = get_config()
     logging.basicConfig(level=cfg.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # httpx logs every request at INFO — one line per thumbnail drowns everything else
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     app = FastAPI(
         title="TripAtlas",
         version=__version__,

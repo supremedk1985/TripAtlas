@@ -187,3 +187,17 @@ def test_import_gpx_twice_and_children_cannot_import(client):
     )
     login(client, "kid", "kid-password")
     assert client.post("/api/imports", data={"tracker_id": tid}, files=files).status_code == 403
+
+
+def test_changing_only_the_traccar_url_keeps_credentials(client):
+    setup_household(client)
+    client.put("/api/settings/traccar", json={"url": "http://a:8082", "email": "me@x", "password": "pw-1234567"})
+    client.put("/api/settings/traccar", json={"url": "http://b:8082"})
+    assert client.get("/api/settings/traccar").json() == {
+        "url": "http://b:8082",
+        "email": "me@x",
+        "has_token": False,
+        "has_password": True,
+    }
+    client.put("/api/settings/traccar", json={"url": "http://b:8082", "token": "tok"})
+    assert client.get("/api/settings/traccar").json()["has_token"] is True
