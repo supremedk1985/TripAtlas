@@ -87,6 +87,14 @@ Everybody signs in with their own name and password. The administrator creates a
 | Titles, notes, imports | ✓ | ✓ | – |
 | Users, vehicles, connections | ✓ | – | – |
 
+### Switching accounts
+
+The person icon at the top right opens the account menu: who is signed in, the other accounts used on this device,
+*Another account…* and *Sign out*. Picking an account opens the sign-in page with the name filled in — your browser's
+password manager can fill in the password. In an app that supports it (see [App bridge](architecture.md#app-bridge)),
+TripAtlas offers to keep the password behind your fingerprint; switching is then one tap and a fingerprint. A child
+cannot switch back to a parent's account without the parent's fingerprint.
+
 ### The children's view
 
 ![The children's home page](images/en/kids.png)

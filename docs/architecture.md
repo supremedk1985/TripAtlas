@@ -59,6 +59,22 @@ unknown places (Nominatim allows one request per second).
 | `lib/components/` | panels and widgets |
 | `lib/i18n/` | dictionaries; `en.ts` is the reference |
 
+## App bridge
+
+TripAtlas runs in any browser; a host app that wraps it in a WebView can add what a web page cannot do safely — keep
+passwords behind the fingerprint. The page looks for an optional object `window.TripAtlasApp` (see
+`web/src/lib/accounts.ts`):
+
+| method | |
+|---|---|
+| `accounts(): string` | JSON array of `{username, display_name}` the app holds a password for — never the passwords |
+| `offerSave(json)` | after a sign-in with a typed password: `{username, password, display_name}`; the app asks the user |
+| `signIn(username)` | the app verifies the user (fingerprint or screen lock), then calls `window.tripAtlasSignIn(username, password)` |
+| `forget(username)` | remove a saved account |
+
+An app should expose the bridge only while its own TripAtlas address is loaded. Without the bridge the account menu
+still lists the accounts recently used in this browser; the browser's password manager fills in passwords.
+
 ## Data model
 
 `users` ←→ `user_trackers` ←→ `trackers` → `positions` (tracker_id, t) · `trips` → `stays` (cache) ·

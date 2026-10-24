@@ -87,6 +87,14 @@ Benutzer** an und bestimmt, welche Fahrzeuge jemand sieht.
 | Titel, Notizen, Importe | ✓ | ✓ | – |
 | Benutzer, Fahrzeuge, Verbindungen | ✓ | – | – |
 
+### Konto wechseln
+
+Das Personen-Symbol oben rechts öffnet das Kontomenü: wer angemeldet ist, die anderen Konten, die auf diesem Gerät
+schon benutzt wurden, *Anderes Konto …* und *Abmelden*. Wer ein Konto antippt, kommt zur Anmeldeseite mit
+eingetragenem Namen — das Passwort trägt der Passwortmanager des Browsers ein. In einer App, die das unterstützt,
+bietet TripAtlas nach der Anmeldung an, das Passwort hinter dem Fingerabdruck zu speichern; dann genügen beim
+Wechseln ein Tipp und der Finger. Ein Kind kommt ohne den Finger der Eltern nicht in deren Konto zurück.
+
 ### Die Ansicht für Kinder
 
 ![Die Startseite für Kinder](../images/de/kids.png)

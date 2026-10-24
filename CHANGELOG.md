@@ -3,6 +3,16 @@
 All notable changes. The format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Added
+- Account menu: switch between the accounts used on a device without retyping the user name; sign-in page lists them
+- Optional app bridge (`window.TripAtlasApp`) so a host app can keep passwords behind the fingerprint
+
+### Fixed
+- After signing out or switching, the next account no longer lands on the previous account's page
+- Country names were missing from a fresh clone (excluded by `.gitignore`)
+
 ## [0.1.0] – 2026-10-24
 
 First public version.
