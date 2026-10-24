@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+# Node / web
+node_modules/
+web/build/
+web/.svelte-kit/
+# Local data — never commit real positions, photos or keys
+data/
+*.db
+*.db-wal
+*.db-shm
+secret.key
+.env
+# Android
+app/.gradle/
+app/build/
+app/app/build/
+app/local.properties

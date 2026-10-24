@@ -1,0 +1,36 @@
+[project]
+name = "tripatlas"
+version = "0.1.0"
+description = "Self-hosted travel map: GPS trackers (Traccar) + photos (Immich) for the whole family"
+requires-python = ">=3.12"
+license = "AGPL-3.0-or-later"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "httpx>=0.27",
+  "argon2-cffi>=23.1",
+  "cryptography>=42",
+  "pydantic-settings>=2.4",
+  "gpxpy>=1.6",
+  "python-multipart>=0.0.9",
+  "nh3>=0.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tripatlas*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
