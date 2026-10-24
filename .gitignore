@@ -11,6 +11,8 @@ web/build/
 web/.svelte-kit/
 # Local data — never commit real positions, photos or keys
 data/
+# …except data shipped with the code (country names); data/ above is meant for instance data only
+!server/tripatlas/data/
 *.db
 *.db-wal
 *.db-shm
