@@ -41,9 +41,11 @@ TripAtlas then fetches the history and recognises your trips (a few minutes for 
 
 ### Requirements
 
-- Docker. The image runs on amd64 and arm64 and needs ~100 MB RAM.
-- Traccar 5.x/6.x (optional) — a read-only user or API token is enough.
-- Immich v1.130+ (optional) — an API key with read access to assets.
+- Docker (amd64; arm64 images are built by CI but not yet tested on real hardware). About 100–150 MB RAM
+  (105 MB measured with two trackers, 40,000 positions and 42,000 photos).
+- Traccar (optional) — a read-only user or API token is enough. Tested with Traccar 6.16.
+- Immich (optional) — an API key with read access to assets. Tested with Immich 3.3; older versions may lack the
+  `/api/map/markers` endpoint the photo layer uses.
 
 ### Behind a reverse proxy
 
@@ -57,7 +59,7 @@ Almost everything is configured in the web UI (*Settings*). Environment variable
 | Variable | Default | |
 |---|---|---|
 | `TRIPATLAS_DATA_DIR` | `/data` | database and `secret.key` |
-| `TRIPATLAS_DATABASE_URL` | SQLite in the data dir | any SQLAlchemy URL (PostgreSQL works) |
+| `TRIPATLAS_DATABASE_URL` | SQLite in the data dir | SQLAlchemy URL; only SQLite is tested so far |
 | `TRIPATLAS_SECRET_KEY` | generated into `secret.key` | encrypts stored Traccar/Immich credentials |
 | `TRIPATLAS_SECURE_COOKIES` | `false` | `true` behind HTTPS |
 | `TRIPATLAS_SYNC_INTERVAL_MINUTES` | `5` | how often Traccar is polled |
