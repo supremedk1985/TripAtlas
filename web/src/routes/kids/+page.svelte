@@ -2,7 +2,8 @@
 	// The children's home: a globe with every place they have been, and their trips as big picture cards.
 	// Read-only by design — the API refuses every change from a child account anyway.
 	import { goto } from '$app/navigation';
-	import { api, thumbUrl } from '$lib/api';
+	import { api, pinPhotos, thumbUrl } from '$lib/api';
+	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import PlaceCard from '$lib/components/PlaceCard.svelte';
 	import VisitedMap from '$lib/components/VisitedMap.svelte';
 	import { countryName, date, flag, tripTitle } from '$lib/format';
@@ -13,6 +14,11 @@
 	let trips = $state<TripSummary[]>([]);
 	let visited = $state<Visited | null>(null);
 	let pin = $state<Pin | null>(null);
+	let viewer = $state<{ ids: string[]; index: number } | null>(null);
+	async function openPinPhotos(p: Pin) {
+		const v = await pinPhotos(p, p.cover_asset);
+		if (v.ids.length) viewer = v;
+	}
 
 	api.get<TripSummary[]>('/api/trips').then((r) => (trips = r));
 
@@ -41,7 +47,11 @@
 		{#if pin}
 			<div class="pin card">
 				<button class="icon-btn close" onclick={() => (pin = null)} aria-label={t('close')}>✕</button>
-				{#if pin.cover_asset}<img src={thumbUrl(pin.cover_asset, 'preview')} alt="" />{/if}
+				{#if pin.cover_asset}
+					<button class="cover-btn" onclick={() => openPinPhotos(pin!)} aria-label={t('show_photos')}>
+						<img src={thumbUrl(pin.cover_asset, 'preview')} alt="" />
+					</button>
+				{/if}
 				<h2>{flag(pin.country)} {pin.name ?? countryName(pin.country)}</h2>
 				<PlaceCard lat={pin.lat} lon={pin.lon} kids />
 			</div>
@@ -62,6 +72,10 @@
 		{/each}
 	</div>
 </div>
+
+{#if viewer}
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} onclose={() => (viewer = null)} />
+{/if}
 
 <style>
 	.kids {
@@ -105,6 +119,14 @@
 		overflow-y: auto;
 		padding: 16px;
 		border-radius: 20px;
+	}
+	.cover-btn {
+		display: block;
+		width: 100%;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: zoom-in;
 	}
 	.pin img {
 		width: 100%;

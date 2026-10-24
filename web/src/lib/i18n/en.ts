@@ -97,6 +97,7 @@ export default {
 	stat_places: 'places',
 	first_visit: 'first visit',
 	open_trip: 'Open trip',
+	show_photos: 'Show photos',
 
 	// kids
 	kids_hello: 'Hello {name}! 👋',

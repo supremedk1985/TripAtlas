@@ -47,6 +47,15 @@ export function videoUrl(assetId: string): string {
 	return `/api/photos/${assetId}/video`;
 }
 
+/** All photo ids of a pin on the "where I've been" map (for the viewer), the given cover first if present. */
+export async function pinPhotos(pin: { lat: number; lon: number; kind: string; name: string | null }, cover?: string) {
+	const r = await api.get<{ ids: string[] }>(
+		`/api/visited/photos?${query({ lat: pin.lat, lon: pin.lon, city: pin.kind === 'photos' ? pin.name : null })}`
+	);
+	const ids = r.ids.length ? r.ids : cover ? [cover] : [];
+	return { ids, index: Math.max(0, cover ? ids.indexOf(cover) : 0) };
+}
+
 export function query(params: Record<string, string | number | null | undefined>): string {
 	const q = new URLSearchParams();
 	for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined) q.set(k, String(v));

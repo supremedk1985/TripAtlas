@@ -3,7 +3,8 @@
 	// on phones both live at the bottom — the country list collapsed to one line, a selected place as a sheet that
 	// replaces it — so the globe stays visible.
 	import { goto } from '$app/navigation';
-	import { thumbUrl } from '$lib/api';
+	import { pinPhotos, thumbUrl } from '$lib/api';
+	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import PlaceCard from '$lib/components/PlaceCard.svelte';
 	import VisitedMap from '$lib/components/VisitedMap.svelte';
@@ -13,6 +14,11 @@
 
 	let visited = $state<Visited | null>(null);
 	let pin = $state<Pin | null>(null);
+	let viewer = $state<{ ids: string[]; index: number } | null>(null);
+	async function openPinPhotos(p: Pin) {
+		const v = await pinPhotos(p, p.cover_asset);
+		if (v.ids.length) viewer = v;
+	}
 	let listOpen = $state(false);
 	const totalPlaces = $derived(visited?.pins.length ?? 0);
 </script>
@@ -45,17 +51,22 @@
 		<div class="detail card">
 			<button class="icon-btn close" onclick={() => (pin = null)} aria-label={t('close')}>✕</button>
 			<div class="head">
-				{#if pin.cover_asset}<img class="cover" src={thumbUrl(pin.cover_asset, 'preview')} alt="" />{/if}
+				{#if pin.cover_asset}
+					<button class="cover-btn" onclick={() => openPinPhotos(pin!)} aria-label={t('show_photos')}>
+						<img class="cover" src={thumbUrl(pin.cover_asset, 'preview')} alt="" />
+					</button>
+				{/if}
 				<div>
 					<h3>{flag(pin.country)} {pin.name ?? ''}</h3>
 					<p class="muted">
-						{#if pin.nights}{plural('nights', pin.nights)} · {/if}{plural('photos', pin.photos)}
+						{#if pin.nights}{plural('nights', pin.nights)} · {/if}{#if pin.photos}<button class="link" onclick={() => openPinPhotos(pin!)}>{plural('photos', pin.photos)}</button>{:else}{plural('photos', 0)}{/if}
 						{#if pin.first}· {t('first_visit')} {date(pin.first)}{/if}
 					</p>
 				</div>
 			</div>
-			{#if pin.trip_ids.length}
+			{#if pin.trip_ids.length || pin.photos}
 				<div class="row">
+					{#if pin.photos}<button class="btn small" onclick={() => openPinPhotos(pin!)}>{t('show_photos')}</button>{/if}
 					{#each pin.trip_ids as id (id)}<button class="btn small" onclick={() => goto(`/?trip=${id}`)}>{t('open_trip')}</button>{/each}
 				</div>
 			{/if}
@@ -63,6 +74,10 @@
 		</div>
 	{/if}
 </div>
+
+{#if viewer}
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} onclose={() => (viewer = null)} />
+{/if}
 
 <style>
 	.page {
@@ -136,7 +151,22 @@
 		display: grid;
 		gap: 8px;
 	}
+	.link {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--accent);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.cover-btn {
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: zoom-in;
+	}
 	.cover {
+		display: block;
 		width: 100%;
 		aspect-ratio: 16/10;
 		object-fit: cover;

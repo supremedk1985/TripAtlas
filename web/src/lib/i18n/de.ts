@@ -91,6 +91,7 @@ const de: Dictionary = {
 	stat_places: 'Orte',
 	first_visit: 'zuerst',
 	open_trip: 'Reise öffnen',
+	show_photos: 'Fotos ansehen',
 
 	kids_hello: 'Hallo {name}! 👋',
 	kids_countries: 'Du warst schon in {n} Ländern!',

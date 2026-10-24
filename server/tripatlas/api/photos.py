@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from ..auth.deps import current_user, visible_trackers
 from ..core.countries import country_code
+from ..core.geo import distance_km
 from ..db.models import Annotation, Role, Stay, Trip, User
 from ..db.session import get_db
 from ..integrations.immich import ImmichError
@@ -106,6 +107,19 @@ def place(lat: float, lon: float, db: Session = Depends(get_db), user: User = De
     if not hh.place_info_enabled:
         return place_dict(cached_place(db, lat, lon, user.locale), kids)
     return place_dict(get_place(db, lat, lon, user.locale), kids)
+
+
+@router.get("/api/visited/photos")
+def visited_photos(
+    lat: float, lon: float, city: str | None = None, db: Session = Depends(get_db), user: User = Depends(current_user)
+):
+    """The photos of one pin, for the viewer: same city as the pin, or within 2 km of it. Up to 500 ids."""
+    try:
+        marks = photo_service.markers(db, user)
+    except ImmichError:
+        return {"ids": []}
+    ids = [m["id"] for m in marks if (city and m.get("city") == city) or distance_km(lat, lon, m["lat"], m["lon"]) <= 2]
+    return {"ids": ids[:500]}
 
 
 @router.get("/api/visited")
