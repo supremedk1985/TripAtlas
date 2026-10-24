@@ -7,6 +7,7 @@
 import { goto } from '$app/navigation';
 import { api, ApiError } from '$lib/api';
 import { setUser } from '$lib/stores/session.svelte';
+import { avatarUrl, tinyDataUrl } from '$lib/avatar';
 import type { User } from '$lib/types';
 
 export interface KnownAccount {
@@ -14,6 +15,8 @@ export interface KnownAccount {
 	display_name: string;
 	/** the host app holds the password: signing in only needs the fingerprint */
 	saved: boolean;
+	/** tiny copy of the profile picture (data URL), kept on this device */
+	avatar?: string;
 }
 
 interface Bridge {
@@ -26,7 +29,7 @@ interface Bridge {
 	forget(username: string): void;
 }
 
-type Entry = { username: string; display_name: string };
+type Entry = { username: string; display_name: string; avatar?: string; avatar_version?: number | null };
 
 const KEY = 'tripatlas.accounts';
 const MAX_RECENT = 6;
@@ -64,13 +67,27 @@ const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 /** Accounts known on this device, most recently used first; saved ones (app) are marked. */
 export function knownAccounts(): KnownAccount[] {
 	const saved = appAccounts();
-	const out: KnownAccount[] = readRecent().map((e) => ({ ...e, saved: saved.some((s) => same(s.username, e.username)) }));
+	const out: KnownAccount[] = readRecent().map((e) => ({
+		username: e.username,
+		display_name: e.display_name,
+		avatar: e.avatar,
+		saved: saved.some((s) => same(s.username, e.username))
+	}));
 	for (const s of saved) if (!out.some((e) => same(e.username, s.username))) out.push({ ...s, saved: true });
 	return out;
 }
 
 export function remember(user: User) {
-	writeRecent([{ username: user.username, display_name: user.display_name }, ...readRecent().filter((e) => !same(e.username, user.username))]);
+	const others = readRecent().filter((e) => !same(e.username, user.username));
+	const old = readRecent().find((e) => same(e.username, user.username));
+	const entry: Entry = { username: user.username, display_name: user.display_name, avatar_version: user.avatar_version };
+	if (old?.avatar_version === user.avatar_version) entry.avatar = old.avatar;
+	writeRecent([entry, ...others]);
+	const url = avatarUrl(user);
+	if (url && !entry.avatar)
+		tinyDataUrl(url).then((avatar) => {
+			if (avatar) writeRecent(readRecent().map((e) => (same(e.username, user.username) ? { ...e, avatar } : e)));
+		});
 }
 
 export function forget(username: string) {

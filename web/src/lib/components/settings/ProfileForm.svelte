@@ -2,6 +2,7 @@
 	import { api, errorText } from '$lib/api';
 	import { LANGUAGES, t } from '$lib/i18n/index.svelte';
 	import { session, setUser } from '$lib/stores/session.svelte';
+	import AvatarPicker from '$lib/components/AvatarPicker.svelte';
 	import type { User } from '$lib/types';
 
 	let displayName = $state(session.user?.display_name ?? '');
@@ -21,6 +22,10 @@
 		}
 	}
 </script>
+
+{#if session.user && session.user.role !== 'child'}
+	<div class="avatar-row"><AvatarPicker user={session.user} path="/api/auth/me/avatar" onchange={setUser} /></div>
+{/if}
 
 <form onsubmit={(e) => (e.preventDefault(), send({ display_name: displayName, locale }))}>
 	<label class="field"><span>{t('display_name')}</span><input type="text" bind:value={displayName} required /></label>
@@ -56,5 +61,8 @@
 	}
 	h4 {
 		margin-top: 24px;
+	}
+	.avatar-row {
+		margin-bottom: 16px;
 	}
 </style>

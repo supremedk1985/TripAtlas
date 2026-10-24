@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
-from .api import auth, imports, photos, setup, trackers, trips, users
+from .api import auth, avatars, imports, photos, setup, trackers, trips, users
 from .config import get_config
 from .db.session import migrate
 from .integrations.immich import ImmichError
@@ -48,7 +48,8 @@ def create_app(start_jobs: bool = True) -> FastAPI:
     # The photo layer sends tens of thousands of markers; gzip halves that JSON (2.4 MB → 1.1 MB for 42,000 photos).
     app.add_middleware(GZipMiddleware, minimum_size=2048)
 
-    for r in (setup.router, auth.router, users.router, trackers.router, trips.router, photos.router, imports.router):
+    for r in (setup.router, auth.router, users.router, trackers.router, trips.router, photos.router, imports.router,
+              avatars.router):
         app.include_router(r)
 
     @app.get("/api/health", tags=["meta"])

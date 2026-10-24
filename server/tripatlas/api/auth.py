@@ -28,6 +28,7 @@ def user_out(u: User) -> UserOut:
         can_see_live=u.can_see_live,
         has_immich_key=bool(u.immich_api_key),
         tracker_ids=[t.id for t in u.trackers],
+        avatar_version=int(u.avatar_updated.timestamp()) if u.avatar_updated else None,
     )
 
 

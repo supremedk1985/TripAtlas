@@ -2,7 +2,9 @@
 	// Who is signed in, the other accounts known on this device (one tap to switch) and signing out.
 	import { forget, knownAccounts, signOut, switchTo, type KnownAccount } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
+	import { avatarUrl } from '$lib/avatar';
 	import { session } from '$lib/stores/session.svelte';
+	import Avatar from './Avatar.svelte';
 
 	let { variant = 'icon' }: { variant?: 'icon' | 'button' } = $props();
 
@@ -29,9 +31,13 @@
 
 <div class="account" bind:this={root}>
 	{#if variant === 'icon'}
-		<button class="icon-btn" class:active={open} onclick={toggle} aria-expanded={open} aria-haspopup="menu"
+		<button class="icon-btn me-btn" class:pic={!!session.user?.avatar_version} class:active={open} onclick={toggle} aria-expanded={open} aria-haspopup="menu"
 			title={session.user?.display_name} aria-label={t('account_menu')}>
-			<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+			{#if session.user?.avatar_version}
+				<Avatar name={session.user.display_name} src={avatarUrl(session.user)} size={28} />
+			{:else}
+				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+			{/if}
 		</button>
 	{:else}
 		<button class="btn small" onclick={toggle} aria-expanded={open} aria-haspopup="menu">{t('account_switch')}</button>
@@ -39,16 +45,21 @@
 
 	{#if open}
 		<div class="menu card" role="menu">
-			<div class="me">
-				<strong>{session.user?.display_name}</strong>
-				<span>@{session.user?.username}</span>
-			</div>
+			{#if session.user}
+				<div class="me">
+					<Avatar name={session.user.display_name} src={avatarUrl(session.user)} size={40} />
+					<div>
+						<strong>{session.user.display_name}</strong>
+						<span>@{session.user.username}</span>
+					</div>
+				</div>
+			{/if}
 			{#if others.length}
 				<div class="label">{t('account_switch')}</div>
 				{#each others as a (a.username)}
 					<div class="other">
 						<button role="menuitem" onclick={() => ((open = false), switchTo(a))}>
-							<span class="avatar">{a.display_name.slice(0, 1).toUpperCase()}</span>
+							<Avatar name={a.display_name} src={a.avatar} size={28} />
 							<span class="name">{a.display_name}</span>
 							{#if a.saved}
 								<svg class="finger" viewBox="0 0 24 24" aria-label={t('account_fingerprint')}><path d="M12 11v3a6 6 0 0 1-1.5 4" /><path d="M8.5 9.5A4 4 0 0 1 16 11v2.5a10 10 0 0 1-1 4.3" /><path d="M5.6 7.6A7.5 7.5 0 0 1 19.5 11v1.5" /><path d="M8 13.5a14 14 0 0 1-1.6 4.5" /></svg>
@@ -95,10 +106,18 @@
 		box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
 	}
 	.me {
-		display: grid;
+		display: flex;
+		align-items: center;
+		gap: 10px;
 		padding: 8px 10px 10px;
 		border-bottom: 1px solid var(--border);
 		margin-bottom: 4px;
+	}
+	.me div {
+		display: grid;
+	}
+	.me-btn.pic {
+		padding: 2px;
 	}
 	.me span,
 	.label {
@@ -140,17 +159,6 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-	}
-	.avatar {
-		width: 28px;
-		height: 28px;
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		background: var(--accent);
-		color: #fff;
-		font-weight: 700;
-		flex: none;
 	}
 	.finger {
 		width: 18px;

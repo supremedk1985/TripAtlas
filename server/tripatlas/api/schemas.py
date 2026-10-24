@@ -18,6 +18,8 @@ class UserOut(BaseModel):
     can_see_live: bool
     has_immich_key: bool
     tracker_ids: list[int]
+    # changes whenever the picture changes (cache key for /api/users/{id}/avatar); None = no picture
+    avatar_version: int | None = None
 
 
 class UserCreate(BaseModel):

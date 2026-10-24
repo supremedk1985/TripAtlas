@@ -29,6 +29,28 @@
 	// svelte-ignore state_referenced_locally
 	let grid = $state(overview && ids.length > 1);
 	let gridEl: HTMLElement | undefined = $state();
+	// columns of the overview, remembered on this device
+	const COLS_KEY = 'tripatlas.viewer.columns';
+	let cols = $state(readCols());
+	function readCols(): number {
+		try {
+			const n = Number(localStorage.getItem(COLS_KEY));
+			return [1, 2, 3].includes(n) ? n : 3;
+		} catch {
+			return 3;
+		}
+	}
+	async function setCols(n: number) {
+		const keep = gridEl?.querySelector('.current');
+		cols = n;
+		try {
+			localStorage.setItem(COLS_KEY, String(n));
+		} catch {
+			// storage blocked: the choice lasts until the viewer closes
+		}
+		await tick();
+		keep?.scrollIntoView({ block: 'center' });
+	}
 	const id = $derived(ids[index]);
 	let known = $state<Record<string, boolean>>({});
 	const isVideo = $derived(videos ? videos.has(id) : known[id]);
@@ -111,11 +133,23 @@
 	{/if}
 	{#if grid}
 		<div class="grid" bind:this={gridEl}>
-			<div class="grid-head">{t('photos_count', { n: ids.length })}</div>
-			<div class="tiles">
+			<div class="grid-head">
+				<span>{t('photos_count', { n: ids.length })}</span>
+				<div class="cols" role="group" aria-label={t('photos_columns')}>
+					{#each [3, 2, 1] as n (n)}
+						<button class:on={cols === n} onclick={() => setCols(n)} aria-pressed={cols === n}
+							title={t('photos_columns_n', { n })} aria-label={t('photos_columns_n', { n })}>
+							<svg viewBox="0 0 24 24" aria-hidden="true">
+								{#each Array(n) as _, k (k)}<rect x={3 + k * (18 / n) + 0.75} y="4" width={18 / n - 1.5} height="16" rx="1.5" />{/each}
+							</svg>
+						</button>
+					{/each}
+				</div>
+			</div>
+			<div class="tiles" class:wide={cols < 3} style="--cols:{cols}">
 				{#each ids as gid, i (gid + i)}
 					<button class="tile" class:current={i === index} onclick={() => pick(i)}>
-						<img src={thumbUrl(gid)} alt="" loading="lazy" />
+						<img src={thumbUrl(gid, cols < 3 ? 'preview' : 'thumbnail')} alt="" loading="lazy" />
 						{#if markedVideo(gid)}<span class="play" aria-label={t('video')}>▶</span>{/if}
 					</button>
 				{/each}
@@ -188,16 +222,47 @@
 	}
 	.grid-head {
 		color: #ddd;
-		text-align: center;
-		margin-bottom: 10px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		max-width: 1100px;
+		margin: 0 auto 10px;
 		font-size: 0.9em;
+	}
+	.cols {
+		display: flex;
+		background: rgb(255 255 255 / 12%);
+		border-radius: 999px;
+		padding: 2px;
+	}
+	.cols button {
+		border: 0;
+		background: none;
+		color: #ccc;
+		padding: 5px 9px;
+		border-radius: 999px;
+		cursor: pointer;
+		display: grid;
+	}
+	.cols button.on {
+		background: rgb(255 255 255 / 22%);
+		color: #fff;
+	}
+	.cols svg {
+		width: 18px;
+		height: 18px;
+		fill: currentColor;
 	}
 	.tiles {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+		grid-template-columns: repeat(var(--cols), 1fr);
 		gap: 4px;
 		max-width: 1100px;
 		margin: 0 auto;
+	}
+	.tiles.wide {
+		gap: 6px;
 	}
 	.tile {
 		position: relative;

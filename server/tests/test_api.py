@@ -259,3 +259,22 @@ def test_photo_kinds_marks_videos_and_skips_unknown(client, monkeypatch):
     # known kinds are not asked again; the missing one is
     client.post("/api/photos/kinds", json={"ids": [vid, img, gone]})
     assert calls.count(vid) == 1 and calls.count(gone) == 2
+
+
+def test_avatar_own_admin_and_child(client):
+    setup_household(client)
+    jpeg = b"\xff\xd8\xff\xe0" + b"0" * 100
+    assert client.put("/api/auth/me/avatar", content=b"GIF89a").status_code == 400
+    assert client.put("/api/auth/me/avatar", content=b"\xff\xd8\xff" + b"0" * 400_000).status_code == 413
+    me = client.put("/api/auth/me/avatar", content=jpeg).json()
+    assert me["avatar_version"]
+    assert client.get(f"/api/users/{me['id']}/avatar").content == jpeg
+    kid = client.post("/api/users", json={"username": "kid", "display_name": "Kid", "password": "kid-password",
+                                          "role": "child"}).json()
+    assert client.put(f"/api/users/{kid['id']}/avatar", content=jpeg).json()["avatar_version"]
+    login(client, "kid", "kid-password")
+    assert client.put("/api/auth/me/avatar", content=jpeg).status_code == 403   # children change nothing
+    assert client.get(f"/api/users/{me['id']}/avatar").status_code == 200    # but see the family's pictures
+    login(client, "admin", ADMIN["password"])
+    assert client.delete("/api/auth/me/avatar").json()["avatar_version"] is None
+    assert client.get(f"/api/users/{me['id']}/avatar").status_code == 404

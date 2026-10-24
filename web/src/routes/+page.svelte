@@ -207,9 +207,21 @@
 		else next.add(id);
 		hidden = next;
 	}
+
+	// Full screen: only the map. In a browser also the real full-screen mode; in an app's WebView that may be
+	// refused, then the map still fills the app.
+	let full = $state(false);
+	async function toggleFull() {
+		full = !full;
+		if (full) await document.documentElement.requestFullscreen?.().catch(() => {});
+		else if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
+	}
 </script>
 
-<div class="layout">
+<svelte:window onkeydown={(e) => e.key === 'Escape' && full && !viewer && toggleFull()} />
+<svelte:document onfullscreenchange={() => !document.fullscreenElement && (full = false)} />
+
+<div class="layout" class:full>
 	<aside class:trip-open={selectedId !== null}>
 		<AppHeader />
 		{#if selectedId && map}
@@ -283,6 +295,12 @@
 	</aside>
 	<main>
 		<MapView {style} onready={onReady} onstyle={installLayers} />
+		<button class="full-btn icon-btn" onclick={toggleFull} aria-pressed={full}
+			title={full ? t('map_fullscreen_exit') : t('map_fullscreen')} aria-label={full ? t('map_fullscreen_exit') : t('map_fullscreen')}>
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				{#if full}<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />{:else}<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />{/if}
+			</svg>
+		</button>
 	</main>
 </div>
 
@@ -310,6 +328,31 @@
 	main {
 		position: relative;
 		min-height: 0;
+	}
+	.full-btn {
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		z-index: 4;
+		box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+	}
+	.full-btn svg {
+		width: 18px;
+		height: 18px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	/* two classes beat the phone layout's .layout below */
+	.layout.full {
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr;
+		grid-template-areas: 'map';
+	}
+	.layout.full aside {
+		display: none;
 	}
 	.list {
 		padding: 12px 16px 24px;

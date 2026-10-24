@@ -3,7 +3,8 @@
 	import { api, errorText } from '$lib/api';
 	import { LANGUAGES, t } from '$lib/i18n/index.svelte';
 	import { confirmDialog, promptDialog } from '$lib/stores/dialog.svelte';
-	import { session } from '$lib/stores/session.svelte';
+	import { session, setUser } from '$lib/stores/session.svelte';
+	import AvatarPicker from '$lib/components/AvatarPicker.svelte';
 	import type { Role, Tracker, User } from '$lib/types';
 
 	let users = $state<User[]>([]);
@@ -75,6 +76,8 @@
 	{#each users as u (u.id)}
 		<li class="card">
 			<div class="row head">
+				<AvatarPicker user={u} path="/api/users/{u.id}/avatar" size={40} compact
+					onchange={(n) => (Object.assign(u, n), u.id === session.user?.id && setUser(n))} />
 				<strong>{u.display_name}</strong>
 				<span class="muted">@{u.username}</span>
 				<span class="spacer"></span>

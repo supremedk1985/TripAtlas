@@ -11,6 +11,7 @@ export interface User {
 	can_see_live: boolean;
 	has_immich_key: boolean;
 	tracker_ids: number[];
+	avatar_version: number | null;
 }
 
 export interface SetupStatus {

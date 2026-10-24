@@ -9,8 +9,21 @@ from __future__ import annotations
 import enum
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import DeclarativeBase, Mapped, deferred, mapped_column, relationship
 
 
 def utcnow() -> datetime:
@@ -39,6 +52,9 @@ class User(Base):
     immich_api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     can_see_live: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Profile picture: a small square JPEG (the browser crops and scales it); loaded only when asked for
+    avatar: Mapped[bytes | None] = deferred(mapped_column(LargeBinary, nullable=True))
+    avatar_updated: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     trackers: Mapped[list[Tracker]] = relationship(secondary="user_trackers", back_populates="users")
 
 

@@ -32,6 +32,10 @@ export function onUnauthorized(handler: () => void) {
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
 	const init: RequestInit = { method, credentials: 'same-origin', headers: {} };
 	if (body instanceof FormData) init.body = body;
+	else if (body instanceof Blob) {
+		(init.headers as Record<string, string>)['Content-Type'] = body.type;
+		init.body = body;
+	}
 	else if (body !== undefined) {
 		(init.headers as Record<string, string>)['Content-Type'] = 'application/json';
 		init.body = JSON.stringify(body);

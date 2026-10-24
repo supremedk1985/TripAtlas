@@ -4,6 +4,7 @@
 	import { ApiError } from '$lib/api';
 	import { homeOf, knownAccounts, offerSave, signIn, switchTo, type KnownAccount } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import { session } from '$lib/stores/session.svelte';
 
 	const failed = page.url.searchParams.get('failed');
@@ -55,7 +56,7 @@
 			<div class="accounts">
 				{#each accounts as a (a.username)}
 					<button type="button" class:current={a.username.toLowerCase() === username.toLowerCase()} onclick={() => pick(a)}>
-						<span class="avatar">{a.display_name.slice(0, 1).toUpperCase()}</span>
+						<Avatar name={a.display_name} src={a.avatar} size={30} />
 						<span class="name">{a.display_name}</span>
 						{#if a.saved}
 							<svg viewBox="0 0 24 24" aria-label={t('account_fingerprint')}><path d="M12 11v3a6 6 0 0 1-1.5 4" /><path d="M8.5 9.5A4 4 0 0 1 16 11v2.5a10 10 0 0 1-1 4.3" /><path d="M5.6 7.6A7.5 7.5 0 0 1 19.5 11v1.5" /><path d="M8 13.5a14 14 0 0 1-1.6 4.5" /></svg>
@@ -121,16 +122,6 @@
 	.accounts .name {
 		flex: 1;
 		font-weight: 600;
-	}
-	.avatar {
-		width: 30px;
-		height: 30px;
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		background: var(--accent);
-		color: #fff;
-		font-weight: 700;
 	}
 	.accounts svg {
 		width: 20px;
