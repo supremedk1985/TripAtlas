@@ -33,11 +33,12 @@ docker compose up -d
 Open `http://<your-server>:8097` — the setup wizard asks for
 
 1. an administrator account,
-2. your home (tap it on the map) and time zone,
-3. the Traccar and Immich addresses with an API token/key (both optional, test button included),
-4. which Traccar devices to follow.
+2. the Traccar and Immich addresses with an API token/key (both optional; "Next" tests and saves what you typed),
+3. which Traccar devices to follow,
+4. your home — **suggested from where your trackers spend most nights**; search or tap the map to change it.
 
-TripAtlas then fetches the history and recognises your trips (a few minutes for a year of data).
+TripAtlas then fetches the history and recognises your trips (a few minutes for a year of data); the map says so
+while it is working and fills in by itself.
 
 ### Requirements
 

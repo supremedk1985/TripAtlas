@@ -201,3 +201,29 @@ def test_changing_only_the_traccar_url_keeps_credentials(client):
     }
     client.put("/api/settings/traccar", json={"url": "http://b:8082", "token": "tok"})
     assert client.get("/api/settings/traccar").json()["has_token"] is True
+
+
+def test_sessions_slide_while_used(client):
+    from datetime import timedelta
+
+    from tripatlas.db.models import Session as DbSession
+    from tripatlas.db.models import utcnow
+
+    setup_household(client)
+    with db_session() as db:
+        s = db.query(DbSession).one()
+        s.expires_at = utcnow() + timedelta(days=1)  # about to expire …
+        s.last_seen_at = utcnow() - timedelta(hours=1)
+    assert client.get("/api/auth/me").status_code == 200
+    with db_session() as db:
+        s = db.query(DbSession).one()
+        expires = s.expires_at if s.expires_at.tzinfo else s.expires_at.replace(tzinfo=utcnow().tzinfo)
+        assert expires - utcnow() > timedelta(days=20), "… but using it extends the sign-in"
+
+
+def test_admin_status_and_home_suggestion_without_data(client):
+    setup_household(client)
+    st = client.get("/api/admin/jobs").json()
+    assert st["trips"] == 0 and st["trackers"] == [] and "last_run_at" in st
+    assert client.get("/api/setup/home-suggestion", params={"tz": "Europe/Berlin"}).json() is None
+    assert "busy" in client.get("/api/setup/status").json()

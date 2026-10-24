@@ -11,6 +11,7 @@ Every step after the first is also reachable later from the admin settings."""
 
 from __future__ import annotations
 
+import time
 from zoneinfo import available_timezones
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -20,12 +21,16 @@ from sqlalchemy.orm import Session
 
 from ..auth.deps import require_admin
 from ..auth.security import create_session, hash_password
-from ..db.models import Role, Tracker, User
+from ..config import get_config
+from ..core.detection import suggest_home
+from ..db.models import Place, Role, Tracker, Trip, User
 from ..db.session import get_db
 from ..integrations.immich import ImmichClient, ImmichError
 from ..integrations.traccar import TraccarClient, TraccarError
+from ..services import flights as flight_service
 from ..services import settings
 from ..services.jobs import jobs
+from ..services.positions import bounds, load_points
 from ..services.settings import HouseholdSettings, ImmichSettings, TraccarSettings
 from .auth import set_session_cookie, user_out
 from .schemas import LOCALES
@@ -37,6 +42,8 @@ router = APIRouter(tags=["setup"])
 def status(db: Session = Depends(get_db)):
     hh = settings.household(db)
     return {
+        # busy: the background job is fetching/recomputing right now (first sync after setup can take minutes)
+        "busy": jobs.running,
         "has_admin": db.scalar(select(func.count()).select_from(User)) > 0,
         "setup_complete": hh.setup_complete,
         "name": hh.name,
@@ -252,8 +259,47 @@ def put_immich(body: ImmichIn, db: Session = Depends(get_db), _: User = Depends(
 
 
 @router.get("/api/admin/jobs")
-def job_status(_: User = Depends(require_admin)):
-    return {"running": jobs.running, "last_result": jobs.last_result}
+def job_status(db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    """What the background job did last, plus a short inventory — the admin's status page."""
+    trackers = []
+    for t in db.scalars(select(Tracker).order_by(Tracker.name)):
+        _, last, count = bounds(db, t.id)
+        trackers.append({"name": t.name, "positions": count, "last": last, "synced_until": t.synced_until})
+    snapshots = sorted(p.name for p in (get_config().data_dir / "backups").glob("tripatlas-*.db"))
+    flights = flight_service.stored(db)
+    return {
+        "running": jobs.running,
+        "last_run_at": jobs.last_run_at,
+        "last_duration_s": jobs.last_duration_s,
+        "last_result": jobs.last_result,
+        "trackers": trackers,
+        "trips": db.scalar(select(func.count()).select_from(Trip)),
+        "places": db.scalar(select(func.count()).select_from(Place)),
+        "flights": len(flights.get("flights", [])),
+        "flights_checked_at": flights.get("updated"),
+        "snapshots": snapshots,
+    }
+
+
+@router.get("/api/setup/home-suggestion")
+def home_suggestion(tz: str = "UTC", db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    """Suggest the home location: where the trackers spent most nights in the last 120 days. Uses positions
+    already stored, otherwise asks Traccar directly (during setup nothing has been synced yet)."""
+    if tz not in available_timezones():
+        tz = "UTC"
+    now = time.time()
+    start = now - 120 * 86400
+    tracks = [load_points(db, t.id, start, now) for t in db.scalars(select(Tracker))]
+    if not any(tracks):
+        cfg = settings.traccar(db)
+        linked = [t.traccar_device_id for t in db.scalars(select(Tracker)) if t.traccar_device_id is not None]
+        if cfg.configured and linked:
+            try:
+                with TraccarClient(cfg.url, cfg.token, cfg.email, cfg.password, timeout=60) as client:
+                    tracks = [client.positions(d, start, now) for d in linked]
+            except TraccarError:
+                tracks = []
+    return suggest_home(tracks, tz)
 
 
 @router.post("/api/admin/jobs/run")

@@ -1,7 +1,9 @@
 <script lang="ts">
 	// Trackers: link Traccar devices, create empty trackers for imports, colour, photo priority, avatar.
-	import { api } from '$lib/api';
+	import { api, errorText } from '$lib/api';
+	import { dateTime } from '$lib/format';
 	import { t } from '$lib/i18n/index.svelte';
+	import { confirmDialog } from '$lib/stores/dialog.svelte';
 	import type { Tracker } from '$lib/types';
 
 	type Device = { id: number; name: string; status: string; tracker_id: number | null };
@@ -37,7 +39,7 @@
 			newName = '';
 			await load();
 		} catch (e) {
-			error = (e as Error).message;
+			error = errorText(e);
 		}
 	}
 
@@ -47,7 +49,8 @@
 	}
 
 	async function remove(tk: Tracker) {
-		if (!confirm(t('tracker_delete_confirm', { name: tk.name }))) return;
+		if (!(await confirmDialog(t('tracker_delete_confirm', { name: tk.name }), { danger: true, confirmLabel: t('delete') })))
+			return;
 		await api.del(`/api/trackers/${tk.id}`);
 		await load();
 	}
@@ -61,7 +64,7 @@
 			tk.has_avatar = true;
 			avatarVersion++;
 		} catch (e) {
-			error = (e as Error).message;
+			error = errorText(e);
 		}
 	}
 	let avatarVersion = $state(0);
@@ -86,6 +89,7 @@
 						<span class="muted">
 							{tk.traccar_device_id ? `Traccar #${tk.traccar_device_id}` : t('import_only')} ·
 							{(tk.position_count ?? 0).toLocaleString()} {t('positions')}
+							{#if tk.last}· {t('last_seen', { when: dateTime(tk.last) })}{/if}
 						</span>
 					</div>
 				</div>

@@ -1,13 +1,15 @@
 <script lang="ts">
 	// User management: roles, which trackers each user sees, live access, password reset.
-	import { api } from '$lib/api';
+	import { api, errorText } from '$lib/api';
 	import { LANGUAGES, t } from '$lib/i18n/index.svelte';
+	import { confirmDialog, promptDialog } from '$lib/stores/dialog.svelte';
 	import { session } from '$lib/stores/session.svelte';
 	import type { Role, Tracker, User } from '$lib/types';
 
 	let users = $state<User[]>([]);
 	let trackers = $state<Tracker[]>([]);
 	let error = $state('');
+	let saved = $state('');
 	let form = $state(blank());
 
 	function blank() {
@@ -27,7 +29,7 @@
 			form = blank();
 			await load();
 		} catch (err) {
-			error = (err as Error).message;
+			error = errorText(err);
 		}
 	}
 
@@ -36,7 +38,7 @@
 		try {
 			Object.assign(u, await api.patch<User>(`/api/users/${u.id}`, body));
 		} catch (err) {
-			error = (err as Error).message;
+			error = errorText(err);
 			await load();
 		}
 	}
@@ -47,13 +49,20 @@
 	}
 
 	async function resetPassword(u: User) {
-		const pw = prompt(t('new_password_for', { name: u.display_name }));
-		if (pw && pw.length >= 8) await patch(u, { password: pw });
-		else if (pw) error = t('password_too_short');
+		const pw = await promptDialog(t('new_password_for', { name: u.display_name }), {
+			inputType: 'password',
+			minLength: 8,
+			confirmLabel: t('save')
+		});
+		if (pw) {
+			await patch(u, { password: pw });
+			if (!error) saved = t('password_set', { name: u.display_name });
+		}
 	}
 
 	async function remove(u: User) {
-		if (!confirm(t('user_delete_confirm', { name: u.display_name }))) return;
+		if (!(await confirmDialog(t('user_delete_confirm', { name: u.display_name }), { danger: true, confirmLabel: t('delete') })))
+			return;
 		await api.del(`/api/users/${u.id}`);
 		await load();
 	}
@@ -61,6 +70,7 @@
 	const roles: Role[] = ['admin', 'member', 'child'];
 </script>
 
+{#if saved}<p class="success">{saved}</p>{/if}
 <ul class="users">
 	{#each users as u (u.id)}
 		<li class="card">

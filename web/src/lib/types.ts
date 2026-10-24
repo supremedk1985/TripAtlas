@@ -14,6 +14,7 @@ export interface User {
 }
 
 export interface SetupStatus {
+	busy: boolean;
 	has_admin: boolean;
 	setup_complete: boolean;
 	name: string;

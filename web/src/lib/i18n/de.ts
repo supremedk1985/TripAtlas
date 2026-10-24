@@ -129,14 +129,14 @@ const de: Dictionary = {
 
 	household_name: 'Name dieses TripAtlas',
 	home: 'Zuhause',
-	home_hint: 'Tippe dein Zuhause auf der Karte an. Eine Reise beginnt, wenn ein Tracker weiter weg ist als der Radius.',
+	home_hint: 'Such euer Zuhause oder tippe es auf der Karte an.',
 	home_required: 'Bitte setze dein Zuhause auf der Karte.',
 	home_radius: 'Radius um Zuhause (km)',
 	timezone: 'Zeitzone',
 	default_language: 'Standardsprache',
 	history_start: 'Positionen ignorieren vor',
-	min_nights: 'Eine Reise braucht mindestens … Nächte',
-	min_distance: '… und mindestens … km Abstand',
+	min_nights: 'Mindestens Nächte auswärts',
+	min_distance: 'Mindestabstand von zu Hause (km)',
 	place_info_enabled: 'Wissen über Orte anzeigen (Wikipedia, OpenStreetMap)',
 	place_info_hint:
 		'Dafür gehen die Koordinaten der Übernachtungsorte an diese öffentlichen Dienste, um Namen und Artikel nachzuschlagen. Ausschalten, wenn alles im Haus bleiben soll.',
@@ -186,7 +186,6 @@ const de: Dictionary = {
 
 	status_hint: 'TripAtlas holt alle paar Minuten neue Positionen, erkennt Reisen und schlägt Orte nach.',
 	status_running: 'Läuft gerade …',
-	status_idle: 'Ruht. Ergebnis des letzten Laufs:',
 	run_now: 'Jetzt ausführen',
 
 	setup_title: 'TripAtlas einrichten',
@@ -197,13 +196,46 @@ const de: Dictionary = {
 	setup_step_trackers: 'Tracker',
 	setup_step_done: 'Fertig',
 	password_rule: 'Mindestens 8 Zeichen.',
-	setup_home_text: 'Wo beginnen eure Reisen? Alles, was weiter weg ist als der Radius, zählt als „unterwegs“.',
-	setup_connections_text: 'Verbinde Traccar für die Ortung und Immich für die Fotos. Beides ist freiwillig und geht auch später.',
+	setup_home_text: 'Wo beginnen eure Reisen? Alles, was weiter weg ist als der Radius um Zuhause, zählt als „unterwegs“.',
+	setup_connections_text: 'Verbinde Traccar für die Strecken und Immich für die Fotos. Beides ist freiwillig – mit „Weiter“ wird Eingetipptes getestet und gespeichert.',
 	setup_trackers_text: 'Welchen Fahrzeugen oder Personen willst du folgen? Füge Traccar-Geräte hinzu oder lege Tracker für Importe an.',
 	setup_done_title: 'Geschafft!',
 	setup_done_text:
 		'TripAtlas holt jetzt den Verlauf deiner Tracker und erkennt eure Reisen. Je nach Datenmenge dauert das ein paar Minuten.',
-	setup_finish: 'Los geht’s'
+	setup_finish: 'Los geht’s',
+
+	// added in the review of 24 October
+	ok: 'OK',
+	password_set: 'Neues Passwort für {name} gespeichert.',
+	loading_history_title: 'Der Verlauf wird geholt …',
+	loading_history_text: 'TripAtlas liest gerade die Positionen eurer Tracker und erkennt die Reisen. Die Seite füllt sich von selbst, sobald es fertig ist – meist in wenigen Minuten.',
+	home_suggested: 'Vorschlag aus euren Trackern: Hier standen sie in {nights} von {total} Nächten. Ist das nicht euer Zuhause, such den Ort oder tippe auf die richtige Stelle.',
+	home_search: 'Ort oder Adresse suchen',
+	search: 'Suchen',
+	home_refine: 'Antippen der Karte verschiebt den Punkt',
+	detection_settings: 'Reiseerkennung anpassen',
+	detection_hint: 'Eine Reise ist eine Zeit fern von zu Hause mit mindestens {nights} auswärts.',
+	save_and_next: 'Speichern und weiter',
+	last_seen: 'zuletzt {when}',
+	choose_files: 'Dateien wählen',
+	no_files: 'Keine Datei gewählt',
+	status_idle_short: 'Bereit',
+	status_last_run: 'letzter Lauf {when} ({s} s)',
+	status_last_round: 'Letzter Lauf',
+	status_sync_error: 'Traccar ließ sich nicht lesen',
+	status_new_positions: '{name}: {n} neue Positionen',
+	status_recomputed: '{name}: Reisen neu erkannt ({n})',
+	status_places_looked_up: '{n} Orte nachgeschlagen',
+	status_flights_checked: 'Flugerkennung: {n} Fotos geprüft, {f} Flüge',
+	status_snapshot_written: 'Sicherungskopie der Datenbank geschrieben',
+	status_nothing_yet: 'Noch nichts – der erste Lauf startet nach der Einrichtung.',
+	status_inventory: 'Was TripAtlas gespeichert hat',
+	status_trips: 'Reisen',
+	status_places: 'Nachgeschlagene Orte',
+	status_flights: 'Flüge',
+	status_checked: 'geprüft {when}',
+	status_backups: 'Sicherungskopien der Datenbank',
+	status_latest: 'neueste'
 };
 
 export default de;

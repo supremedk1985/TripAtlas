@@ -239,3 +239,34 @@ def detect_drives(points: Sequence[Point], s: DetectionSettings) -> list[Drive]:
             )
         )
     return drives
+
+
+def suggest_home(
+    tracks: Sequence[Sequence[Point]], timezone: str, cell_deg: float = 0.01, max_age_s: float = 7 * 86400
+) -> dict | None:
+    """Where do the trackers spend most nights? That is almost certainly home — a much better start than asking
+    people to find their house on a map. Counts the location at 3 a.m. of every night (a parked vehicle often stays
+    silent for days, so the last point up to `max_age_s` old counts), groups them in ~1 km cells and returns the
+    busiest cell: {lat, lon, nights, total}."""
+    s = DetectionSettings(home_lat=0, home_lon=0, timezone=timezone)
+    cells: dict[tuple[int, int], list[tuple[float, float]]] = {}
+    total = 0
+    for pts in tracks:
+        if not pts:
+            continue
+        for instant in night_times(pts[0].t, pts[-1].t, s):
+            i = index_before(pts, instant)
+            if i < 0 or instant - pts[i].t > max_age_s:
+                continue
+            p = pts[i]
+            cells.setdefault((round(p.lat / cell_deg), round(p.lon / cell_deg)), []).append((p.lat, p.lon))
+            total += 1
+    if not cells:
+        return None
+    best = max(cells.values(), key=len)
+    return {
+        "lat": round(sum(x[0] for x in best) / len(best), 5),
+        "lon": round(sum(x[1] for x in best) / len(best), 5),
+        "nights": len(best),
+        "total": total,
+    }

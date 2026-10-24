@@ -4,6 +4,7 @@
 	import StarterKit from '@tiptap/starter-kit';
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from '$lib/i18n/index.svelte';
+	import { promptDialog } from '$lib/stores/dialog.svelte';
 
 	let { html, onchange }: { html: string; onchange: (html: string) => void } = $props();
 
@@ -31,8 +32,12 @@
 	});
 	onDestroy(() => editor?.destroy());
 
-	function link() {
-		const url = prompt(t('note_link_prompt'), editor?.getAttributes('link').href ?? 'https://');
+	async function link() {
+		const url = await promptDialog(t('note_link'), {
+			text: t('note_link_prompt'),
+			inputType: 'url',
+			value: editor?.getAttributes('link').href ?? 'https://'
+		});
 		if (url === null) return;
 		if (!url) editor?.chain().focus().unsetLink().run();
 		else editor?.chain().focus().setLink({ href: url }).run();

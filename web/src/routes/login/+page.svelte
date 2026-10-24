@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { api, ApiError } from '$lib/api';
 	import { t } from '$lib/i18n/index.svelte';
 	import { session, setUser } from '$lib/stores/session.svelte';
@@ -17,7 +18,9 @@
 		try {
 			const r = await api.post<{ user: User }>('/api/auth/login', { username, password });
 			setUser(r.user);
-			goto(r.user.role === 'child' ? '/kids' : '/');
+			// back to where the user was when the session ended (only paths inside TripAtlas)
+			const next = page.url.searchParams.get('next');
+			goto(next && next.startsWith('/') && !next.startsWith('//') ? next : r.user.role === 'child' ? '/kids' : '/');
 		} catch (err) {
 			error = err instanceof ApiError && err.status === 429 ? t('login_throttled') : t('login_failed');
 		} finally {

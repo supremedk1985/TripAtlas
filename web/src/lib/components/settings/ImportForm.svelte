@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Import GPX, Google location history or GeoJSON into a tracker. Duplicates (same tracker, same second) are skipped,
 	// so importing the same file twice is harmless.
-	import { api } from '$lib/api';
+	import { api, errorText } from '$lib/api';
 	import { date } from '$lib/format';
 	import { t } from '$lib/i18n/index.svelte';
 	import type { Tracker } from '$lib/types';
@@ -39,7 +39,7 @@
 			result = { ok: true, text: t('import_done', { added: added.toLocaleString(), total: total.toLocaleString() }) };
 			await load();
 		} catch (err) {
-			result = { ok: false, text: (err as Error).message };
+			result = { ok: false, text: errorText(err) };
 		} finally {
 			busy = false;
 		}
@@ -52,10 +52,15 @@
 		<span>{t('tracker')}</span>
 		<select bind:value={trackerId}>{#each trackers as tk (tk.id)}<option value={tk.id}>{tk.name}</option>{/each}</select>
 	</label>
-	<label class="field">
+	<div class="field">
 		<span>{t('files')}</span>
-		<input type="file" multiple accept=".gpx,.json,.geojson" bind:files />
-	</label>
+		<!-- the native file input speaks the browser's language and cannot be styled; this one matches the page -->
+		<label class="btn picker">
+			{t('choose_files')}
+			<input type="file" multiple accept=".gpx,.json,.geojson" bind:files hidden />
+		</label>
+		<small>{files?.length ? [...files].map((f) => f.name).join(', ') : t('no_files')}</small>
+	</div>
 	{#if result}<p class={result.ok ? 'success' : 'error'}>{result.text}</p>{/if}
 	<button class="btn primary" disabled={busy || !files?.length}>{busy ? t('importing') : t('import')}</button>
 </form>
@@ -77,6 +82,10 @@
 {/if}
 
 <style>
+	.picker {
+		justify-self: start;
+		cursor: pointer;
+	}
 	table {
 		width: 100%;
 		border-collapse: collapse;

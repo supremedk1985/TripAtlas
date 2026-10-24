@@ -3,6 +3,8 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { onUnauthorized } from '$lib/api';
+	import DialogHost from '$lib/components/DialogHost.svelte';
 	import { loadSession, session } from '$lib/stores/session.svelte';
 	import { t } from '$lib/i18n/index.svelte';
 
@@ -15,13 +17,18 @@
 		const path = page.url.pathname;
 		const s = session.status;
 		if (s && !s.has_admin && path !== '/setup') goto('/setup');
-		else if (s?.has_admin && !session.user && path !== '/login') goto('/login');
+		else if (s?.has_admin && !session.user && path !== '/login')
+			goto(`/login?next=${encodeURIComponent(page.url.pathname + page.url.search)}`);
 		else if (session.user?.role === 'admin' && s && !s.setup_complete && path !== '/setup') goto('/setup');
 		else if (session.user?.role === 'child' && !path.startsWith('/kids')) goto('/kids');
 	});
 
-	loadSession().catch((e) => (error = String(e)));
+	// Session expired or ended elsewhere: forget the user; the guard above then shows the sign-in page.
+	onUnauthorized(() => (session.user = null));
+	loadSession().catch((e) => (error = e instanceof Error ? e.message : String(e)));
 </script>
+
+<DialogHost />
 
 {#if error}
 	<main class="center"><p class="error">{t('error_server')}</p><p class="muted">{error}</p></main>
@@ -33,7 +40,8 @@
 
 <style>
 	.center {
-		min-height: 100vh;
+		position: fixed;
+		inset: 0;
 		display: grid;
 		place-items: center;
 		align-content: center;

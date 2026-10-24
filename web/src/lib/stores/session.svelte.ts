@@ -16,7 +16,9 @@ export async function loadSession() {
 	} catch {
 		session.user = null;
 	}
-	setLocale(session.user?.locale ?? session.status.default_locale ?? navigator.language.slice(0, 2));
+	// Before the first account exists nobody has chosen a language yet: follow the browser.
+	const browser = navigator.language.slice(0, 2);
+	setLocale(session.user?.locale ?? (session.status.has_admin ? session.status.default_locale : browser));
 	session.loaded = true;
 }
 

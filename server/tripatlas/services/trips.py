@@ -103,7 +103,11 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
         names = [x.place_name for x in trip.stays if x.place_name]
         trip.places = [n for j, n in enumerate(names) if j == 0 or n != names[j - 1]]
         trip.countries = countries
-        trip.auto_title = most_common_city(placed, exclude_home=s) or (trip.places[0] if trip.places else None)
+        # Title: the place where the most nights were spent is what people call the trip ("Brittany", not the town
+        # with the most photos, which was a day trip); without named stays the most photographed city.
+        named = [x for x in trip.stays if x.place_name]
+        main = max(named, key=lambda x: (x.nights, -x.arrival)) if named else None
+        trip.auto_title = (main.place_name if main else None) or most_common_city(placed, exclude_home=s)
         rows.append(trip)
     if immich is not None:
         immich.close()

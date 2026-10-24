@@ -1,19 +1,21 @@
 <script lang="ts">
-	// First-run wizard. Step 1 creates the administrator; the following steps reuse the settings forms.
+	// First-run wizard: account → connections → trackers → home → done.
+	// Home comes last on purpose: with trackers connected, TripAtlas can suggest it from where they spend the nights.
 	import { goto } from '$app/navigation';
-	import { api } from '$lib/api';
+	import { api, errorText } from '$lib/api';
 	import ConnectionsForm from '$lib/components/settings/ConnectionsForm.svelte';
 	import HouseholdForm from '$lib/components/settings/HouseholdForm.svelte';
 	import TrackersForm from '$lib/components/settings/TrackersForm.svelte';
-	import { LANGUAGES, setLocale, t, i18n } from '$lib/i18n/index.svelte';
+	import { i18n, LANGUAGES, setLocale, t } from '$lib/i18n/index.svelte';
 	import { loadSession, session, setUser } from '$lib/stores/session.svelte';
 	import type { User } from '$lib/types';
 
-	const steps = ['setup_step_account', 'setup_step_home', 'setup_step_connections', 'setup_step_trackers', 'setup_step_done'] as const;
+	const steps = ['setup_step_account', 'setup_step_connections', 'setup_step_trackers', 'setup_step_home', 'setup_step_done'] as const;
 	let step = $state(session.user ? 1 : 0);
 	let admin = $state({ username: '', display_name: '', password: '', locale: i18n.locale });
 	let error = $state('');
-	let homeSaved = $state(false);
+	let busy = $state(false);
+	let connections = $state<ConnectionsForm>();
 
 	async function createAdmin(e: SubmitEvent) {
 		e.preventDefault();
@@ -23,18 +25,28 @@
 			setUser(r.user);
 			step = 1;
 		} catch (err) {
-			error = (err as Error).message;
+			error = errorText(err);
 		}
+	}
+
+	async function afterConnections() {
+		busy = true;
+		const ok = (await connections?.saveUnsaved()) ?? true;
+		busy = false;
+		if (ok) step = 2;
 	}
 
 	async function finish() {
 		error = '';
+		busy = true;
 		try {
 			await api.post('/api/setup/complete');
 			await loadSession();
 			goto('/');
 		} catch (err) {
-			error = (err as Error).message;
+			error = errorText(err);
+		} finally {
+			busy = false;
 		}
 	}
 </script>
@@ -68,36 +80,36 @@
 					<small>{t('password_rule')}</small>
 				</label>
 				{#if error}<p class="error">{error}</p>{/if}
-				<button class="btn primary">{t('next')}</button>
+				<div class="nav row"><span class="spacer"></span><button class="btn primary">{t('next')}</button></div>
 			</form>
 		{:else if step === 1}
-			<h2>{t('setup_step_home')}</h2>
-			<p class="muted">{t('setup_home_text')}</p>
-			<HouseholdForm onsaved={() => (homeSaved = true)} />
-			<div class="nav row"><span class="spacer"></span><button class="btn primary" disabled={!homeSaved} onclick={() => (step = 2)}>{t('next')}</button></div>
-		{:else if step === 2}
 			<h2>{t('setup_step_connections')}</h2>
 			<p class="muted">{t('setup_connections_text')}</p>
-			<ConnectionsForm />
+			<ConnectionsForm bind:this={connections} />
+			<div class="nav row">
+				<span class="spacer"></span>
+				<button class="btn primary" onclick={afterConnections} disabled={busy}>{t('next')}</button>
+			</div>
+		{:else if step === 2}
+			<h2>{t('setup_step_trackers')}</h2>
+			<p class="muted">{t('setup_trackers_text')}</p>
+			<TrackersForm />
 			<div class="nav row">
 				<button class="btn" onclick={() => (step = 1)}>{t('back')}</button><span class="spacer"></span>
 				<button class="btn primary" onclick={() => (step = 3)}>{t('next')}</button>
 			</div>
 		{:else if step === 3}
-			<h2>{t('setup_step_trackers')}</h2>
-			<p class="muted">{t('setup_trackers_text')}</p>
-			<TrackersForm />
-			<div class="nav row">
-				<button class="btn" onclick={() => (step = 2)}>{t('back')}</button><span class="spacer"></span>
-				<button class="btn primary" onclick={() => (step = 4)}>{t('next')}</button>
-			</div>
+			<h2>{t('setup_step_home')}</h2>
+			<p class="muted">{t('setup_home_text')}</p>
+			<HouseholdForm wizard onsaved={() => (step = 4)} />
+			<div class="nav row"><button class="btn" onclick={() => (step = 2)}>{t('back')}</button></div>
 		{:else}
 			<h2>{t('setup_done_title')}</h2>
 			<p>{t('setup_done_text')}</p>
 			{#if error}<p class="error">{error}</p>{/if}
 			<div class="nav row">
 				<button class="btn" onclick={() => (step = 3)}>{t('back')}</button><span class="spacer"></span>
-				<button class="btn primary" onclick={finish}>{t('setup_finish')}</button>
+				<button class="btn primary" onclick={finish} disabled={busy}>{t('setup_finish')}</button>
 			</div>
 		{/if}
 	</section>

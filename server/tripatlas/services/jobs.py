@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 
 from sqlalchemy import select
 
@@ -31,6 +32,8 @@ class BackgroundJobs:
         self._thread: threading.Thread | None = None
         self.last_result: dict = {}
         self.running = False
+        self.last_run_at: float | None = None
+        self.last_duration_s: float | None = None
 
     def start(self) -> None:
         self._thread = threading.Thread(target=self._loop, name="tripatlas-jobs", daemon=True)
@@ -52,6 +55,7 @@ class BackgroundJobs:
 
     def run_once(self) -> dict:
         self.running = True
+        started = time.time()
         result: dict = {}
         try:
             with db_session() as db:
@@ -78,6 +82,8 @@ class BackgroundJobs:
         finally:
             self.running = False
             self.last_result = result
+            self.last_run_at = started
+            self.last_duration_s = round(time.time() - started, 1)
         return result
 
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Traccar and Immich connections. Each is tested before it is saved; stored secrets are never sent back
 	// (empty secret field = keep the stored one).
-	import { api } from '$lib/api';
+	import { api, errorText } from '$lib/api';
 	import { t } from '$lib/i18n/index.svelte';
 
 	let { onsaved }: { onsaved?: () => void } = $props();
@@ -10,41 +10,72 @@
 	let immich = $state({ url: '', api_key: '', has_api_key: false });
 	let traccarResult = $state<{ ok: boolean; text: string } | null>(null);
 	let immichResult = $state<{ ok: boolean; text: string } | null>(null);
+	// what is stored, to notice typed-in but unsaved changes
+	let stored = { traccarUrl: '', traccarEmail: '', immichUrl: '' };
 
 	api.get<{ url: string; email: string; has_token: boolean; has_password: boolean }>('/api/settings/traccar').then((r) => {
 		Object.assign(traccar, r, { useToken: !r.email });
+		stored.traccarUrl = r.url;
+		stored.traccarEmail = r.email;
 	});
-	api.get<{ url: string; has_api_key: boolean }>('/api/settings/immich').then((r) => Object.assign(immich, r));
+	api.get<{ url: string; has_api_key: boolean }>('/api/settings/immich').then((r) => {
+		Object.assign(immich, r);
+		stored.immichUrl = r.url;
+	});
+
+	const traccarPending = () =>
+		!!traccar.url &&
+		(traccar.url !== stored.traccarUrl || !!traccar.token || !!traccar.password || (!traccar.useToken && traccar.email !== stored.traccarEmail));
+	const immichPending = () => !!immich.url && (immich.url !== stored.immichUrl || !!immich.api_key);
+
+	/** For the wizard's "Next": test and save whatever was typed in but not saved yet. False if that failed. */
+	export async function saveUnsaved(): Promise<boolean> {
+		let ok = true;
+		if (traccarPending()) ok = (await saveTraccar()) && ok;
+		if (immichPending()) ok = (await saveImmich()) && ok;
+		return ok;
+	}
 
 	const traccarBody = () =>
 		traccar.useToken
 			? { url: traccar.url, token: traccar.token }
 			: { url: traccar.url, email: traccar.email, password: traccar.password };
 
-	async function saveTraccar(e: SubmitEvent) {
-		e.preventDefault();
+	async function saveTraccar(e?: SubmitEvent): Promise<boolean> {
+		e?.preventDefault();
 		traccarResult = null;
 		try {
 			const r = await api.post<{ version: string; devices: unknown[] }>('/api/settings/traccar/test', traccarBody());
 			await api.put('/api/settings/traccar', traccarBody());
 			traccarResult = { ok: true, text: t('traccar_ok', { version: r.version, n: r.devices.length }) };
+			Object.assign(stored, { traccarUrl: traccar.url, traccarEmail: traccar.email });
+			if (traccar.useToken) traccar.has_token = !!traccar.token || traccar.has_token;
+			else traccar.has_password = !!traccar.password || traccar.has_password;
+			traccar.token = traccar.password = '';
 			onsaved?.();
+			return true;
 		} catch (err) {
-			traccarResult = { ok: false, text: (err as Error).message };
+			traccarResult = { ok: false, text: errorText(err) };
+			return false;
 		}
 	}
 
-	async function saveImmich(e: SubmitEvent) {
-		e.preventDefault();
+	async function saveImmich(e?: SubmitEvent): Promise<boolean> {
+		e?.preventDefault();
 		immichResult = null;
 		try {
 			const body = { url: immich.url, api_key: immich.api_key };
 			const r = await api.post<{ version: string; user: string }>('/api/settings/immich/test', body);
 			await api.put('/api/settings/immich', body);
 			immichResult = { ok: true, text: t('immich_ok', { version: r.version, user: r.user }) };
+			stored.immichUrl = immich.url;
+			immich.api_key = '';
+			immich.has_api_key = true;
 			onsaved?.();
+			return true;
 		} catch (err) {
-			immichResult = { ok: false, text: (err as Error).message };
+			immichResult = { ok: false, text: errorText(err) };
+			return false;
 		}
 	}
 </script>

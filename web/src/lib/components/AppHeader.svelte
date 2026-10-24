@@ -28,9 +28,12 @@
 		</a>
 		<span class="spacer"></span>
 		<a class="icon-btn" href="/settings" title={t('nav_settings')} aria-label={t('nav_settings')}
-			class:active={page.url.pathname === '/settings'}>⚙</a
-		>
-		<button class="icon-btn" onclick={logout} title="{t('logout')} ({session.user?.display_name})" aria-label={t('logout')}>⎋</button>
+			class:active={page.url.pathname === '/settings'}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+		</a>
+		<button class="icon-btn" onclick={logout} title="{t('logout')} ({session.user?.display_name})" aria-label={t('logout')}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
+		</button>
 	</div>
 	<div class="segments">
 		{#each views as v (v.href)}
@@ -75,6 +78,15 @@
 	.icon-btn {
 		text-decoration: none;
 		flex: none;
+	}
+	.icon-btn svg {
+		width: 18px;
+		height: 18px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 	.icon-btn.active {
 		border-color: var(--accent);

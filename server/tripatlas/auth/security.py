@@ -36,6 +36,10 @@ def _token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def _session_days(kind: str) -> int:
+    return get_config().session_days if kind == "web" else 365
+
+
 def create_session(db: DbSession, user: User, kind: str = "web", label: str = "") -> str:
     """Create a session and return the token. Only its hash is stored."""
     token = secrets.token_urlsafe(32)
@@ -45,7 +49,7 @@ def create_session(db: DbSession, user: User, kind: str = "web", label: str = ""
             user_id=user.id,
             kind=kind,
             label=label[:200],
-            expires_at=utcnow() + timedelta(days=get_config().session_days if kind == "web" else 365),
+            expires_at=utcnow() + timedelta(days=_session_days(kind)),
         )
     )
     db.commit()
@@ -65,6 +69,8 @@ def user_for_token(db: DbSession, token: str) -> User | None:
     last = s.last_seen_at if s.last_seen_at.tzinfo else s.last_seen_at.replace(tzinfo=now.tzinfo)
     if (now - last).total_seconds() > 300:  # do not write on every request
         s.last_seen_at = now
+        # Sliding expiry: whoever uses TripAtlas regularly is never signed out; only unused sessions expire.
+        s.expires_at = now + timedelta(days=_session_days(s.kind))
         db.commit()
     return s.user
 

@@ -9,12 +9,15 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import __version__
 from ..auth.deps import current_user, visible_trackers
+from ..config import get_config
 from ..core.countries import country_code
 from ..core.geo import distance_km
 from ..db.models import Annotation, Role, Stay, Trip, User
 from ..db.session import get_db
 from ..integrations.immich import ImmichError
+from ..integrations.places import PlaceLookup
 from ..services import flights as flight_service
 from ..services import photos as photo_service
 from ..services import settings
@@ -101,6 +104,16 @@ def video(asset_id: str, request: Request, db: Session = Depends(get_db), user: 
         headers=headers,
         media_type=upstream.headers.get("content-type", "video/mp4"),
     )
+
+
+@router.get("/api/places/search")
+def place_search(q: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Find a place by name or address (OpenStreetMap) — used to set the home location."""
+    q = q.strip()
+    if len(q) < 3:
+        return []
+    with PlaceLookup(f"TripAtlas/{__version__} ({get_config().contact})") as lookup:
+        return lookup.search(q[:200], user.locale)
 
 
 @router.get("/api/places")

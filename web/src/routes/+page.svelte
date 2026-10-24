@@ -49,8 +49,13 @@
 	});
 	const trackerOf = (id: number) => trackers.find((tk) => tk.id === id);
 
+	let loaded = $state(false);
+	let busy = $state(false);
+
 	async function loadData() {
 		[trackers, trips] = await Promise.all([api.get<Tracker[]>('/api/trackers'), api.get<TripSummary[]>('/api/trips')]);
+		loaded = true;
+		if (!trips.length) watchFirstSync();
 		api.get<{ markers: [string, number, number][]; error?: string }>('/api/photos/markers').then((r) => {
 			allMarkers = r.markers;
 			photoNote = r.error ? t('photos_unavailable') : '';
@@ -61,6 +66,27 @@
 			const r = await api.get<{ points: TrackPoint[] }>(`/api/trips/${tr.id}/track`);
 			tracks.set(tr.id, r.points);
 			drawOverview();
+		}
+	}
+
+	/** Right after setup the history is still being fetched: say so, and load the trips as soon as it is done. */
+	async function watchFirstSync() {
+		for (let i = 0; i < 120; i++) {
+			const s = await api.get<{ busy: boolean }>('/api/setup/status').catch(() => ({ busy: false }));
+			busy = s.busy;
+			if (!s.busy && i > 0) break;
+			await new Promise((r) => setTimeout(r, 5000));
+		}
+		busy = false;
+		const fresh = await api.get<TripSummary[]>('/api/trips');
+		if (fresh.length) {
+			trips = fresh;
+			for (const tr of trips) {
+				const r = await api.get<{ points: TrackPoint[] }>(`/api/trips/${tr.id}/track`);
+				tracks.set(tr.id, r.points);
+			}
+			drawOverview();
+			fitAll();
 		}
 	}
 
@@ -184,7 +210,7 @@
 </script>
 
 <div class="layout">
-	<aside>
+	<aside class:trip-open={selectedId !== null}>
 		<AppHeader />
 		{#if selectedId && map}
 			<TripPanel
@@ -216,10 +242,15 @@
 				</div>
 				{#if photoNote}<p class="muted small">{photoNote}</p>{/if}
 
-				{#if !trips.length}
+				{#if !trips.length && loaded}
 					<div class="empty card">
-						<h3>{t('no_trips_title')}</h3>
-						<p class="muted">{t('no_trips_text')}</p>
+						{#if busy}
+							<h3><span class="spin" aria-hidden="true"></span> {t('loading_history_title')}</h3>
+							<p class="muted">{t('loading_history_text')}</p>
+						{:else}
+							<h3>{t('no_trips_title')}</h3>
+							<p class="muted">{t('no_trips_text')}</p>
+						{/if}
 					</div>
 				{/if}
 				{#each byYear as [year, list] (year)}
@@ -236,7 +267,7 @@
 								<strong>{tripTitle(tr, t('trip_untitled'))}</strong>
 								<span class="muted">{dateRange(tr.start, tr.end)}</span>
 								<span class="muted small">
-									{plural('nights', tr.nights)} · {km(tr.distance_km)}{#if tr.photo_count} · {plural('photos', tr.photo_count)}{/if}
+									{plural('nights', tr.nights)} · {km(tr.distance_km)}{#if tr.photo_count}{' · '}{plural('photos', tr.photo_count)}{/if}
 								</span>
 								<span class="flags">
 									{#if trackers.length > 1}<span class="dot" style="background:{tk?.color}" title={tk?.name}></span>{/if}
@@ -357,6 +388,21 @@
 	.pad {
 		padding: 16px;
 	}
+	.spin {
+		display: inline-block;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 2px solid var(--border);
+		border-top-color: var(--accent);
+		animation: spin 0.9s linear infinite;
+		vertical-align: -1px;
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
 	.empty {
 		padding: 16px;
 		box-shadow: none;
@@ -369,6 +415,10 @@
 		}
 		main {
 			grid-area: map;
+		}
+		/* with a trip open the back button is enough; the header would take a fifth of the screen */
+		aside.trip-open > :global(nav) {
+			display: none;
 		}
 		aside {
 			grid-area: side;

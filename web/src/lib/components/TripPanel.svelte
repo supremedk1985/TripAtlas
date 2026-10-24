@@ -2,7 +2,7 @@
 	// Details of one trip: header with cover, stats, time slider to replay the route, the timeline of drives and
 	// stays (with photos and "about this place"), and the editable title/note.
 	import { untrack } from 'svelte';
-	import { api, thumbUrl } from '$lib/api';
+	import { api, errorText, thumbUrl } from '$lib/api';
 	import { countryName, date, dateRange, dateTime, flag, km, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import type { MapControl } from '$lib/map/control';
@@ -61,7 +61,7 @@
 			});
 			api.get<{ entries: TimelineEntry[] }>(`/api/trips/${id}/timeline`).then((r) => (timeline = r.entries));
 		} catch (e) {
-			error = String(e);
+			error = errorText(e);
 		}
 	}
 
@@ -143,7 +143,7 @@
 			}
 			editing = null;
 		} catch (e) {
-			error = String(e);
+			error = errorText(e);
 		} finally {
 			saving = false;
 		}

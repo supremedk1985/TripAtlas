@@ -139,14 +139,14 @@ export default {
 	// household
 	household_name: 'Name of this TripAtlas',
 	home: 'Home',
-	home_hint: 'Tap your home on the map. Trips start when a tracker is further away than the radius.',
+	home_hint: 'Search your home or tap it on the map.',
 	home_required: 'Please set your home on the map.',
 	home_radius: 'Home radius (km)',
 	timezone: 'Time zone',
 	default_language: 'Default language',
 	history_start: 'Ignore positions before',
-	min_nights: 'A trip needs at least … nights',
-	min_distance: '… and at least … km from home',
+	min_nights: 'Minimum nights away',
+	min_distance: 'Minimum distance from home (km)',
 	place_info_enabled: 'Show information about places (Wikipedia, OpenStreetMap)',
 	place_info_hint:
 		'The coordinates of overnight stays are sent to these public services to look up names and articles. Turn off to keep everything local.',
@@ -201,7 +201,6 @@ export default {
 	// status
 	status_hint: 'TripAtlas fetches new positions, recognises trips and looks up places in the background every few minutes.',
 	status_running: 'Running right now…',
-	status_idle: 'Idle. Result of the last run:',
 	run_now: 'Run now',
 
 	// setup
@@ -213,11 +212,44 @@ export default {
 	setup_step_trackers: 'Trackers',
 	setup_step_done: 'Done',
 	password_rule: 'At least 8 characters.',
-	setup_home_text: 'Where do your trips start? Everything further away than the radius counts as "away".',
-	setup_connections_text: 'Connect Traccar for live tracking and Immich for photos. Both are optional and can be added later.',
+	setup_home_text: 'Where do your trips start? Everything further away than the home radius counts as "away".',
+	setup_connections_text: 'Connect Traccar for the tracks and Immich for the photos. Both are optional – with "Next" whatever you typed in is tested and saved.',
 	setup_trackers_text: 'Which vehicles or people do you want to follow? Add Traccar devices or create a tracker for imports.',
 	setup_done_title: 'All set!',
 	setup_done_text:
 		'TripAtlas now fetches the history of your trackers and recognises your trips. Depending on the amount of data this takes a few minutes.',
-	setup_finish: 'Start'
+	setup_finish: 'Start',
+
+	// added in the review of 24 October
+	ok: 'OK',
+	password_set: 'New password for {name} saved.',
+	loading_history_title: 'Fetching your history …',
+	loading_history_text: 'TripAtlas is reading the positions of your trackers and recognising trips. This page fills itself in when it is done – usually within a few minutes.',
+	home_suggested: 'Suggested from your trackers: they spent {nights} of {total} nights here. If that is not home, search or tap the right spot.',
+	home_search: 'Search a place or address',
+	search: 'Search',
+	home_refine: 'tap the map to move it',
+	detection_settings: 'Adjust trip detection',
+	detection_hint: 'A trip is a time away from home with at least {nights} away.',
+	save_and_next: 'Save and continue',
+	last_seen: 'last {when}',
+	choose_files: 'Choose files',
+	no_files: 'No file chosen',
+	status_idle_short: 'Idle',
+	status_last_run: 'last run {when} ({s} s)',
+	status_last_round: 'Last run',
+	status_sync_error: 'Traccar could not be read',
+	status_new_positions: '{name}: {n} new positions',
+	status_recomputed: '{name}: trips recognised again ({n})',
+	status_places_looked_up: '{n} places looked up',
+	status_flights_checked: 'Flight detection: {n} photos checked, {f} flights',
+	status_snapshot_written: 'Database backup written',
+	status_nothing_yet: 'Nothing yet – the first run starts after setup.',
+	status_inventory: 'What TripAtlas holds',
+	status_trips: 'Trips',
+	status_places: 'Places looked up',
+	status_flights: 'Flights',
+	status_checked: 'checked {when}',
+	status_backups: 'Database backups',
+	status_latest: 'latest'
 } as const;

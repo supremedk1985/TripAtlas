@@ -217,3 +217,14 @@ def test_cover_and_city():
     assert pick_cover(photos) == "a", "landscape images first"
     assert pick_cover([Photo("f", 1, 1, 1, is_favorite=True), *photos]) == "f", "favourites win"
     assert pick_cover([]) is None
+
+
+def test_suggest_home_is_where_most_nights_are_spent():
+    from tripatlas.core.detection import suggest_home
+
+    # 20 nights at home (tracker silent while parked: one point a day), 5 nights on a campsite
+    van = [Point(ts(d, 18), *HOME) for d in range(1, 21)] + [Point(ts(d, 18), *FAR) for d in range(21, 26)]
+    s = suggest_home([van], "Europe/Berlin")
+    assert abs(s["lat"] - HOME[0]) < 0.01 and abs(s["lon"] - HOME[1]) < 0.01
+    assert s["nights"] >= 19 and s["total"] >= s["nights"]
+    assert suggest_home([[]], "Europe/Berlin") is None

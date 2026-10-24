@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { api } from '$lib/api';
+	import { api, errorText } from '$lib/api';
 	import { LANGUAGES, t } from '$lib/i18n/index.svelte';
 	import { session, setUser } from '$lib/stores/session.svelte';
 	import type { User } from '$lib/types';
@@ -17,7 +17,7 @@
 			setUser(await api.put<User>('/api/auth/me', body));
 			msg = { ok: true, text: t('saved') };
 		} catch (err) {
-			msg = { ok: false, text: (err as Error).message };
+			msg = { ok: false, text: errorText(err) };
 		}
 	}
 </script>

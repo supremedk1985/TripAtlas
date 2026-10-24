@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 import httpx
 
 NOMINATIM = "https://nominatim.openstreetmap.org/reverse"
+NOMINATIM_SEARCH = "https://nominatim.openstreetmap.org/search"
 WIKIDATA = "https://www.wikidata.org/w/api.php"
 
 # MediaWiki API endpoints of child-friendly encyclopedias. Add your language here — see docs/contributing.md.
@@ -72,6 +73,26 @@ class PlaceLookup:
             return self._json(
                 NOMINATIM, lat=lat, lon=lon, format="jsonv2", zoom=10, extratags=1, **{"accept-language": lang}
             )
+
+    def search(self, query: str, lang: str, limit: int = 6) -> list[dict]:
+        """Places matching a name or address (for setting the home location)."""
+        global _nominatim_last
+        with _nominatim_lock:
+            wait = 1.1 - (time.monotonic() - _nominatim_last)
+            if wait > 0:
+                time.sleep(wait)
+            _nominatim_last = time.monotonic()
+            d = self._json(NOMINATIM_SEARCH, q=query, format="jsonv2", limit=limit, **{"accept-language": lang})
+        return [
+            {
+                "name": r.get("name") or r.get("display_name", "").split(",")[0],
+                "label": r.get("display_name"),
+                "lat": float(r["lat"]),
+                "lon": float(r["lon"]),
+            }
+            for r in (d or [])
+            if "lat" in r
+        ]
 
     def wikipedia_title(self, wikidata_id: str, lang: str) -> tuple[str, str] | None:
         """(language, title) of the Wikipedia article for a Wikidata item, preferring `lang`, then English."""

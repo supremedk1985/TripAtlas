@@ -17,6 +17,18 @@ function errorMessage(data: unknown, fallback: string): string {
 	return fallback;
 }
 
+/** Human-readable message of anything thrown (no "Error: " prefix). */
+export function errorText(e: unknown): string {
+	return e instanceof Error ? e.message : String(e);
+}
+
+// Called when the server says the session is gone (expired, signed out elsewhere) — the root layout sends the
+// user to the sign-in page instead of leaving a page full of errors.
+let unauthorized: (() => void) | null = null;
+export function onUnauthorized(handler: () => void) {
+	unauthorized = handler;
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
 	const init: RequestInit = { method, credentials: 'same-origin', headers: {} };
 	if (body instanceof FormData) init.body = body;
@@ -27,6 +39,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 	const res = await fetch(path, init);
 	if (res.status === 204) return undefined as T;
 	const data = await res.json().catch(() => null);
+	if (res.status === 401 && !path.startsWith('/api/auth/') && !path.startsWith('/api/setup/')) unauthorized?.();
 	if (!res.ok) throw new ApiError(res.status, errorMessage(data, res.statusText));
 	return data as T;
 }
