@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import mimetypes
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -17,6 +18,9 @@ from .db.session import migrate
 from .integrations.immich import ImmichError
 from .integrations.traccar import TraccarError
 from .services.jobs import jobs
+
+# Not in every system's MIME table; browsers only accept the manifest with the right type.
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 
 @asynccontextmanager

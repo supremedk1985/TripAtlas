@@ -160,3 +160,30 @@ def test_secrets_are_encrypted_at_rest(client):
 
         assert "super-secret-key" not in str(db.get(Setting, "immich").value)
     assert client.get("/api/settings/immich").json() == {"url": "http://immich:2283", "has_api_key": True}
+
+
+def test_import_gpx_twice_and_children_cannot_import(client):
+    setup_household(client)
+    tid = client.post("/api/trackers", json={"name": "Bike"}).json()["id"]
+    gpx = b"""<?xml version="1.0"?><gpx version="1.1" creator="t" xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg>
+      <trkpt lat="48.80" lon="2.30"><time>2024-05-01T10:00:00Z</time></trkpt>
+      <trkpt lat="48.81" lon="2.31"><time>2024-05-01T10:01:00Z</time></trkpt></trkseg></trk></gpx>"""
+    files = {"file": ("ride.gpx", gpx, "application/gpx+xml")}
+    r = client.post("/api/imports", data={"tracker_id": tid}, files=files)
+    assert r.status_code == 200 and r.json()["added"] == 2
+    again = client.post("/api/imports", data={"tracker_id": tid}, files=files).json()
+    assert again["added"] == 0 and again["skipped"] == 2, "importing the same file twice is harmless"
+    bad = client.post("/api/imports", data={"tracker_id": tid}, files={"file": ("x.gpx", b"not xml", "text/plain")})
+    assert bad.status_code == 400
+    client.post(
+        "/api/users",
+        json={
+            "username": "kid",
+            "display_name": "Kid",
+            "password": "kid-password",
+            "role": "child",
+            "tracker_ids": [tid],
+        },
+    )
+    login(client, "kid", "kid-password")
+    assert client.post("/api/imports", data={"tracker_id": tid}, files=files).status_code == 403
