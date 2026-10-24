@@ -1,6 +1,7 @@
 <script lang="ts">
-	// Full-screen photo viewer: arrows / swipe / keyboard, Escape closes.
-	import { thumbUrl } from '$lib/api';
+	// Full-screen photo and video viewer: arrows / swipe / keyboard, Escape closes. Whether an entry is a video is
+	// asked from the server per entry (map markers do not carry the type) unless the caller already knows it.
+	import { api, thumbUrl, videoUrl } from '$lib/api';
 	import { dateTime } from '$lib/format';
 	import { t } from '$lib/i18n/index.svelte';
 
@@ -8,11 +9,30 @@
 		ids,
 		index = $bindable(0),
 		times = {},
+		videos,
 		onclose
-	}: { ids: string[]; index?: number; times?: Record<string, number>; onclose: () => void } = $props();
+	}: {
+		ids: string[];
+		index?: number;
+		times?: Record<string, number>;
+		/** ids known to be videos; when omitted the viewer asks the server */
+		videos?: Set<string>;
+		onclose: () => void;
+	} = $props();
 
 	let touchX = 0;
 	const id = $derived(ids[index]);
+	let known = $state<Record<string, boolean>>({});
+	const isVideo = $derived(videos ? videos.has(id) : known[id]);
+
+	$effect(() => {
+		const current = id;
+		if (videos || current in known) return;
+		api
+			.get<{ is_video: boolean }>(`/api/photos/${current}/info`)
+			.then((r) => (known[current] = r.is_video))
+			.catch(() => (known[current] = false));
+	});
 
 	function go(delta: number) {
 		index = (index + delta + ids.length) % ids.length;
@@ -34,14 +54,20 @@
 	tabindex="-1"
 	ontouchstart={(e) => (touchX = e.touches[0].clientX)}
 	ontouchend={(e) => {
+		if (e.target instanceof HTMLVideoElement) return; // swiping on the player's controls is seeking, not paging
 		const dx = e.changedTouches[0].clientX - touchX;
 		if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
 	}}
 >
 	<button class="close icon-btn" onclick={onclose} aria-label={t('close')}>✕</button>
 	{#key id}
-		<!-- Small thumbnail first (usually cached), the large preview replaces it when loaded -->
-		<img class="photo" src={thumbUrl(id, 'preview')} alt="" style="background-image:url({thumbUrl(id)})" />
+		{#if isVideo}
+			<!-- svelte-ignore a11y_media_has_caption -->
+			<video class="photo" src={videoUrl(id)} poster={thumbUrl(id, 'preview')} controls autoplay playsinline></video>
+		{:else}
+			<!-- Small thumbnail first (usually cached), the large preview replaces it when loaded -->
+			<img class="photo" src={thumbUrl(id, 'preview')} alt="" style="background-image:url({thumbUrl(id)})" />
+		{/if}
 	{/key}
 	{#if ids.length > 1}
 		<button class="nav prev icon-btn" onclick={() => go(-1)} aria-label={t('previous')}>‹</button>
@@ -75,9 +101,14 @@
 		right: 12px;
 		z-index: 2;
 	}
+	video.photo {
+		width: 100%;
+		background: #000;
+	}
 	.nav {
 		position: absolute;
 		top: 50%;
+		z-index: 2;
 		font-size: 1.6em;
 		width: 1.8em;
 		height: 1.8em;

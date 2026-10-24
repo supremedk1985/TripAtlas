@@ -7,6 +7,8 @@ means one place to fix. Endpoints used:
   POST /api/search/metadata               assets taken in a period, with EXIF
   POST /api/search/smart                  CLIP search ("beautiful landscape") for cover images
   GET  /api/assets/{id}/thumbnail         image bytes
+  GET  /api/assets/{id}                   type, date, duration of one asset
+  GET  /api/assets/{id}/video/playback    video stream (supports Range)
 """
 
 from __future__ import annotations
@@ -89,6 +91,27 @@ class ImmichClient:
             },
         ).json()
         return [p for p in (asset_to_photo(a) for a in d.get("assets", {}).get("items", [])) if p]
+
+    def asset(self, asset_id: str) -> dict:
+        return self._call("GET", f"/api/assets/{asset_id}").json()
+
+    def open_video(self, asset_id: str, byte_range: str | None = None) -> httpx.Response:
+        """Start streaming a video. The caller must close the response. Range requests are passed through so
+        players can seek."""
+        headers = {"Accept": "*/*"}
+        if byte_range:
+            headers["Range"] = byte_range
+        req = self._http.build_request(
+            "GET", f"/api/assets/{asset_id}/video/playback", headers=headers, timeout=httpx.Timeout(30, read=300)
+        )
+        try:
+            r = self._http.send(req, stream=True)
+        except httpx.HTTPError as e:
+            raise ImmichError(f"Immich not reachable: {e}") from e
+        if r.status_code >= 400:
+            r.close()
+            raise ImmichError(f"Immich answered {r.status_code}")
+        return r
 
     def thumbnail(self, asset_id: str, size: str = "thumbnail") -> tuple[bytes, str]:
         r = self._call("GET", f"/api/assets/{asset_id}/thumbnail", params={"size": size}, headers={"Accept": "*/*"})

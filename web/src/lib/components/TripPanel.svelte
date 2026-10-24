@@ -89,6 +89,7 @@
 	});
 
 	const photoTimes = $derived(Object.fromEntries(photos.map((p) => [p.id, p.t])));
+	const videoIds = $derived(new Set(photos.filter((p) => p.is_video).map((p) => p.id)));
 	const inRange = $derived(photos.filter((p) => p.t >= from && p.t <= to));
 
 	function photosOf(e: TimelineEntry) {
@@ -99,7 +100,8 @@
 		control.openPhotos(
 			list.map((p) => p.id),
 			i,
-			photoTimes
+			photoTimes,
+			videoIds
 		);
 	}
 
@@ -235,7 +237,7 @@
 			{#if inRange.length}
 				<div class="strip">
 					{#each inRange.slice(0, 30) as p, i (p.id)}
-						<button onclick={() => openStrip(inRange, i)}><img src={thumbUrl(p.id)} alt="" loading="lazy" /></button>
+						<button onclick={() => openStrip(inRange, i)}><img src={thumbUrl(p.id)} alt="" loading="lazy" />{#if p.is_video}<span class="play" aria-label="Video">▶</span>{/if}</button>
 					{/each}
 				</div>
 			{/if}
@@ -273,7 +275,7 @@
 							{#if list.length}
 								<div class="strip small">
 									{#each list.slice(0, 8) as p, j (p.id)}
-										<button onclick={() => openStrip(list, j)}><img src={thumbUrl(p.id)} alt="" loading="lazy" /></button>
+										<button onclick={() => openStrip(list, j)}><img src={thumbUrl(p.id)} alt="" loading="lazy" />{#if p.is_video}<span class="play" aria-label="Video">▶</span>{/if}</button>
 									{/each}
 									{#if list.length > 8}<button class="more" onclick={() => openStrip(list, 8)}>+{list.length - 8}</button>{/if}
 								</div>
@@ -399,6 +401,7 @@
 		scrollbar-width: thin;
 	}
 	.strip button {
+		position: relative;
 		flex: none;
 		padding: 0;
 		border: 0;
@@ -413,9 +416,35 @@
 		display: block;
 	}
 	.strip.small img,
+	/* videos: a play sign on the thumbnail */
+	.play {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: #fff;
+		font-size: 18px;
+		text-shadow: 0 1px 4px rgb(0 0 0 / 70%);
+		background: rgb(0 0 0 / 18%);
+		border-radius: 8px;
+		pointer-events: none;
+	}
 	.strip .more {
 		width: 52px;
 		height: 52px;
+	}
+	/* videos: a play sign on the thumbnail */
+	.play {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: #fff;
+		font-size: 18px;
+		text-shadow: 0 1px 4px rgb(0 0 0 / 70%);
+		background: rgb(0 0 0 / 18%);
+		border-radius: 8px;
+		pointer-events: none;
 	}
 	.strip .more {
 		border-radius: 8px;

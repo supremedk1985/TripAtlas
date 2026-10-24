@@ -32,7 +32,7 @@
 	let allMarkers = $state<[string, number, number][]>([]);
 	let photoNote = $state('');
 	let tracks = new Map<number, TrackPoint[]>();
-	let viewer = $state<{ ids: string[]; index: number; times: Record<string, number> } | null>(null);
+	let viewer = $state<{ ids: string[]; index: number; times: Record<string, number>; videos?: Set<string> } | null>(null);
 	let selectedPoints: TrackPoint[] = [];
 	let selectedStays: { lat: number; lon: number }[] = [];
 
@@ -170,8 +170,8 @@
 		showTripPhotos(photos) {
 			tripPhotos = photos;
 		},
-		openPhotos(ids, index, times = {}) {
-			viewer = { ids, index, times };
+		openPhotos(ids, index, times = {}, videos) {
+			viewer = { ids, index, times, videos };
 		}
 	};
 
@@ -256,7 +256,7 @@
 </div>
 
 {#if viewer}
-	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} onclose={() => (viewer = null)} />
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} onclose={() => (viewer = null)} />
 {/if}
 
 <style>

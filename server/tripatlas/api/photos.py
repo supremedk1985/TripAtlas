@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -46,6 +46,54 @@ def thumbnail(
         raise HTTPException(404 if "404" in str(e) or "400" in str(e) else 502, str(e)) from e
     # Same id = same image, forever; private because it is the user's photo.
     return Response(data, media_type=kind, headers={"Cache-Control": "private, max-age=2592000, immutable"})
+
+
+@router.get("/api/photos/{asset_id}/info")
+def photo_info(asset_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Whether an asset is a video (the map markers do not say), when it was taken, how long it runs."""
+    if not _ASSET_ID.match(asset_id):
+        raise HTTPException(400, "Invalid request")
+    with photo_service.client_for(db, user) as c:
+        a = c.asset(asset_id)
+    return {
+        "id": asset_id,
+        "is_video": a.get("type") == "VIDEO",
+        "taken_at": a.get("localDateTime"),
+        "duration": a.get("duration"),
+    }
+
+
+@router.get("/api/photos/{asset_id}/video")
+def video(asset_id: str, request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Stream a video from Immich, passing Range through so the player can seek."""
+    if not _ASSET_ID.match(asset_id):
+        raise HTTPException(400, "Invalid request")
+    client = photo_service.client_for(db, user)
+    try:
+        upstream = client.open_video(asset_id, request.headers.get("range"))
+    except ImmichError:
+        client.close()
+        raise
+
+    def body():
+        try:
+            yield from upstream.iter_raw(256 * 1024)
+        finally:
+            upstream.close()
+            client.close()
+
+    headers = {
+        k: upstream.headers[k] for k in ("content-range", "accept-ranges", "content-length") if k in upstream.headers
+    }
+    # Already compressed — and the gzip middleware must not touch it (it would break Content-Length/Range).
+    headers["Content-Encoding"] = "identity"
+    headers["Cache-Control"] = "private, max-age=86400"
+    return StreamingResponse(
+        body(),
+        status_code=upstream.status_code,
+        headers=headers,
+        media_type=upstream.headers.get("content-type", "video/mp4"),
+    )
 
 
 @router.get("/api/places")

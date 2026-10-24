@@ -8,5 +8,5 @@ export interface MapControl {
 	fit(points: { lat: number; lon: number }[]): void;
 	focus(lat: number, lon: number, zoom?: number): void;
 	showTripPhotos(photos: Photo[]): void;
-	openPhotos(ids: string[], index: number, times?: Record<string, number>): void;
+	openPhotos(ids: string[], index: number, times?: Record<string, number>, videos?: Set<string>): void;
 }

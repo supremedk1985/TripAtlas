@@ -43,6 +43,10 @@ export function thumbUrl(assetId: string, size: 'thumbnail' | 'preview' = 'thumb
 	return `/api/photos/${assetId}/thumbnail?size=${size}`;
 }
 
+export function videoUrl(assetId: string): string {
+	return `/api/photos/${assetId}/video`;
+}
+
 export function query(params: Record<string, string | number | null | undefined>): string {
 	const q = new URLSearchParams();
 	for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined) q.set(k, String(v));
