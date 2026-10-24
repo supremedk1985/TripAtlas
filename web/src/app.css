@@ -296,3 +296,17 @@ button:focus-visible {
 	border-width: 2px;
 	box-shadow: 0 0 0 2px var(--c), 0 2px 6px rgb(0 0 0 / 40%);
 }
+
+/* ✈ in the middle of a flight arc on the "where I've been" globe */
+.flight-marker {
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	border: 2px solid var(--accent);
+	background: var(--surface);
+	color: var(--accent);
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: var(--shadow);
+}

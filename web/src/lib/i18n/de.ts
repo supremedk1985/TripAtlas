@@ -91,6 +91,12 @@ const de: Dictionary = {
 	stat_places: 'Orte',
 	first_visit: 'zuerst',
 	open_trip: 'Reise öffnen',
+	flights_one: '{n} Flug',
+	flights_other: '{n} Flüge',
+	flight: 'Flug',
+	flight_photos: '{n} Fotos aus dem Flugzeug',
+	flight_altitude: 'bis {m} m hoch',
+	kids_flight: 'Hier seid ihr geflogen!',
 	show_photos: 'Fotos ansehen',
 
 	kids_hello: 'Hallo {name}! 👋',

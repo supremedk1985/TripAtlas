@@ -133,7 +133,22 @@ export interface Pin {
 	cover_asset?: string;
 }
 
+export interface Flight {
+	start: number;
+	end: number;
+	max_altitude_m: number;
+	origin: [number, number] | null;
+	destination: [number, number] | null;
+	origin_name: string | null;
+	destination_name: string | null;
+	/** positions of the photos taken on board */
+	path: [number, number][];
+	photo_ids: string[];
+	cover_asset: string;
+}
+
 export interface Visited {
 	pins: Pin[];
+	flights: Flight[];
 	countries: { country: string; places: number; photos: number; nights: number }[];
 }

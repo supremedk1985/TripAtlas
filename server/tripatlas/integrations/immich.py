@@ -9,10 +9,14 @@ means one place to fix. Endpoints used:
   GET  /api/assets/{id}/thumbnail         image bytes
   GET  /api/assets/{id}                   type, date, duration of one asset
   GET  /api/assets/{id}/video/playback    video stream (supports Range)
+  GET  /api/assets/{id}/original          first bytes only (Range), for the EXIF GPS altitude
 """
 
 from __future__ import annotations
 
+import io
+
+import exifread
 import httpx
 
 from ..core.geo import iso_to_ts
@@ -91,6 +95,37 @@ class ImmichClient:
             },
         ).json()
         return [p for p in (asset_to_photo(a) for a in d.get("assets", {}).get("items", [])) if p]
+
+    def all_assets(self, page_size: int = 1000):
+        """Every asset with EXIF, page by page (generator)."""
+        page = 1
+        while page:
+            d = self._call(
+                "POST", "/api/search/metadata", json={"withExif": True, "size": page_size, "page": page}
+            ).json()
+            items = d.get("assets", {})
+            yield from items.get("items", [])
+            nxt = items.get("nextPage")
+            page = int(nxt) if nxt else 0
+
+    def gps_altitude(self, asset_id: str, head_bytes: int = 131072) -> float | None:
+        """GPS altitude in metres from the original's EXIF, reading only the first bytes. None if absent."""
+        r = self._call(
+            "GET", f"/api/assets/{asset_id}/original", headers={"Accept": "*/*", "Range": f"bytes=0-{head_bytes - 1}"}
+        )
+        try:
+            tags = exifread.process_file(io.BytesIO(r.content), details=False, stop_tag="GPS GPSAltitude")
+        except Exception:  # unreadable / unsupported container: treat as "no altitude"
+            return None
+        alt = tags.get("GPS GPSAltitude")
+        if not alt or not alt.values:
+            return None
+        v = alt.values[0]
+        value = float(v.num) / float(v.den) if getattr(v, "den", 1) else 0.0
+        ref = tags.get("GPS GPSAltitudeRef")
+        if ref and ref.values and ref.values[0] == 1:  # below sea level
+            value = -value
+        return round(value, 1)
 
     def asset(self, asset_id: str) -> dict:
         return self._call("GET", f"/api/assets/{asset_id}").json()

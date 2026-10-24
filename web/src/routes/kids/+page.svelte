@@ -9,11 +9,13 @@
 	import { countryName, date, flag, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import { session, setUser } from '$lib/stores/session.svelte';
-	import type { Pin, TripSummary, Visited } from '$lib/types';
+	import FlightSheet from '$lib/components/FlightSheet.svelte';
+	import type { Flight, Pin, TripSummary, Visited } from '$lib/types';
 
 	let trips = $state<TripSummary[]>([]);
 	let visited = $state<Visited | null>(null);
 	let pin = $state<Pin | null>(null);
+	let flight = $state<Flight | null>(null);
 	let viewer = $state<{ ids: string[]; index: number } | null>(null);
 	async function openPinPhotos(p: Pin) {
 		const v = await pinPhotos(p, p.cover_asset);
@@ -37,11 +39,21 @@
 	</header>
 
 	<section class="globe card">
-		<VisitedMap style="liberty" onpin={(p) => (pin = p)} onloaded={(v) => (visited = v)} />
+		<VisitedMap
+			style="liberty"
+			onpin={(p) => ((pin = p), (flight = null))}
+			onflight={(f) => ((flight = f), (pin = null))}
+			onloaded={(v) => (visited = v)}
+		/>
 		{#if visited}
 			<div class="badge">
 				{t('kids_countries', { n: visited.countries.length })}
 				<span class="flags">{visited.countries.map((c) => flag(c.country)).join(' ')}</span>
+			</div>
+		{/if}
+		{#if flight}
+			<div class="pin flight">
+				<FlightSheet {flight} kids onphotos={(ids, index) => (viewer = { ids, index })} onclose={() => (flight = null)} />
 			</div>
 		{/if}
 		{#if pin}
@@ -133,6 +145,14 @@
 		border-radius: 14px;
 		aspect-ratio: 4/3;
 		object-fit: cover;
+	}
+	.pin.flight {
+		padding: 0;
+		background: none;
+	}
+	.pin.flight :global(.sheet) {
+		position: relative;
+		border-radius: 20px;
 	}
 	.pin h2 {
 		margin: 10px 0 6px;

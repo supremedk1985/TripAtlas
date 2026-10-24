@@ -97,6 +97,12 @@ export default {
 	stat_places: 'places',
 	first_visit: 'first visit',
 	open_trip: 'Open trip',
+	flights_one: '{n} flight',
+	flights_other: '{n} flights',
+	flight: 'Flight',
+	flight_photos: '{n} photos taken on board',
+	flight_altitude: 'up to {m} m altitude',
+	kids_flight: 'Here you were flying!',
 	show_photos: 'Show photos',
 
 	// kids

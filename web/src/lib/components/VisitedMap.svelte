@@ -3,18 +3,25 @@
 	import maplibregl from 'maplibre-gl';
 	import { api } from '$lib/api';
 	import MapView from '$lib/map/MapView.svelte';
-	import { installPins } from '$lib/map/pinsLayer';
+	import { installFlights, installPins } from '$lib/map/pinsLayer';
 	import { boundsOf } from '$lib/map/trackLayer';
 	import type { MapStyleId } from '$lib/map/styles';
-	import type { Pin, Visited } from '$lib/types';
+	import type { Flight, Pin, Visited } from '$lib/types';
 
 	let {
 		style,
 		onpin,
+		onflight,
 		onloaded
-	}: { style?: MapStyleId; onpin: (pin: Pin) => void; onloaded?: (v: Visited) => void } = $props();
+	}: {
+		style?: MapStyleId;
+		onpin: (pin: Pin) => void;
+		onflight?: (f: Flight) => void;
+		onloaded?: (v: Visited) => void;
+	} = $props();
 
 	let visited: Visited | null = null;
+	let flightMarkers: maplibregl.Marker[] = [];
 
 	function colors() {
 		const css = getComputedStyle(document.documentElement);
@@ -22,7 +29,10 @@
 	}
 
 	function draw(map: maplibregl.Map) {
-		if (visited) installPins(map, visited.pins, visited.countries.map((c) => c.country), colors());
+		if (!visited) return;
+		installPins(map, visited.pins, visited.countries.map((c) => c.country), colors());
+		flightMarkers.forEach((m) => m.remove());
+		flightMarkers = installFlights(map, visited.flights ?? [], colors().pin, (f) => onflight?.(f));
 	}
 
 	function onReady(map: maplibregl.Map) {

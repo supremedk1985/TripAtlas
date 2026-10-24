@@ -15,6 +15,7 @@ from ..core.geo import distance_km
 from ..db.models import Annotation, Role, Stay, Trip, User
 from ..db.session import get_db
 from ..integrations.immich import ImmichError
+from ..services import flights as flight_service
 from ..services import photos as photo_service
 from ..services import settings
 from ..services.places import cached as cached_place
@@ -27,9 +28,14 @@ _ASSET_ID = re.compile(r"^[0-9a-f-]{36}$")
 
 @router.get("/api/photos/markers")
 def markers(db: Session = Depends(get_db), user: User = Depends(current_user)):
-    """Every geotagged photo the user can see in Immich: [[id, lat, lon], …] — compact, the map clusters them."""
+    """Every geotagged photo the user can see in Immich: [[id, lat, lon], …] — compact, the map clusters them.
+    Photos taken on board an aircraft are left out: their positions are places nobody visited."""
+    in_flight = flight_service.airborne_ids(db)
     try:
-        return {"markers": [[m["id"], round(m["lat"], 5), round(m["lon"], 5)] for m in photo_service.markers(db, user)]}
+        marks = photo_service.markers(db, user)
+        return {
+            "markers": [[m["id"], round(m["lat"], 5), round(m["lon"], 5)] for m in marks if m["id"] not in in_flight]
+        }
     except ImmichError as e:
         return {"markers": [], "error": str(e)}
 
@@ -118,7 +124,13 @@ def visited_photos(
         marks = photo_service.markers(db, user)
     except ImmichError:
         return {"ids": []}
-    ids = [m["id"] for m in marks if (city and m.get("city") == city) or distance_km(lat, lon, m["lat"], m["lon"]) <= 2]
+    in_flight = flight_service.airborne_ids(db)
+    ids = [
+        m["id"]
+        for m in marks
+        if m["id"] not in in_flight
+        and ((city and m.get("city") == city) or distance_km(lat, lon, m["lat"], m["lon"]) <= 2)
+    ]
     return {"ids": ids[:500]}
 
 
@@ -166,6 +178,10 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
         marks = photo_service.markers(db, user)
     except ImmichError:
         marks = []
+    # Photos taken on board an aircraft carry positions of places nobody visited — they become flights instead.
+    flight_data = flight_service.stored(db)
+    in_flight = set(flight_data.get("airborne", {}))
+    marks = [m for m in marks if m["id"] not in in_flight]
     groups: dict[tuple, list[dict]] = {}
     for m in marks:
         if m.get("city"):
@@ -207,4 +223,32 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
             c["places"] += 1
             c["photos"] += p["photos"]
             c["nights"] += p["nights"]
-    return {"pins": list(pins.values()), "countries": sorted(countries.values(), key=lambda c: -c["places"])}
+    visible = {m["id"] for m in photo_service.markers(db, user)} if marks or in_flight else set()
+    flights = []
+    for f in flight_data.get("flights", []):
+        ids = [i for i in f["photo_ids"] if i in visible]  # only flights with photos this user may see
+        if ids:
+            flights.append(
+                {
+                    **{
+                        k: f[k]
+                        for k in (
+                            "start",
+                            "end",
+                            "max_altitude_m",
+                            "origin",
+                            "destination",
+                            "origin_name",
+                            "destination_name",
+                            "path",
+                        )
+                    },
+                    "photo_ids": ids,
+                    "cover_asset": ids[len(ids) // 2],
+                }
+            )
+    return {
+        "pins": list(pins.values()),
+        "countries": sorted(countries.values(), key=lambda c: -c["places"]),
+        "flights": flights,
+    }

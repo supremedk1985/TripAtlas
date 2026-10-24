@@ -10,7 +10,8 @@
 	import VisitedMap from '$lib/components/VisitedMap.svelte';
 	import { countryName, date, flag } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
-	import type { Pin, Visited } from '$lib/types';
+	import FlightSheet from '$lib/components/FlightSheet.svelte';
+	import type { Flight, Pin, Visited } from '$lib/types';
 
 	let visited = $state<Visited | null>(null);
 	let pin = $state<Pin | null>(null);
@@ -20,11 +21,16 @@
 		if (v.ids.length) viewer = v;
 	}
 	let listOpen = $state(false);
+	let flight = $state<Flight | null>(null);
 	const totalPlaces = $derived(visited?.pins.length ?? 0);
 </script>
 
-<div class="page" class:has-pin={pin !== null}>
-	<VisitedMap onpin={(p) => (pin = p)} onloaded={(v) => (visited = v)} />
+<div class="page" class:has-pin={pin !== null || flight !== null}>
+	<VisitedMap
+		onpin={(p) => ((pin = p), (flight = null))}
+		onflight={(f) => ((flight = f), (pin = null))}
+		onloaded={(v) => (visited = v)}
+	/>
 	<AppHeader floating />
 
 	<div class="stats card" class:open={listOpen}>
@@ -33,6 +39,7 @@
 				<span class="numbers">
 					<span><strong>{visited.countries.length}</strong> {t('stat_countries')}</span>
 					<span><strong>{totalPlaces}</strong> {t('stat_places')}</span>
+					{#if visited.flights?.length}<span>✈ {plural('flights', visited.flights.length)}</span>{/if}
 				</span>
 				<span class="toggle" aria-hidden="true">{listOpen ? '▾' : '▴'}</span>
 				<span class="flags">{visited.countries.map((c) => flag(c.country)).join(' ')}</span>
@@ -46,6 +53,12 @@
 			<p class="muted">{t('loading')}</p>
 		{/if}
 	</div>
+
+	{#if flight}
+		<div class="detail flight-detail">
+			<FlightSheet {flight} onphotos={(ids, index) => (viewer = { ids, index })} onclose={() => (flight = null)} />
+		</div>
+	{/if}
 
 	{#if pin}
 		<div class="detail card">
@@ -108,7 +121,9 @@
 	}
 	.numbers {
 		display: flex;
-		gap: 16px;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 4px 16px;
 		color: var(--text-2);
 	}
 	.numbers strong {
@@ -140,6 +155,13 @@
 		overflow-y: auto;
 		padding: 14px 16px;
 		z-index: 4;
+	}
+	.flight-detail {
+		padding: 0;
+		overflow: visible;
+	}
+	.flight-detail :global(.sheet) {
+		position: relative;
 	}
 	.close {
 		position: absolute;

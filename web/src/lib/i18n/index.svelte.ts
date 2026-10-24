@@ -25,7 +25,7 @@ export function t(key: keyof typeof en, vars?: Record<string, string | number>):
 }
 
 /** Choose between singular and plural form: plural('nights', 3) → t('nights_other', {n: 3}) */
-export function plural(base: 'nights' | 'photos' | 'places' | 'countries' | 'trips', n: number): string {
+export function plural(base: 'nights' | 'photos' | 'places' | 'countries' | 'trips' | 'flights', n: number): string {
 	const key = (n === 1 ? `${base}_one` : `${base}_other`) as keyof typeof en;
 	return t(key, { n: n.toLocaleString(i18n.locale) });
 }

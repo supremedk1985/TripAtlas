@@ -203,3 +203,13 @@ class ImportJob(Base):
     skipped: Mapped[int] = mapped_column(Integer, default=0)
     message: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PhotoCheck(Base):
+    """GPS altitude read from a photo's EXIF (for flight detection, core/flights.py). One row per checked asset,
+    also when there was no altitude, so no photo is downloaded twice."""
+
+    __tablename__ = "photo_checks"
+    asset_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    altitude_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
