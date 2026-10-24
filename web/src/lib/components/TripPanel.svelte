@@ -52,7 +52,7 @@
 			from = detail.start;
 			to = detail.end;
 			const avatar = tracker?.has_avatar ? `/api/trackers/${tracker.id}/avatar` : undefined;
-			control.showTrip(points, detail.stays, tracker?.color ?? '#e4572e', avatar);
+			control.showTrip(points, detail.stays, tracker?.color ?? '#e4572e', avatar, tracker?.kind);
 			control.fit(points.map((p) => ({ lat: p[1], lon: p[2] })));
 			// Slower parts afterwards: photos and the timeline need Immich.
 			api.get<{ photos: Photo[] }>(`/api/trips/${id}/photos`).then((r) => {

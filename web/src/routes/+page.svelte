@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The explorer: trips of all visible trackers on one map, a photo layer independent of trackers, and the detail
 	// panel of a selected trip. The selected trip is in the URL (?trip=…) so it can be bookmarked and shared.
+	import { vehicleMarker } from '$lib/map/vehicleMarker';
 	import maplibregl from 'maplibre-gl';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -108,11 +109,13 @@
 		if (selectedId) return; // a selected trip has its own vehicle marker
 		for (const tk of trackers) {
 			if (!tk.latest || hidden.has(tk.id)) continue;
-			const el = document.createElement('div');
-			el.className = 'vehicle-marker live';
-			el.style.setProperty('--c', tk.color);
-			if (tk.has_avatar) el.style.backgroundImage = `url(/api/trackers/${tk.id}/avatar)`;
-			el.title = tk.name;
+			const el = vehicleMarker({
+				color: tk.color,
+				kind: tk.kind,
+				avatarUrl: tk.has_avatar ? `/api/trackers/${tk.id}/avatar` : undefined,
+				title: tk.name,
+				live: true
+			});
 			liveMarkers.push(new maplibregl.Marker({ element: el }).setLngLat([tk.latest.lon, tk.latest.lat]).addTo(map));
 		}
 	}
@@ -169,12 +172,12 @@
 	});
 
 	const control: MapControl = {
-		showTrip(points, stays, color, avatarUrl) {
+		showTrip(points, stays, color, avatarUrl, kind) {
 			selectedPoints = points;
 			selectedStays = stays;
 			trackLayer?.setVehicle(null);
 			trackLayer?.setSelected(points, points[0]?.[0] ?? 0, points.at(-1)?.[0] ?? 0, stays);
-			trackLayer?.setVehicle(positionAt(points, points.at(-1)?.[0] ?? 0), color, avatarUrl);
+			trackLayer?.setVehicle(positionAt(points, points.at(-1)?.[0] ?? 0), color, avatarUrl, kind);
 		},
 		setRange(from, to, follow) {
 			trackLayer?.setSelected(selectedPoints, from, to, selectedStays);

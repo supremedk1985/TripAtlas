@@ -1,10 +1,11 @@
 <script lang="ts">
 	// Choose, change or remove a profile picture. `path` is /api/auth/me/avatar or /api/users/<id>/avatar.
 	import { api, errorText } from '$lib/api';
-	import { avatarUrl, squareJpeg } from '$lib/avatar';
+	import { avatarUrl } from '$lib/avatar';
 	import { t } from '$lib/i18n/index.svelte';
 	import type { User } from '$lib/types';
 	import Avatar from './Avatar.svelte';
+	import AvatarCropper from './AvatarCropper.svelte';
 
 	let {
 		user,
@@ -24,17 +25,22 @@
 	let input: HTMLInputElement | undefined = $state();
 	let busy = $state(false);
 	let error = $state('');
+	let cropping = $state<File | null>(null);
 
-	async function chosen(e: Event) {
+	function chosen(e: Event) {
 		const file = (e.currentTarget as HTMLInputElement).files?.[0];
 		(e.currentTarget as HTMLInputElement).value = '';
-		if (!file) return;
-		busy = true;
 		error = '';
+		if (file) cropping = file;
+	}
+
+	async function upload(jpeg: Blob) {
+		cropping = null;
+		busy = true;
 		try {
-			onchange(await api.put<User>(path, await squareJpeg(file)));
+			onchange(await api.put<User>(path, jpeg));
 		} catch (err) {
-			error = err instanceof Error && err.message === 'encode' ? t('avatar_unreadable') : errorText(err);
+			error = errorText(err);
 		} finally {
 			busy = false;
 		}
@@ -67,6 +73,12 @@
 	<input bind:this={input} type="file" accept="image/*" hidden onchange={chosen} />
 	{#if error}<p class="error">{error}</p>{/if}
 </div>
+
+{#if cropping}
+	{#key cropping}
+		<AvatarCropper file={cropping} ondone={upload} oncancel={() => (cropping = null)} />
+	{/key}
+{/if}
 
 <style>
 	.picker {

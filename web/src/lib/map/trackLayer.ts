@@ -1,8 +1,9 @@
 // Tracks on the map: an overview of all trips (one line per trip in its tracker's colour) and the selected trip
 // (coloured per day, limited to the range of the time slider, stays as numbered markers).
+import { vehicleMarker } from './vehicleMarker';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import { DAY_COLORS } from '$lib/format';
-import type { TrackPoint } from '$lib/types';
+import type { TrackPoint, Tracker } from '$lib/types';
 
 // A jump of more than this between two points is a gap (tracker off), not a straight line through the landscape.
 const GAP_KM = 3;
@@ -144,17 +145,14 @@ export class TrackLayer {
 	}
 
 	/** The marker for "where was the vehicle at this moment" (end of the slider range). */
-	setVehicle(pos: [number, number] | null, color = '#e4572e', avatarUrl?: string) {
+	setVehicle(pos: [number, number] | null, color = '#e4572e', avatarUrl?: string, kind?: Tracker['kind']) {
 		if (!pos) {
 			this.vehicle?.remove();
 			this.vehicle = undefined;
 			return;
 		}
 		if (!this.vehicle) {
-			const el = document.createElement('div');
-			el.className = 'vehicle-marker';
-			el.style.setProperty('--c', color);
-			if (avatarUrl) el.style.backgroundImage = `url(${avatarUrl})`;
+			const el = vehicleMarker({ color, kind, avatarUrl });
 			this.vehicle = new maplibregl.Marker({ element: el }).setLngLat([pos[1], pos[0]]).addTo(this.map);
 		} else this.vehicle.setLngLat([pos[1], pos[0]]);
 	}

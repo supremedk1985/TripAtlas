@@ -15,6 +15,22 @@ async function draw(src: CanvasImageSource, w: number, h: number, size: number, 
 	return new Promise((ok, fail) => canvas.toBlob((b) => (b ? ok(b) : fail(new Error('encode'))), type, 0.86));
 }
 
+/** A square cut out of a picture (in the picture's own pixels), scaled to a small JPEG. */
+export async function cropJpeg(file: Blob, sx: number, sy: number, side: number, size = AVATAR_SIZE): Promise<Blob> {
+	const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+	try {
+		const canvas = document.createElement('canvas');
+		canvas.width = canvas.height = size;
+		const g = canvas.getContext('2d')!;
+		g.fillStyle = '#fff';
+		g.fillRect(0, 0, size, size);
+		g.drawImage(bmp, sx, sy, side, side, 0, 0, size, size);
+		return await new Promise((ok, fail) => canvas.toBlob((b) => (b ? ok(b) : fail(new Error('encode'))), 'image/jpeg', 0.86));
+	} finally {
+		bmp.close();
+	}
+}
+
 /** The middle square of a picture the user chose, as a small JPEG. */
 export async function squareJpeg(file: Blob, size = AVATAR_SIZE): Promise<Blob> {
 	const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
