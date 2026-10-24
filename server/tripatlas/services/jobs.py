@@ -1,5 +1,6 @@
 """The background loop: sync Traccar → recompute changed trackers → look up unknown places. One thread, one round
 every `sync_interval_minutes`; a round can also be requested (e.g. after an import or a settings change)."""
+
 from __future__ import annotations
 
 import logging
@@ -56,7 +57,7 @@ class BackgroundJobs:
                     return result
                 try:
                     result["synced"] = sync_all(db)
-                except Exception as e:   # noqa: BLE001 — a failing source must not stop the other steps
+                except Exception as e:  # a failing source must not stop the other steps
                     log.warning("Sync failed: %s", e)
                     result["sync_error"] = str(e)
                 result["recomputed"] = recompute_dirty(db)
@@ -82,7 +83,7 @@ def enrich_places(db, limit: int = PLACES_PER_ROUND) -> int:
             continue
         try:
             get_place(db, st.lat, st.lon, hh.default_locale)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:  # network trouble: try again next round
             log.info("Place lookup failed: %s", e)
             break
         done += 1

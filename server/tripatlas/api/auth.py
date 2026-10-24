@@ -1,4 +1,5 @@
 """Sign-in, sign-out, own profile."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -7,7 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..auth.deps import COOKIE_NAME, current_user
-from ..auth.security import (create_session, end_session, hash_password, login_throttle, verify_password)
+from ..auth.security import create_session, end_session, hash_password, login_throttle, verify_password
 from ..config import get_config
 from ..db.models import Role, User
 from ..db.session import get_db
@@ -18,15 +19,29 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def user_out(u: User) -> UserOut:
-    return UserOut(id=u.id, username=u.username, display_name=u.display_name, role=u.role, locale=u.locale,
-                   can_see_live=u.can_see_live, has_immich_key=bool(u.immich_api_key),
-                   tracker_ids=[t.id for t in u.trackers])
+    return UserOut(
+        id=u.id,
+        username=u.username,
+        display_name=u.display_name,
+        role=u.role,
+        locale=u.locale,
+        can_see_live=u.can_see_live,
+        has_immich_key=bool(u.immich_api_key),
+        tracker_ids=[t.id for t in u.trackers],
+    )
 
 
 def set_session_cookie(response: Response, token: str) -> None:
     cfg = get_config()
-    response.set_cookie(COOKIE_NAME, token, max_age=cfg.session_days * 86400, httponly=True, samesite="lax",
-                        secure=cfg.secure_cookies, path="/")
+    response.set_cookie(
+        COOKIE_NAME,
+        token,
+        max_age=cfg.session_days * 86400,
+        httponly=True,
+        samesite="lax",
+        secure=cfg.secure_cookies,
+        path="/",
+    )
 
 
 class LoginIn(BaseModel):

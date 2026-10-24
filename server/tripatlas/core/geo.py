@@ -1,10 +1,13 @@
 """Geometry and time helpers shared by all detectors. Pure functions, no I/O."""
+
 from __future__ import annotations
 
 import bisect
+import itertools
 import math
-from datetime import datetime, timezone
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import NamedTuple
 
 EARTH_RADIUS_KM = 6371.0
 
@@ -39,7 +42,7 @@ MAX_SEGMENT_KM = 5.0
 def path_length_km(points: Sequence[Point]) -> float:
     """Length of a track, skipping implausible jumps (see MAX_SEGMENT_KM)."""
     total = 0.0
-    for a, b in zip(points, points[1:]):
+    for a, b in itertools.pairwise(points):
         d = point_distance_km(a, b)
         if d < MAX_SEGMENT_KM:
             total += d
@@ -64,7 +67,7 @@ def thin_out(points: Sequence[Point], min_meters: float = 15, max_seconds: float
 def slice_by_time(points: Sequence[Point], start: float, end: float) -> list[Point]:
     """Points with start <= t <= end. `points` must be sorted by time."""
     times = [p.t for p in points]
-    return list(points[bisect.bisect_left(times, start):bisect.bisect_right(times, end)])
+    return list(points[bisect.bisect_left(times, start) : bisect.bisect_right(times, end)])
 
 
 def index_before(points: Sequence[Point], t: float) -> int:
@@ -114,4 +117,4 @@ def iso_to_ts(value: str) -> float:
 
 
 def ts_to_iso(ts: float) -> str:
-    return datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(ts, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

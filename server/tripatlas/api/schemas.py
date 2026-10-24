@@ -1,4 +1,5 @@
 """Request/response models shared by several routers."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -36,7 +37,7 @@ class UserUpdate(BaseModel):
     locale: str | None = None
     can_see_live: bool | None = None
     tracker_ids: list[int] | None = None
-    immich_api_key: str | None = None   # "" removes the personal key
+    immich_api_key: str | None = None  # "" removes the personal key
 
 
 class TrackerOut(BaseModel):

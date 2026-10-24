@@ -28,9 +28,20 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["tripatlas*"]
 
+[tool.setuptools.package-data]
+tripatlas = ["data/*.json", "migrations/script.py.mako", "migrations/versions/*.py"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+extend-exclude = ["tripatlas/migrations/versions"]
+
+[tool.ruff.lint]
+# Explicit rule set, so a new ruff release does not change what CI checks.
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+# B008: FastAPI's Depends()/File() in default arguments is the framework's idiom.
+# RUF001-003: German/English texts legitimately contain typographic characters.
+ignore = ["B008", "RUF001", "RUF002", "RUF003"]

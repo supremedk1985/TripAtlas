@@ -6,6 +6,7 @@
    "rawSignals": [{"position": {"LatLng": "48.85°, 2.35°", "timestamp": ...}}]}
   or (iOS) a list of segments with "visit"/"activity"/"timelinePath" and "geo:48.85,2.35" strings.
 """
+
 from __future__ import annotations
 
 import json
@@ -46,31 +47,42 @@ def parse_google(data: bytes) -> list[Point]:
         for loc in doc["locations"]:
             if "latitudeE7" not in loc:
                 continue
-            add(_ts(loc.get("timestamp") or loc.get("timestampMs")), (loc["latitudeE7"] / 1e7, loc["longitudeE7"] / 1e7),
-                (loc.get("velocity") or 0) * 3.6, loc.get("altitude") or 0)
+            add(
+                _ts(loc.get("timestamp") or loc.get("timestampMs")),
+                (loc["latitudeE7"] / 1e7, loc["longitudeE7"] / 1e7),
+                (loc.get("velocity") or 0) * 3.6,
+                loc.get("altitude") or 0,
+            )
     segments = doc.get("semanticSegments", []) if isinstance(doc, dict) else doc if isinstance(doc, list) else []
     for seg in segments:
         if not isinstance(seg, dict):
             continue
         for p in seg.get("timelinePath", []) or []:
-            if "time" in p:   # Android: absolute time per point
+            if "time" in p:  # Android: absolute time per point
                 add(_ts(p["time"]), _latlng(p.get("point", "")))
-            elif "durationMinutesOffsetFromStartTime" in p:   # iOS: minutes after the segment start
+            elif "durationMinutesOffsetFromStartTime" in p:  # iOS: minutes after the segment start
                 base = _ts(seg.get("startTime"))
                 if base is not None:
                     add(base + int(p["durationMinutesOffsetFromStartTime"]) * 60, _latlng(p.get("point", "")))
         visit = seg.get("visit")
         if visit:
             cand = visit.get("topCandidate", {})
-            ll = _latlng((cand.get("placeLocation") or {}).get("latLng", "") if isinstance(cand.get("placeLocation"), dict)
-                         else cand.get("placeLocation", ""))
+            ll = _latlng(
+                (cand.get("placeLocation") or {}).get("latLng", "")
+                if isinstance(cand.get("placeLocation"), dict)
+                else cand.get("placeLocation", "")
+            )
             for key in ("startTime", "endTime"):
                 add(_ts(seg.get(key)), ll)
     if isinstance(doc, dict):
         for sig in doc.get("rawSignals", []):
             pos = sig.get("position")
             if pos:
-                add(_ts(pos.get("timestamp")), _latlng(pos.get("LatLng", "")), (pos.get("speedMetersPerSecond") or 0) * 3.6,
-                    pos.get("altitudeMeters") or 0)
+                add(
+                    _ts(pos.get("timestamp")),
+                    _latlng(pos.get("LatLng", "")),
+                    (pos.get("speedMetersPerSecond") or 0) * 3.6,
+                    pos.get("altitudeMeters") or 0,
+                )
     out.sort(key=lambda x: x.t)
     return out

@@ -1,4 +1,5 @@
 """Passwords, session tokens and login throttling."""
+
 from __future__ import annotations
 
 import hashlib
@@ -38,8 +39,15 @@ def _token_hash(token: str) -> str:
 def create_session(db: DbSession, user: User, kind: str = "web", label: str = "") -> str:
     """Create a session and return the token. Only its hash is stored."""
     token = secrets.token_urlsafe(32)
-    db.add(Session(token_hash=_token_hash(token), user_id=user.id, kind=kind, label=label[:200],
-                   expires_at=utcnow() + timedelta(days=get_config().session_days if kind == "web" else 365)))
+    db.add(
+        Session(
+            token_hash=_token_hash(token),
+            user_id=user.id,
+            kind=kind,
+            label=label[:200],
+            expires_at=utcnow() + timedelta(days=get_config().session_days if kind == "web" else 365),
+        )
+    )
     db.commit()
     return token
 
@@ -55,7 +63,7 @@ def user_for_token(db: DbSession, token: str) -> User | None:
         return None
     now = utcnow()
     last = s.last_seen_at if s.last_seen_at.tzinfo else s.last_seen_at.replace(tzinfo=now.tzinfo)
-    if (now - last).total_seconds() > 300:   # do not write on every request
+    if (now - last).total_seconds() > 300:  # do not write on every request
         s.last_seen_at = now
         db.commit()
     return s.user
@@ -92,7 +100,7 @@ class LoginThrottle:
     def failed(self, *keys: str) -> None:
         with self._lock:
             for k in keys:
-                self._fails[k] = self._recent(k) + [time.monotonic()]
+                self._fails[k] = [*self._recent(k), time.monotonic()]
 
     def succeeded(self, *keys: str) -> None:
         with self._lock:

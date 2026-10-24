@@ -8,6 +8,7 @@ means one place to fix. Endpoints used:
   POST /api/search/smart                  CLIP search ("beautiful landscape") for cover images
   GET  /api/assets/{id}/thumbnail         image bytes
 """
+
 from __future__ import annotations
 
 import httpx
@@ -24,8 +25,9 @@ class ImmichClient:
     def __init__(self, url: str, api_key: str, timeout: float = 60):
         if not url or not api_key:
             raise ImmichError("Immich is not configured")
-        self._http = httpx.Client(base_url=url.rstrip("/"), timeout=timeout,
-                                  headers={"x-api-key": api_key, "Accept": "application/json"})
+        self._http = httpx.Client(
+            base_url=url.rstrip("/"), timeout=timeout, headers={"x-api-key": api_key, "Accept": "application/json"}
+        )
 
     def close(self) -> None:
         self._http.close()
@@ -61,8 +63,11 @@ class ImmichClient:
     def photos_between(self, start_iso: str, end_iso: str) -> list[Photo]:
         out, page = [], 1
         while page:
-            d = self._call("POST", "/api/search/metadata", json={"takenAfter": start_iso, "takenBefore": end_iso,
-                                                                  "withExif": True, "size": 1000, "page": page}).json()
+            d = self._call(
+                "POST",
+                "/api/search/metadata",
+                json={"takenAfter": start_iso, "takenBefore": end_iso, "withExif": True, "size": 1000, "page": page},
+            ).json()
             items = d.get("assets", {})
             out += [p for p in (asset_to_photo(a) for a in items.get("items", [])) if p]
             nxt = items.get("nextPage")
@@ -71,8 +76,18 @@ class ImmichClient:
         return out
 
     def smart_search(self, query: str, start_iso: str, end_iso: str, size: int = 20) -> list[Photo]:
-        d = self._call("POST", "/api/search/smart", json={"query": query, "takenAfter": start_iso, "takenBefore": end_iso,
-                                                           "type": "IMAGE", "withExif": True, "size": size}).json()
+        d = self._call(
+            "POST",
+            "/api/search/smart",
+            json={
+                "query": query,
+                "takenAfter": start_iso,
+                "takenBefore": end_iso,
+                "type": "IMAGE",
+                "withExif": True,
+                "size": size,
+            },
+        ).json()
         return [p for p in (asset_to_photo(a) for a in d.get("assets", {}).get("items", [])) if p]
 
     def thumbnail(self, asset_id: str, size: str = "thumbnail") -> tuple[bytes, str]:
@@ -91,7 +106,17 @@ def asset_to_photo(a: dict) -> Photo | None:
         return None
     e = a.get("exifInfo") or {}
     w, h = e.get("exifImageWidth"), e.get("exifImageHeight")
-    if str(e.get("orientation")) in ("5", "6", "7", "8"):   # stored rotated: swap
+    if str(e.get("orientation")) in ("5", "6", "7", "8"):  # stored rotated: swap
         w, h = h, w
-    return Photo(id=a["id"], t=t, lat=e.get("latitude"), lon=e.get("longitude"), is_video=a.get("type") == "VIDEO",
-                 is_favorite=bool(a.get("isFavorite")), city=e.get("city"), country=e.get("country"), width=w, height=h)
+    return Photo(
+        id=a["id"],
+        t=t,
+        lat=e.get("latitude"),
+        lon=e.get("longitude"),
+        is_video=a.get("type") == "VIDEO",
+        is_favorite=bool(a.get("isFavorite")),
+        city=e.get("city"),
+        country=e.get("country"),
+        width=w,
+        height=h,
+    )

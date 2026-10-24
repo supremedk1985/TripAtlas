@@ -1,6 +1,8 @@
 """(Re)compute the trip cache of a tracker from its positions."""
+
 from __future__ import annotations
 
+import contextlib
 import logging
 import time
 from datetime import datetime
@@ -39,14 +41,14 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
     found = detect_trips(points, s)
 
     immich = None
-    try:
+    with contextlib.suppress(ImmichError):  # no Immich: trips without photos
         immich = photo_service.client_for(db, None)
-    except ImmichError:
-        pass
 
     rows: list[Trip] = []
     for i, tr in enumerate(found):
-        ongoing = i == len(found) - 1 and tr.end > now - 2 * 3600 and points and not s.is_home(points[-1].lat, points[-1].lon)
+        ongoing = (
+            i == len(found) - 1 and tr.end > now - 2 * 3600 and points and not s.is_home(points[-1].lat, points[-1].lon)
+        )
         end = now if ongoing else tr.end
         part = slice_by_time(points, tr.start, end)
         stays = detect_stays(part, s)
@@ -56,9 +58,19 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
                 placed, _ = photo_service.tracker_photos(db, None, tracker, part, tr.start, end, s)
             except ImmichError as e:
                 log.warning("Photos for %s unavailable: %s", tracker.name, e)
-        trip = Trip(tracker_id=tracker.id, day_key=day_key(tr.start, s), start=tr.start, end=end, ongoing=ongoing,
-                    distance_km=tr.distance_km, farthest_km=tr.farthest_km, nights=tr.nights,
-                    dest_lat=tr.destination[0], dest_lon=tr.destination[1], photo_count=len(placed))
+        trip = Trip(
+            tracker_id=tracker.id,
+            day_key=day_key(tr.start, s),
+            start=tr.start,
+            end=end,
+            ongoing=ongoing,
+            distance_km=tr.distance_km,
+            farthest_km=tr.farthest_km,
+            nights=tr.nights,
+            dest_lat=tr.destination[0],
+            dest_lon=tr.destination[1],
+            photo_count=len(placed),
+        )
         if immich is not None and placed:
             trip.cover_asset = photo_service.choose_cover(immich, placed, tr.start, end)
         countries: list[str] = []
@@ -68,10 +80,19 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
             place = cached_place(db, st.lat, st.lon, hh.default_locale)
             if not name and place:
                 name = place.name
-            stay = Stay(tracker_id=tracker.id, day_key=day_key(st.arrival, s), arrival=st.arrival,
-                        departure=st.departure, lat=st.lat, lon=st.lon, nights=st.nights, place_name=name,
-                        country_code=place.country_code if place else None, photo_count=len(near),
-                        cover_asset=pick_cover(near, (st.lat, st.lon)))
+            stay = Stay(
+                tracker_id=tracker.id,
+                day_key=day_key(st.arrival, s),
+                arrival=st.arrival,
+                departure=st.departure,
+                lat=st.lat,
+                lon=st.lon,
+                nights=st.nights,
+                place_name=name,
+                country_code=place.country_code if place else None,
+                photo_count=len(near),
+                cover_asset=pick_cover(near, (st.lat, st.lon)),
+            )
             trip.stays.append(stay)
             if place and place.country_code and place.country_code not in countries:
                 countries.append(place.country_code)

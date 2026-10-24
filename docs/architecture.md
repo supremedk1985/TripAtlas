@@ -1,0 +1,65 @@
+# Architecture
+
+```
+            ┌───────────── TripAtlas container ─────────────┐
+ Traccar ──▶│ services/sync.py ──▶ positions (SQLite) ──┐    │
+ GPX/JSON ─▶│ importers/*       ──▶                     │    │
+            │                                           ▼    │
+            │ core/detection.py  (pure)  trips · stays · drives│
+ Immich ◀──▶│ services/photos.py  ──▶  core/photos.py (pure)  │
+ Wikipedia ◀│ services/places.py  (cached per ~1 km cell)     │
+ Nominatim ◀│                                                 │
+            │ api/*  (FastAPI, JSON)  ◀──  web/ (SvelteKit SPA)│◀── browser / app
+            └─────────────────────────────────────────────────┘
+```
+
+## Principles
+
+1. **One local source of positions.** Traccar is synced into the `positions` table; imports land there too. All
+   detection works on that table, so a trip before the tracker existed (imported GPX) and one recorded live look the
+   same.
+2. **Pure core.** Everything that decides *what a trip is* lives in `server/tripatlas/core/` — plain functions over
+   `Point`s, no database, no network, fully unit-tested. If you change a rule, change a test.
+3. **Detected data is a cache.** `trips` and `stays` are thrown away and rebuilt whenever positions or settings
+   change (`services/trips.py: recompute`). User content (titles, notes) lives in `annotations`, keyed by tracker +
+   kind + *local start day*, so it survives recomputation even when the start moves by a few minutes.
+4. **Read-only integrations.** TripAtlas never writes to Traccar or Immich. Everything specific to their APIs is in
+   `integrations/` — when Immich changes its API, that is the one file to fix.
+5. **Photos are not copied.** The web UI loads thumbnails through `/api/photos/{id}/thumbnail`, which proxies Immich
+   with the user's own key (or the household key). TripAtlas stores only counts and the cover photo id.
+6. **Security in the API, not the UI.** Role checks happen in `auth/deps.py` and in every endpoint; the children's
+   interface is a convenience, the protection is that the API refuses changes and hides live data
+   (`tests/test_api.py` locks this in).
+
+## Server layout (`server/tripatlas/`)
+
+| Package | Responsibility |
+|---|---|
+| `core/` | geometry, trip/stay/drive detection, photo matching, timeline, country codes — pure |
+| `db/` | SQLAlchemy models, engine/session; `migrations/` holds the Alembic history |
+| `integrations/` | HTTP clients: Traccar, Immich, OpenStreetMap/Wikipedia/Klexikon |
+| `importers/` | file formats → `Point`s |
+| `services/` | glue: settings (encrypted secrets), sync, recompute, photos, places, background jobs |
+| `auth/` | password hashing (Argon2), sessions, login throttle, FastAPI dependencies for roles |
+| `api/` | HTTP endpoints, grouped by topic |
+
+Background work runs in one thread (`services/jobs.py`): sync Traccar → recompute changed trackers → look up up to 20
+unknown places (Nominatim allows one request per second).
+
+## Web layout (`web/src/`)
+
+| Path | |
+|---|---|
+| `routes/+layout.svelte` | session loading and route guard (setup → login → kids) |
+| `routes/+page.svelte` | the map explorer; owns the map layers and implements `MapControl` |
+| `routes/visited` | globe with pins and visited countries |
+| `routes/kids` | children's home and trip stories |
+| `routes/settings`, `routes/setup` | settings tabs; the wizard reuses the same forms |
+| `lib/map/` | MapLibre wrapper and layers (tracks, photo stacks, pins) — no Svelte inside layers |
+| `lib/components/` | panels and widgets |
+| `lib/i18n/` | dictionaries; `en.ts` is the reference |
+
+## Data model
+
+`users` ←→ `user_trackers` ←→ `trackers` → `positions` (tracker_id, t) · `trips` → `stays` (cache) ·
+`annotations` (tracker, kind, day_key) · `places` (cell, lang) · `settings` (key → JSON) · `sessions` · `import_jobs`

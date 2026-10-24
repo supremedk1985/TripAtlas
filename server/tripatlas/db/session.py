@@ -1,5 +1,6 @@
 """Engine and session factory. One short-lived session per request (FastAPI runs sync endpoints in a thread pool,
 so connections must never be shared between requests)."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -22,13 +23,15 @@ def get_engine() -> Engine:
         kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
     engine = create_engine(url, **kwargs)
     if url.startswith("sqlite"):
+
         @event.listens_for(engine, "connect")
         def _sqlite_pragmas(conn, _record):
             cur = conn.cursor()
-            cur.execute("PRAGMA journal_mode=WAL")      # readers do not block the sync writer
+            cur.execute("PRAGMA journal_mode=WAL")  # readers do not block the sync writer
             cur.execute("PRAGMA foreign_keys=ON")
             cur.execute("PRAGMA synchronous=NORMAL")
             cur.close()
+
     return engine
 
 
@@ -65,8 +68,8 @@ def migrate() -> None:
     from alembic import command
     from alembic.config import Config as AlembicConfig
 
-    root = Path(__file__).resolve().parent.parent.parent
-    cfg = AlembicConfig(str(root / "alembic.ini"))
-    cfg.set_main_option("script_location", str(root / "migrations"))
+    # No alembic.ini needed at runtime — the migrations ship inside the package (alembic.ini is for the CLI).
+    cfg = AlembicConfig()
+    cfg.set_main_option("script_location", str(Path(__file__).resolve().parent.parent / "migrations"))
     cfg.set_main_option("sqlalchemy.url", get_config().db_url)
     command.upgrade(cfg, "head")

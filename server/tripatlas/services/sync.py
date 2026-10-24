@@ -1,4 +1,5 @@
 """Pull new positions from Traccar into the local database."""
+
 from __future__ import annotations
 
 import logging
@@ -15,8 +16,8 @@ from .positions import add_points
 
 log = logging.getLogger(__name__)
 
-CHUNK_S = 30 * 86400          # one request per 30 days of history
-OVERLAP_S = 3600              # re-read the last hour: positions can arrive late (buffered by the tracker)
+CHUNK_S = 30 * 86400  # one request per 30 days of history
+OVERLAP_S = 3600  # re-read the last hour: positions can arrive late (buffered by the tracker)
 DEFAULT_HISTORY_DAYS = 365 * 3
 
 
@@ -32,8 +33,11 @@ def sync_tracker(db: Session, client: TraccarClient, tracker: Tracker, now: floa
         return 0
     now = now or time.time()
     hh = settings.household(db)
-    start = tracker.synced_until - OVERLAP_S if tracker.synced_until else (
-        iso_to_ts(hh.history_start) if hh.history_start else now - DEFAULT_HISTORY_DAYS * 86400)
+    start = (
+        tracker.synced_until - OVERLAP_S
+        if tracker.synced_until
+        else (iso_to_ts(hh.history_start) if hh.history_start else now - DEFAULT_HISTORY_DAYS * 86400)
+    )
     added = 0
     while start < now:
         end = min(start + CHUNK_S, now)

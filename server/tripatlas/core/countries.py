@@ -1,6 +1,7 @@
 """Country names → ISO 3166-1 alpha-2 codes. Sources name countries differently (Immich: "The Netherlands",
 Nominatim in German: "Niederlande"); TripAtlas stores codes and lets the client translate them
 (e.g. Intl.DisplayNames in the browser). Data: tools/build_countries.py."""
+
 from __future__ import annotations
 
 import json

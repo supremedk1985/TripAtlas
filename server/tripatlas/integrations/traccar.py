@@ -1,7 +1,8 @@
 """Minimal Traccar REST client (tested against Traccar 6.x). Read-only: TripAtlas never writes to Traccar."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 
@@ -56,11 +57,13 @@ class TraccarClient:
         return self._get("/api/positions")
 
     def positions(self, device_id: int, start: float, end: float) -> list[Point]:
-        return points_from_traccar(self._get("/api/positions", deviceId=device_id, **{"from": _iso(start), "to": _iso(end)}))
+        return points_from_traccar(
+            self._get("/api/positions", deviceId=device_id, **{"from": _iso(start), "to": _iso(end)})
+        )
 
 
 def _iso(ts: float) -> str:
-    return datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(ts, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def points_from_traccar(raw: list[dict]) -> list[Point]:
@@ -70,8 +73,15 @@ def points_from_traccar(raw: list[dict]) -> list[Point]:
         if p.get("valid") is False:
             continue
         try:
-            out.append(Point(iso_to_ts(p["fixTime"]), p["latitude"], p["longitude"],
-                             round((p.get("speed") or 0) * KNOTS_TO_KMH, 1), round(p.get("altitude") or 0)))
+            out.append(
+                Point(
+                    iso_to_ts(p["fixTime"]),
+                    p["latitude"],
+                    p["longitude"],
+                    round((p.get("speed") or 0) * KNOTS_TO_KMH, 1),
+                    round(p.get("altitude") or 0),
+                )
+            )
         except (KeyError, TypeError, ValueError):
             continue
     out.sort(key=lambda x: x.t)

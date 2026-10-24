@@ -3,6 +3,7 @@
 - Wikidata / Wikipedia REST API: summaries and nearby articles.
 - Child-friendly encyclopedias per language (KIDS_SOURCES): Klexikon (de), Simple English Wikipedia (en).
 Results are cached in the `places` table (services/places.py), so each place is looked up once."""
+
 from __future__ import annotations
 
 import threading
@@ -68,13 +69,20 @@ class PlaceLookup:
             if wait > 0:
                 time.sleep(wait)
             _nominatim_last = time.monotonic()
-            return self._json(NOMINATIM, lat=lat, lon=lon, format="jsonv2", zoom=10, extratags=1,
-                              **{"accept-language": lang})
+            return self._json(
+                NOMINATIM, lat=lat, lon=lon, format="jsonv2", zoom=10, extratags=1, **{"accept-language": lang}
+            )
 
     def wikipedia_title(self, wikidata_id: str, lang: str) -> tuple[str, str] | None:
         """(language, title) of the Wikipedia article for a Wikidata item, preferring `lang`, then English."""
-        d = self._json(WIKIDATA, action="wbgetentities", ids=wikidata_id, props="sitelinks",
-                       sitefilter=f"{lang}wiki|enwiki", format="json")
+        d = self._json(
+            WIKIDATA,
+            action="wbgetentities",
+            ids=wikidata_id,
+            props="sitelinks",
+            sitefilter=f"{lang}wiki|enwiki",
+            format="json",
+        )
         links = ((d or {}).get("entities", {}).get(wikidata_id, {}) or {}).get("sitelinks", {})
         for code in (lang, "en"):
             if f"{code}wiki" in links:
@@ -82,16 +90,30 @@ class PlaceLookup:
         return None
 
     def summary(self, lang: str, title: str) -> dict | None:
-        return self._json(f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/"
-                          + urllib.parse.quote(title.replace(" ", "_"), safe=""))
+        return self._json(
+            f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/"
+            + urllib.parse.quote(title.replace(" ", "_"), safe="")
+        )
 
     def nearby(self, lat: float, lon: float, lang: str, radius_m: int = 10000, limit: int = 8) -> list[dict]:
-        d = self._json(f"https://{lang}.wikipedia.org/w/api.php", action="query", list="geosearch",
-                       gscoord=f"{lat}|{lon}", gsradius=radius_m, gslimit=limit, format="json")
+        d = self._json(
+            f"https://{lang}.wikipedia.org/w/api.php",
+            action="query",
+            list="geosearch",
+            gscoord=f"{lat}|{lon}",
+            gsradius=radius_m,
+            gslimit=limit,
+            format="json",
+        )
         out = []
         for a in (d or {}).get("query", {}).get("geosearch", []):
-            out.append({"title": a["title"], "distance_m": round(a.get("dist", 0)),
-                        "url": f"https://{lang}.wikipedia.org/wiki/" + urllib.parse.quote(a["title"].replace(" ", "_"))})
+            out.append(
+                {
+                    "title": a["title"],
+                    "distance_m": round(a.get("dist", 0)),
+                    "url": f"https://{lang}.wikipedia.org/wiki/" + urllib.parse.quote(a["title"].replace(" ", "_")),
+                }
+            )
         return out
 
     def kids_intro(self, lang: str, candidates: list[str]) -> tuple[str, str] | None:
@@ -101,8 +123,9 @@ class PlaceLookup:
             return None
         api, base = src
         for title in [c for c in candidates if c]:
-            d = self._json(api, action="query", prop="extracts", exintro=1, explaintext=1, titles=title,
-                           redirects=1, format="json")
+            d = self._json(
+                api, action="query", prop="extracts", exintro=1, explaintext=1, titles=title, redirects=1, format="json"
+            )
             for page in ((d or {}).get("query", {}).get("pages", {}) or {}).values():
                 text = (page.get("extract") or "").strip()
                 if text and "missing" not in page:

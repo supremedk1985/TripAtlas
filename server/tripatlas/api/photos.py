@@ -1,4 +1,5 @@
-"""The photo layer (all geotagged photos, independent of trackers), thumbnails, places and the "where I've been" pins."""
+"""The photo layer (all geotagged photos, independent of trackers), thumbnails, places and "where I've been" pins."""
+
 from __future__ import annotations
 
 import re
@@ -33,14 +34,16 @@ def markers(db: Session = Depends(get_db), user: User = Depends(current_user)):
 
 
 @router.get("/api/photos/{asset_id}/thumbnail")
-def thumbnail(asset_id: str, size: str = "thumbnail", db: Session = Depends(get_db), user: User = Depends(current_user)):
+def thumbnail(
+    asset_id: str, size: str = "thumbnail", db: Session = Depends(get_db), user: User = Depends(current_user)
+):
     if not _ASSET_ID.match(asset_id) or size not in ("thumbnail", "preview"):
         raise HTTPException(400, "Invalid request")
     try:
         with photo_service.client_for(db, user) as c:
             data, kind = c.thumbnail(asset_id, size)
     except ImmichError as e:
-        raise HTTPException(404 if "404" in str(e) or "400" in str(e) else 502, str(e))
+        raise HTTPException(404 if "404" in str(e) or "400" in str(e) else 502, str(e)) from e
     # Same id = same image, forever; private because it is the user's photo.
     return Response(data, media_type=kind, headers={"Cache-Control": "private, max-age=2592000, immutable"})
 
@@ -68,15 +71,30 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
         q = select(Stay, Trip).join(Trip, Stay.trip_id == Trip.id).where(Stay.tracker_id.in_(tracker_ids))
         if not user.can_see_live:
             q = q.where(Trip.ongoing.is_(False))
-        titles = {(a.tracker_id, a.day_key): a.title for a in
-                  db.scalars(select(Annotation).where(Annotation.kind == "stay", Annotation.tracker_id.in_(tracker_ids)))}
+        titles = {
+            (a.tracker_id, a.day_key): a.title
+            for a in db.scalars(
+                select(Annotation).where(Annotation.kind == "stay", Annotation.tracker_id.in_(tracker_ids))
+            )
+        }
         for st, trip in db.execute(q):
             place = cached_place(db, st.lat, st.lon, user.locale)
             name = titles.get((st.tracker_id, st.day_key)) or st.place_name or (place.name if place else None)
             key = f"stay:{round(st.lat, 2)},{round(st.lon, 2)}"
-            pin = pins.setdefault(key, {"lat": st.lat, "lon": st.lon, "name": name,
-                                        "country": st.country_code or (place.country_code if place else None),
-                                        "nights": 0, "photos": 0, "first": st.arrival, "trip_ids": [], "kind": "stay"})
+            pin = pins.setdefault(
+                key,
+                {
+                    "lat": st.lat,
+                    "lon": st.lon,
+                    "name": name,
+                    "country": st.country_code or (place.country_code if place else None),
+                    "nights": 0,
+                    "photos": 0,
+                    "first": st.arrival,
+                    "trip_ids": [],
+                    "kind": "stay",
+                },
+            )
             pin["nights"] += st.nights
             pin["first"] = min(pin["first"], st.arrival)
             if trip.id not in pin["trip_ids"]:
@@ -93,16 +111,31 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
     for (city, country), ms in groups.items():
         lat = sum(m["lat"] for m in ms) / len(ms)
         lon = sum(m["lon"] for m in ms) / len(ms)
-        near = next((p for p in pins.values() if p["kind"] == "stay" and abs(p["lat"] - lat) < 0.05 and abs(p["lon"] - lon) < 0.08), None)
+        near = next(
+            (
+                p
+                for p in pins.values()
+                if p["kind"] == "stay" and abs(p["lat"] - lat) < 0.05 and abs(p["lon"] - lon) < 0.08
+            ),
+            None,
+        )
         if near:
             near["photos"] += len(ms)
             near["name"] = near["name"] or city
             near["country"] = near["country"] or country_code(country)
             continue
-        pins[f"city:{city}|{country}"] = {"lat": round(lat, 5), "lon": round(lon, 5), "name": city,
-                                          "country": country_code(country),
-                                          "nights": 0, "photos": len(ms), "first": None, "trip_ids": [], "kind": "photos",
-                                          "cover_asset": ms[len(ms) // 2]["id"]}
+        pins[f"city:{city}|{country}"] = {
+            "lat": round(lat, 5),
+            "lon": round(lon, 5),
+            "name": city,
+            "country": country_code(country),
+            "nights": 0,
+            "photos": len(ms),
+            "first": None,
+            "trip_ids": [],
+            "kind": "photos",
+            "cover_asset": ms[len(ms) // 2]["id"],
+        }
 
     # Countries as ISO codes; the client shows localised names.
     countries: dict[str, dict] = {}

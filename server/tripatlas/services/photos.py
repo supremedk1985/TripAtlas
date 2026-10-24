@@ -1,12 +1,12 @@
 """Immich access per user, with small in-memory caches (Immich is local and fast, but a map with 40,000 markers
 should not be fetched on every pan)."""
+
 from __future__ import annotations
 
 import hashlib
 import threading
 import time
 from collections.abc import Callable
-from typing import TypeVar
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,12 +20,11 @@ from . import settings
 from .positions import load_points
 from .secrets import decrypt
 
-T = TypeVar("T")
 _cache: dict[tuple, tuple[float, object]] = {}
 _lock = threading.Lock()
 
 
-def cached(key: tuple, seconds: float, fetch: Callable[[], T]) -> T:
+def cached[T](key: tuple, seconds: float, fetch: Callable[[], T]) -> T:
     with _lock:
         hit = _cache.get(key)
         if hit and time.time() - hit[0] < seconds:
@@ -64,8 +63,12 @@ def key_id(db: Session, user: User | None) -> str:
 def markers(db: Session, user: User) -> list[dict]:
     def fetch():
         with client_for(db, user) as c:
-            return [{"id": m["id"], "lat": m["lat"], "lon": m["lon"], "city": m.get("city"), "country": m.get("country")}
-                    for m in c.map_markers() if m.get("lat") is not None and m.get("lon") is not None]
+            return [
+                {"id": m["id"], "lat": m["lat"], "lon": m["lon"], "city": m.get("city"), "country": m.get("country")}
+                for m in c.map_markers()
+                if m.get("lat") is not None and m.get("lon") is not None
+            ]
+
     return cached(("markers", key_id(db, user)), 300, fetch)
 
 
@@ -73,17 +76,27 @@ def photos_between(db: Session, user: User | None, start: float, end: float) -> 
     def fetch():
         with client_for(db, user) as c:
             return c.photos_between(ts_to_iso(start), ts_to_iso(end))
+
     ongoing = end > time.time() - 3600
     return cached(("period", key_id(db, user), int(start), int(end)), 120 if ongoing else 900, fetch)
 
 
 def higher_priority_tracks(db: Session, tracker: Tracker, start: float, end: float) -> list[list[Point]]:
-    others = db.scalars(select(Tracker).where(Tracker.id != tracker.id, Tracker.photo_priority > tracker.photo_priority))
+    others = db.scalars(
+        select(Tracker).where(Tracker.id != tracker.id, Tracker.photo_priority > tracker.photo_priority)
+    )
     return [pts for o in others if (pts := load_points(db, o.id, start - 6 * 3600, end + 6 * 3600))]
 
 
-def tracker_photos(db: Session, user: User | None, tracker: Tracker, points: list[Point], start: float, end: float,
-                   s: DetectionSettings) -> tuple[list[Photo], int]:
+def tracker_photos(
+    db: Session,
+    user: User | None,
+    tracker: Tracker,
+    points: list[Point],
+    start: float,
+    end: float,
+    s: DetectionSettings,
+) -> tuple[list[Photo], int]:
     """Photos taken on this tracker's journey between start and end, each with a location."""
     photos = photos_between(db, user, start, end)
     return place_photos(points, photos, s, higher_priority_tracks(db, tracker, start, end))

@@ -16,10 +16,14 @@ def parse_gpx(data: bytes) -> list[Point]:
             for p in seg.points:
                 if p.time is None:
                     continue
-                speed = p.speed * 3.6 if p.speed is not None else (
-                    p.speed_between(prev) * 3.6 if prev is not None and p.speed_between(prev) else 0.0)
-                out.append(Point(p.time.timestamp(), p.latitude, p.longitude, round(speed or 0, 1),
-                                 round(p.elevation or 0)))
+                speed = (
+                    p.speed * 3.6
+                    if p.speed is not None
+                    else (p.speed_between(prev) * 3.6 if prev is not None and p.speed_between(prev) else 0.0)
+                )
+                out.append(
+                    Point(p.time.timestamp(), p.latitude, p.longitude, round(speed or 0, 1), round(p.elevation or 0))
+                )
                 prev = p
     for p in gpx.waypoints:
         if p.time is not None:

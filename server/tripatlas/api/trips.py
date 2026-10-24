@@ -1,4 +1,5 @@
 """Trips, their timeline, photos and user annotations."""
+
 from __future__ import annotations
 
 import re
@@ -31,11 +32,25 @@ def _annotations(db: Session, tracker_ids: list[int], kind: str) -> dict[tuple[i
 
 
 def trip_summary(t: Trip, ann: Annotation | None) -> dict:
-    return {"id": t.id, "tracker_id": t.tracker_id, "day_key": t.day_key, "start": t.start, "end": t.end,
-            "ongoing": t.ongoing, "distance_km": t.distance_km, "farthest_km": t.farthest_km, "nights": t.nights,
-            "destination": [t.dest_lat, t.dest_lon], "auto_title": t.auto_title, "title": ann.title if ann else "",
-            "has_note": bool(ann and ann.note_html), "places": t.places or [], "countries": t.countries or [],
-            "photo_count": t.photo_count, "cover_asset": t.cover_asset}
+    return {
+        "id": t.id,
+        "tracker_id": t.tracker_id,
+        "day_key": t.day_key,
+        "start": t.start,
+        "end": t.end,
+        "ongoing": t.ongoing,
+        "distance_km": t.distance_km,
+        "farthest_km": t.farthest_km,
+        "nights": t.nights,
+        "destination": [t.dest_lat, t.dest_lon],
+        "auto_title": t.auto_title,
+        "title": ann.title if ann else "",
+        "has_note": bool(ann and ann.note_html),
+        "places": t.places or [],
+        "countries": t.countries or [],
+        "photo_count": t.photo_count,
+        "cover_asset": t.cover_asset,
+    }
 
 
 def _visible_trip(db: Session, user: User, trip_id: int) -> Trip:
@@ -70,11 +85,23 @@ def trip_detail(trip_id: int, db: Session = Depends(get_db), user: User = Depend
     out["stays"] = []
     for st in t.stays:
         a = stay_ann.get((t.tracker_id, st.day_key))
-        out["stays"].append({"id": st.id, "day_key": st.day_key, "arrival": st.arrival, "departure": st.departure,
-                             "lat": st.lat, "lon": st.lon, "nights": st.nights, "place_name": st.place_name,
-                             "country_code": st.country_code, "photo_count": st.photo_count,
-                             "cover_asset": st.cover_asset, "title": a.title if a else "",
-                             "note_html": a.note_html if a else ""})
+        out["stays"].append(
+            {
+                "id": st.id,
+                "day_key": st.day_key,
+                "arrival": st.arrival,
+                "departure": st.departure,
+                "lat": st.lat,
+                "lon": st.lon,
+                "nights": st.nights,
+                "place_name": st.place_name,
+                "country_code": st.country_code,
+                "photo_count": st.photo_count,
+                "cover_asset": st.cover_asset,
+                "title": a.title if a else "",
+                "note_html": a.note_html if a else "",
+            }
+        )
     return out
 
 
@@ -138,8 +165,13 @@ NOTE_ATTRIBUTES = {"a": {"href"}}
 
 
 def clean_note(html: str) -> str:
-    html = nh3.clean(html or "", tags=NOTE_TAGS, attributes=NOTE_ATTRIBUTES, url_schemes={"http", "https", "mailto"},
-                     link_rel="noopener noreferrer nofollow")
+    html = nh3.clean(
+        html or "",
+        tags=NOTE_TAGS,
+        attributes=NOTE_ATTRIBUTES,
+        url_schemes={"http", "https", "mailto"},
+        link_rel="noopener noreferrer nofollow",
+    )
     return html if _EMPTY_HTML.sub("", html) else ""
 
 
@@ -149,8 +181,11 @@ def put_annotation(body: AnnotationIn, db: Session = Depends(get_db), user: User
     tracker_for(db, user, body.tracker_id)
     html = clean_note(body.note_html)
     title = body.title.strip()
-    row = db.scalar(select(Annotation).where(Annotation.tracker_id == body.tracker_id, Annotation.kind == body.kind,
-                                             Annotation.day_key == body.day_key))
+    row = db.scalar(
+        select(Annotation).where(
+            Annotation.tracker_id == body.tracker_id, Annotation.kind == body.kind, Annotation.day_key == body.day_key
+        )
+    )
     if not title and not html:
         if row:
             db.delete(row)

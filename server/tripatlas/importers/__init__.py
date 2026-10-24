@@ -2,6 +2,7 @@
 
 To add a format: write `parse_<format>(data: bytes) -> list[Point]`, register it in IMPORTERS, add a test with a small
 sample file in tests/data/."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

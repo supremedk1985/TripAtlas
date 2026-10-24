@@ -1,4 +1,5 @@
 """Typed access to the household settings stored in the `settings` table."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -27,9 +28,14 @@ class HouseholdSettings(BaseModel):
     def detection(self) -> DetectionSettings | None:
         if self.home_lat is None or self.home_lon is None:
             return None
-        return DetectionSettings(home_lat=self.home_lat, home_lon=self.home_lon, timezone=self.timezone,
-                                 home_radius_km=self.home_radius_km, min_nights=self.min_trip_nights,
-                                 min_distance_km=self.min_trip_distance_km)
+        return DetectionSettings(
+            home_lat=self.home_lat,
+            home_lon=self.home_lon,
+            timezone=self.timezone,
+            home_radius_km=self.home_radius_km,
+            min_nights=self.min_trip_nights,
+            min_distance_km=self.min_trip_distance_km,
+        )
 
 
 class TraccarSettings(BaseModel):

@@ -1,4 +1,5 @@
 """User management (administrators only)."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -32,10 +33,15 @@ def list_users(db: Session = Depends(get_db), _: User = Depends(require_admin)):
 def create_user(body: UserCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     if db.scalar(select(User).where(func.lower(User.username) == body.username.lower())):
         raise HTTPException(409, "Username is taken")
-    u = User(username=body.username, display_name=body.display_name, password_hash=hash_password(body.password),
-             role=body.role, locale=body.locale if body.locale in LOCALES else "en",
-             # Children never see where someone is right now, unless an admin explicitly allows it.
-             can_see_live=body.can_see_live if body.can_see_live is not None else body.role != Role.child)
+    u = User(
+        username=body.username,
+        display_name=body.display_name,
+        password_hash=hash_password(body.password),
+        role=body.role,
+        locale=body.locale if body.locale in LOCALES else "en",
+        # Children never see where someone is right now, unless an admin explicitly allows it.
+        can_see_live=body.can_see_live if body.can_see_live is not None else body.role != Role.child,
+    )
     u.trackers = _trackers(db, body.tracker_ids)
     db.add(u)
     db.commit()

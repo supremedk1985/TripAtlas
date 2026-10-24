@@ -1,0 +1,216 @@
+// English — the reference dictionary. Every key used in the UI must exist here; other languages fall back to it.
+export default {
+	// general
+	loading: 'Loading…',
+	save: 'Save',
+	saved: 'Saved.',
+	cancel: 'Cancel',
+	close: 'Close',
+	back: 'Back',
+	next: 'Next',
+	previous: 'Previous',
+	add: 'Add',
+	delete: 'Delete',
+	remove: 'Remove',
+	hide: 'Hide',
+	name: 'Name',
+	color: 'Colour',
+	title: 'Title',
+	note: 'Note',
+	files: 'Files',
+	tracker: 'Tracker',
+	positions: 'positions',
+	error_server: 'The server cannot be reached.',
+
+	// plurals
+	nights_one: '{n} night',
+	nights_other: '{n} nights',
+	photos_one: '{n} photo',
+	photos_other: '{n} photos',
+	places_one: '{n} place',
+	places_other: '{n} places',
+	countries_one: '{n} country',
+	countries_other: '{n} countries',
+	trips_one: '{n} trip',
+	trips_other: '{n} trips',
+
+	// navigation
+	nav_map: 'Map',
+	nav_visited: "Where I've been",
+	nav_settings: 'Settings',
+	logout: 'Sign out',
+
+	// login
+	username: 'Username',
+	password: 'Password',
+	login: 'Sign in',
+	login_failed: 'Wrong username or password.',
+	login_throttled: 'Too many attempts. Please wait 15 minutes.',
+
+	// map page
+	layer_routes: 'Routes',
+	layer_photos: 'Photos',
+	map_style: 'Map style',
+	style_streets: 'Streets',
+	style_light: 'Light',
+	style_dark: 'Dark',
+	photos_unavailable: 'Photos are not available right now (Immich not reachable).',
+	no_trips_title: 'No trips yet',
+	no_trips_text:
+		'Trips appear here once a tracker has been away from home overnight. New positions are fetched every few minutes; imports are processed right away.',
+	trip_untitled: 'Trip',
+	trip_ongoing: 'on the road',
+
+	// trip panel
+	edit_title_note: 'Title & note',
+	title_placeholder: 'e.g. Summer in Brittany',
+	follow: 'Follow',
+	play: 'Play',
+	pause: 'Pause',
+	range_from: 'Start of the shown part',
+	range_to: 'End of the shown part',
+	whole_trip: 'Whole trip',
+	timeline: 'Timeline',
+	stay: 'Overnight stay',
+	drive: 'Drive',
+	on_the_road: 'On the road',
+	about_place: 'About this place',
+	note_bold: 'Bold',
+	note_italic: 'Italic',
+	note_underline: 'Underline',
+	note_heading: 'Heading',
+	note_list: 'List',
+	note_numbered: 'Numbered list',
+	note_link: 'Link',
+	note_link_prompt: 'Link address (empty removes the link):',
+
+	// places
+	place_loading: 'Looking up this place…',
+	place_unavailable: 'No information available.',
+	place_no_article: 'No encyclopedia article found for this place.',
+	place_read_more: 'Read more on Wikipedia',
+	place_nearby: 'Nearby',
+	place_credit: 'Text: Wikipedia / Klexikon (CC BY-SA). Place names: © OpenStreetMap contributors.',
+
+	// visited
+	stat_countries: 'countries',
+	stat_places: 'places',
+	first_visit: 'first visit',
+	open_trip: 'Open trip',
+
+	// kids
+	kids_hello: 'Hello {name}! 👋',
+	kids_countries: 'You have been to {n} countries!',
+	kids_our_trips: 'Our trips',
+	kids_back: 'All trips',
+	kids_intro: 'We were away for {nights} nights, drove {km} and slept in {places} different places.',
+	kids_did_you_know: 'Did you know?',
+	kids_read_more: 'Read more',
+	kids_the_end: 'And then we drove home.',
+
+	// settings tabs
+	tab_profile: 'Profile',
+	tab_import: 'Import',
+	tab_trackers: 'Trackers',
+	tab_users: 'Users',
+	tab_household: 'Household',
+	tab_connections: 'Connections',
+	tab_status: 'Status',
+
+	// profile
+	display_name: 'Display name',
+	language: 'Language',
+	change_password: 'Change password',
+	current_password: 'Current password',
+	new_password: 'New password',
+	own_immich_key: 'Your own Immich access',
+	own_immich_key_hint:
+		'Optional. With your own Immich API key you see your photos and those shared with you. Without one, the household key is used.',
+	stored_keep: '•••••• (stored — leave empty to keep)',
+	api_key: 'API key',
+
+	// household
+	household_name: 'Name of this TripAtlas',
+	home: 'Home',
+	home_hint: 'Tap your home on the map. Trips start when a tracker is further away than the radius.',
+	home_required: 'Please set your home on the map.',
+	home_radius: 'Home radius (km)',
+	timezone: 'Time zone',
+	default_language: 'Default language',
+	history_start: 'Ignore positions before',
+	min_nights: 'A trip needs at least … nights',
+	min_distance: '… and at least … km from home',
+	place_info_enabled: 'Show information about places (Wikipedia, OpenStreetMap)',
+	place_info_hint:
+		'The coordinates of overnight stays are sent to these public services to look up names and articles. Turn off to keep everything local.',
+
+	// connections
+	server_url: 'Server address',
+	traccar_hint: 'TripAtlas only reads from Traccar. Without Traccar you can still import GPX files and location histories.',
+	api_token: 'API token',
+	email_password: 'E-mail & password',
+	email: 'E-mail',
+	traccar_token_hint: 'Traccar → Settings → Preferences → Token. A read-only user is enough.',
+	traccar_ok: 'Connected to Traccar {version} — {n} devices.',
+	immich_hint: 'Photos come from Immich and stay there; TripAtlas only reads them.',
+	immich_key_hint: 'Immich → Account settings → API keys. This key is used for everyone without their own key.',
+	immich_ok: 'Connected to Immich {version} as {user}.',
+	test_and_save: 'Test & save',
+
+	// trackers
+	add_tracker: 'Add a tracker',
+	traccar_devices: 'Devices in Traccar — click to add:',
+	traccar_not_connected: 'Traccar is not connected — you can still add trackers for imports.',
+	tracker_manual_placeholder: 'Name, e.g. "Camper van" (for imports)',
+	import_only: 'imports only',
+	avatar_upload: 'Upload picture',
+	photo_priority: 'Photo priority',
+	photo_priority_hint:
+		'When several trackers travel together, photos go to the one with the highest priority (e.g. the camper van, not the car).',
+	tracker_delete_confirm: 'Delete "{name}" and all its positions? This cannot be undone.',
+
+	// users
+	role: 'Role',
+	role_admin: 'Administrator',
+	role_member: 'Member',
+	role_child: 'Child',
+	sees_trackers: 'Sees',
+	can_see_live: 'May see live positions',
+	child_hint: 'Children see a simplified, read-only view with child-friendly texts and never see where someone is right now.',
+	reset_password: 'New password',
+	new_password_for: 'New password for {name} (at least 8 characters):',
+	password_too_short: 'The password must be at least 8 characters long.',
+	user_delete_confirm: 'Delete the account of {name}?',
+	add_user: 'Add a user',
+
+	// import
+	import: 'Import',
+	importing: 'Importing…',
+	import_hint:
+		'GPX files, Google location history (Records.json from Takeout or the newer Timeline export) and GeoJSON. Positions that already exist are skipped.',
+	import_done: '{added} of {total} positions were new.',
+	import_history: 'Recent imports',
+
+	// status
+	status_hint: 'TripAtlas fetches new positions, recognises trips and looks up places in the background every few minutes.',
+	status_running: 'Running right now…',
+	status_idle: 'Idle. Result of the last run:',
+	run_now: 'Run now',
+
+	// setup
+	setup_title: 'Set up TripAtlas',
+	setup_welcome: 'Welcome! First, create the administrator account. You can add family members afterwards.',
+	setup_step_account: 'Account',
+	setup_step_home: 'Home',
+	setup_step_connections: 'Connections',
+	setup_step_trackers: 'Trackers',
+	setup_step_done: 'Done',
+	password_rule: 'At least 8 characters.',
+	setup_home_text: 'Where do your trips start? Everything further away than the radius counts as "away".',
+	setup_connections_text: 'Connect Traccar for live tracking and Immich for photos. Both are optional and can be added later.',
+	setup_trackers_text: 'Which vehicles or people do you want to follow? Add Traccar devices or create a tracker for imports.',
+	setup_done_title: 'All set!',
+	setup_done_text:
+		'TripAtlas now fetches the history of your trackers and recognises your trips. Depending on the amount of data this takes a few minutes.',
+	setup_finish: 'Start'
+} as const;

@@ -1,0 +1,298 @@
+/* Design tokens and base styles. Components use these variables only — change the look here. */
+:root {
+	--bg: #f6f7f9;
+	--surface: #ffffff;
+	--surface-2: #f0f2f5;
+	--border: #e2e5ea;
+	--text: #1c2330;
+	--text-2: #5b6575;
+	--accent: #0f766e;
+	--accent-2: #14b8a6;
+	--accent-text: #ffffff;
+	--warn: #b45309;
+	--danger: #b91c1c;
+	--ok: #15803d;
+	--shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 16px rgb(16 24 40 / 8%);
+	--radius: 14px;
+	--radius-sm: 9px;
+	--font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--sidebar: 400px;
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #0e1116;
+		--surface: #161b22;
+		--surface-2: #1e252e;
+		--border: #2b333d;
+		--text: #e6e9ee;
+		--text-2: #9aa4b2;
+		--accent: #2dd4bf;
+		--accent-2: #14b8a6;
+		--accent-text: #06201d;
+		--warn: #f59e0b;
+		--danger: #f87171;
+		--ok: #4ade80;
+		--shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 6px 20px rgb(0 0 0 / 35%);
+		color-scheme: dark;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--font);
+	font-size: 15px;
+	line-height: 1.45;
+	-webkit-font-smoothing: antialiased;
+}
+
+a {
+	color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+	line-height: 1.2;
+	margin: 0 0 0.5em;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
+	padding: 0.55em 1.05em;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	cursor: pointer;
+	font-weight: 550;
+	text-decoration: none;
+	color: var(--text);
+	white-space: nowrap;
+}
+.btn:hover {
+	background: var(--surface-2);
+}
+.btn.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-text);
+}
+.btn.primary:hover {
+	filter: brightness(1.08);
+}
+.btn.danger {
+	color: var(--danger);
+}
+.btn.small {
+	padding: 0.3em 0.75em;
+	font-size: 0.88em;
+}
+.btn:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+.icon-btn {
+	display: inline-grid;
+	place-items: center;
+	width: 2.3em;
+	height: 2.3em;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	cursor: pointer;
+	color: var(--text);
+}
+.icon-btn:hover {
+	background: var(--surface-2);
+}
+
+.field {
+	display: grid;
+	gap: 0.3em;
+	margin-bottom: 0.9em;
+}
+.field > span {
+	font-size: 0.85em;
+	font-weight: 600;
+	color: var(--text-2);
+}
+.field small {
+	color: var(--text-2);
+}
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='url'],
+input[type='date'],
+select,
+textarea {
+	width: 100%;
+	padding: 0.55em 0.75em;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--border);
+	background: var(--surface);
+	min-width: 0;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+}
+
+.muted {
+	color: var(--text-2);
+}
+.error {
+	color: var(--danger);
+}
+.success {
+	color: var(--ok);
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	padding: 0.25em 0.7em;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	font-size: 0.86em;
+	cursor: pointer;
+	user-select: none;
+}
+.chip.on {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--accent-text);
+}
+
+.row {
+	display: flex;
+	gap: 0.6em;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.spacer {
+	flex: 1;
+}
+
+.prose p {
+	margin: 0 0 0.6em;
+}
+.prose ul,
+.prose ol {
+	padding-left: 1.3em;
+}
+
+/* MapLibre popups follow the theme */
+.maplibregl-popup-content {
+	background: var(--surface) !important;
+	color: var(--text);
+	border-radius: var(--radius-sm) !important;
+	box-shadow: var(--shadow) !important;
+	padding: 10px 12px !important;
+}
+.maplibregl-popup-tip {
+	border-top-color: var(--surface) !important;
+	border-bottom-color: var(--surface) !important;
+}
+.maplibregl-ctrl-attrib {
+	font-size: 10px;
+}
+
+/* Photo stacks on the map (lib/map/photoLayer.ts creates them outside any component) */
+.photo-stack {
+	position: relative;
+	width: var(--size);
+	height: var(--size);
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	transform: rotate(var(--tilt));
+	transition: transform 0.15s;
+}
+.photo-marker:hover {
+	z-index: 2;
+}
+.photo-stack:hover {
+	transform: rotate(0deg) scale(1.12);
+}
+.photo-stack img,
+.photo-stack .paper {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border: 3px solid #fff;
+	border-radius: 6px;
+	box-shadow: 0 2px 6px rgb(0 0 0 / 35%);
+	background: #ddd;
+}
+.photo-stack .p1 {
+	transform: rotate(7deg) translate(3px, 1px);
+}
+.photo-stack .p2 {
+	transform: rotate(-6deg) translate(-3px, 2px);
+}
+.photo-stack .count {
+	position: absolute;
+	right: -8px;
+	top: -8px;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 6px;
+	border-radius: 11px;
+	background: var(--accent);
+	color: var(--accent-text);
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 22px;
+	box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+}
+
+.vehicle-marker {
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	border: 3px solid #fff;
+	background: var(--c) center / cover no-repeat;
+	box-shadow: 0 0 0 3px var(--c), 0 3px 10px rgb(0 0 0 / 40%);
+}
+.vehicle-marker.live {
+	width: 24px;
+	height: 24px;
+	border-width: 2px;
+	box-shadow: 0 0 0 2px var(--c), 0 2px 6px rgb(0 0 0 / 40%);
+}

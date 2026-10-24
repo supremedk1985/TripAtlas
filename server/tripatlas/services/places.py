@@ -1,8 +1,9 @@
 """Cached place lookups (name, country, encyclopedia summary) keyed by a ~1 km grid cell and language."""
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -35,8 +36,19 @@ def get_place(db: Session, lat: float, lon: float, lang: str, refresh: bool = Fa
     if row is None:
         row = Place(cell=cell_of(lat, lon), lang=lang)
         db.add(row)
-    for f in ("name", "country", "country_code", "wikidata", "article_title", "article_url", "summary",
-              "thumbnail_url", "kids_summary", "kids_url", "sights"):
+    for f in (
+        "name",
+        "country",
+        "country_code",
+        "wikidata",
+        "article_title",
+        "article_url",
+        "summary",
+        "thumbnail_url",
+        "kids_summary",
+        "kids_url",
+        "sights",
+    ):
         setattr(row, f, getattr(info, f))
     row.fetched_at = utcnow()
     db.commit()
@@ -44,7 +56,7 @@ def get_place(db: Session, lat: float, lon: float, lang: str, refresh: bool = Fa
 
 
 def _aware(dt: datetime) -> datetime:
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def place_dict(p: Place | None, kids: bool = False) -> dict | None:
@@ -54,6 +66,12 @@ def place_dict(p: Place | None, kids: bool = False) -> dict | None:
     if kids:
         d.update(summary=p.kids_summary, url=p.kids_url, thumbnail_url=p.thumbnail_url)
     else:
-        d.update(summary=p.summary, url=p.article_url, title=p.article_title, thumbnail_url=p.thumbnail_url,
-                 kids_summary=p.kids_summary, sights=p.sights or [])
+        d.update(
+            summary=p.summary,
+            url=p.article_url,
+            title=p.article_title,
+            thumbnail_url=p.thumbnail_url,
+            kids_summary=p.kids_summary,
+            sights=p.sights or [],
+        )
     return d

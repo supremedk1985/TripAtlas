@@ -1,4 +1,6 @@
 """Tests for the pure detection rules. Each case comes from a real situation; the comment says which."""
+
+import itertools
 from datetime import datetime
 
 import pytest
@@ -8,8 +10,8 @@ from tripatlas.core.geo import Point, position_at, thin_out
 from tripatlas.core.photos import Photo, claimed_by, matches_tracker, most_common_city, pick_cover, place_photos
 from tripatlas.core.timeline import build_timeline
 
-HOME = (51.95, 8.0)   # any place; the scenarios are relative to it
-FAR = (51.75, 10.0)          # ~120 km away
+HOME = (51.95, 8.0)  # any place; the scenarios are relative to it
+FAR = (51.75, 10.0)  # ~120 km away
 S = DetectionSettings(home_lat=HOME[0], home_lon=HOME[1], timezone="Europe/Berlin")
 
 
@@ -22,6 +24,7 @@ def at(place, start, end, step=900, speed=0):
 
 
 # --- trips ---------------------------------------------------------------------------------------------------------
+
 
 def test_simple_trip():
     t0 = 1_760_000_000
@@ -48,12 +51,22 @@ def test_day_trip_is_not_a_trip():
 
 
 def test_night_at_home_splits_trips():
-    pts = at(FAR, ts(1, 9), ts(3, 12)) + at(HOME, ts(3, 12), ts(5, 9)) + at(FAR, ts(5, 9), ts(8, 12)) + at(HOME, ts(8, 12), ts(8, 20))
+    pts = (
+        at(FAR, ts(1, 9), ts(3, 12))
+        + at(HOME, ts(3, 12), ts(5, 9))
+        + at(FAR, ts(5, 9), ts(8, 12))
+        + at(HOME, ts(8, 12), ts(8, 20))
+    )
     assert [t.nights for t in detect_trips(pts, S)] == [2, 3]
 
 
 def test_short_visit_home_during_the_day_keeps_one_trip():
-    pts = at(FAR, ts(1, 9), ts(3, 11)) + at(HOME, ts(3, 11), ts(3, 14)) + at(FAR, ts(3, 14), ts(5, 12)) + at(HOME, ts(5, 12), ts(5, 20))
+    pts = (
+        at(FAR, ts(1, 9), ts(3, 11))
+        + at(HOME, ts(3, 11), ts(3, 14))
+        + at(FAR, ts(3, 14), ts(5, 12))
+        + at(HOME, ts(5, 12), ts(5, 20))
+    )
     assert len(detect_trips(pts, S)) == 1
 
 
@@ -65,10 +78,17 @@ def test_silent_tracker_away_still_counts_the_night():
 # --- stays and timeline ------------------------------------------------------------------------------------------
 
 A, B, EXCURSION = (51.75, 10.0), (50.4, 1.6), (51.80, 10.15)
-JOURNEY = (at(HOME, ts(1, 6), ts(1, 9)) + at((51.8, 9.0), ts(1, 10), ts(1, 11)) + at(A, ts(1, 13), ts(2, 10))
-           + at(EXCURSION, ts(2, 10), ts(2, 16)) + at(A, ts(2, 16), ts(3, 9))
-           + at((51.0, 6.0), ts(3, 11), ts(3, 13)) + at(B, ts(3, 16), ts(4, 10)) + at((51.0, 6.0), ts(4, 13), ts(4, 14))
-           + at(HOME, ts(4, 18), ts(4, 22)))
+JOURNEY = (
+    at(HOME, ts(1, 6), ts(1, 9))
+    + at((51.8, 9.0), ts(1, 10), ts(1, 11))
+    + at(A, ts(1, 13), ts(2, 10))
+    + at(EXCURSION, ts(2, 10), ts(2, 16))
+    + at(A, ts(2, 16), ts(3, 9))
+    + at((51.0, 6.0), ts(3, 11), ts(3, 13))
+    + at(B, ts(3, 16), ts(4, 10))
+    + at((51.0, 6.0), ts(4, 13), ts(4, 14))
+    + at(HOME, ts(4, 18), ts(4, 22))
+)
 
 
 def test_stays_with_excursion():
@@ -85,25 +105,33 @@ def test_timeline():
     assert [e.kind for e in tl] == ["drive", "stay", "drive", "stay", "drive"]
     assert tl[1].photo_count == 1 and tl[1].place == "Riverton" and tl[1].cover_photo == "x"
     assert tl[2].photo_count == 1 and tl[2].place == "Aachen"
-    assert all(a.end == b.start for a, b in zip(tl, tl[1:])), "timeline has no gaps"
+    assert all(a.end == b.start for a, b in itertools.pairwise(tl)), "timeline has no gaps"
     assert build_timeline(JOURNEY[:-16], stays, [], S)[-1].kind == "ongoing"
 
 
 def test_dashcam_gap_at_same_place_counts_as_nights():
     # Dashcams only record while driving: three days without points at the same place are three nights there.
-    pts = at(HOME, ts(20, 8), ts(20, 9)) + at(A, ts(20, 18), ts(20, 19)) + at(A, ts(23, 10), ts(23, 11)) + at(HOME, ts(23, 20), ts(23, 21))
+    pts = (
+        at(HOME, ts(20, 8), ts(20, 9))
+        + at(A, ts(20, 18), ts(20, 19))
+        + at(A, ts(23, 10), ts(23, 11))
+        + at(HOME, ts(23, 20), ts(23, 21))
+    )
     stays = detect_stays(pts, S)
     assert len(stays) == 1 and stays[0].nights == 3
 
 
 # --- drives ----------------------------------------------------------------------------------------------------
 
+
 def test_drives_without_overnight():
-    pts = (at(HOME, ts(12, 6), ts(12, 8))
-           + [Point(ts(12, 8) + i * 60, HOME[0] + 0.01 * i, HOME[1], 60) for i in range(1, 21)]
-           + at((HOME[0] + 0.2, HOME[1]), ts(12, 8, 21), ts(12, 11))
-           + [Point(ts(12, 11) + i * 60, HOME[0] + 0.2 - 0.01 * i, HOME[1], 60) for i in range(1, 21)]
-           + [Point(ts(12, 15), HOME[0], HOME[1] + 0.0003, 3)])
+    pts = (
+        at(HOME, ts(12, 6), ts(12, 8))
+        + [Point(ts(12, 8) + i * 60, HOME[0] + 0.01 * i, HOME[1], 60) for i in range(1, 21)]
+        + at((HOME[0] + 0.2, HOME[1]), ts(12, 8, 21), ts(12, 11))
+        + [Point(ts(12, 11) + i * 60, HOME[0] + 0.2 - 0.01 * i, HOME[1], 60) for i in range(1, 21)]
+        + [Point(ts(12, 15), HOME[0], HOME[1] + 0.0003, 3)]
+    )
     drives = detect_drives(pts, S)
     assert len(drives) == 2
     assert drives[0].origin_is_home and not drives[0].destination_is_home and drives[1].destination_is_home
@@ -111,15 +139,23 @@ def test_drives_without_overnight():
 
 
 def test_gap_without_points_splits_drives():
-    pts = [Point(0, 50.0, 8.0, 60), Point(60, 50.01, 8.0, 60), Point(3600, 50.01, 8.0, 0),
-           Point(3660, 50.02, 8.0, 60), Point(3720, 50.03, 8.0, 60)]
+    pts = [
+        Point(0, 50.0, 8.0, 60),
+        Point(60, 50.01, 8.0, 60),
+        Point(3600, 50.01, 8.0, 0),
+        Point(3660, 50.02, 8.0, 60),
+        Point(3720, 50.03, 8.0, 60),
+    ]
     assert len(detect_drives(pts, S)) == 2
 
 
 # --- geometry -------------------------------------------------------------------------------------------------
 
+
 def test_thin_out():
-    pts = [Point(i * 120, 51.75, 10.0) for i in range(1440)] + [Point(172800 + i * 60, 51.75 + 0.01 * i, 10.0, 50) for i in range(10)]
+    pts = [Point(i * 120, 51.75, 10.0) for i in range(1440)] + [
+        Point(172800 + i * 60, 51.75 + 0.01 * i, 10.0, 50) for i in range(10)
+    ]
     thinned = thin_out(pts)
     assert len([p for p in thinned if p.lat == 51.75]) <= 200
     assert thinned[0] == pts[0] and thinned[-1] == pts[-1]
@@ -135,6 +171,7 @@ def test_position_at():
 
 
 # --- photos -------------------------------------------------------------------------------------------------------
+
 
 def test_photo_must_be_near_the_tracker():
     # A second car parked at home got every holiday photo before this rule existed.
@@ -170,9 +207,13 @@ def test_place_photos_estimates_location_and_respects_priority():
 
 
 def test_cover_and_city():
-    photos = [Photo("home", 1, *HOME, city="Hometown"), Photo("a", 2, 51.75, 10.0, city="Hillside", width=3, height=2),
-              Photo("b", 3, 51.74, 10.01, city="Hillside"), Photo("v", 4, 51.75, 10.0, is_video=True, city="Lakeside")]
+    photos = [
+        Photo("home", 1, *HOME, city="Hometown"),
+        Photo("a", 2, 51.75, 10.0, city="Hillside", width=3, height=2),
+        Photo("b", 3, 51.74, 10.01, city="Hillside"),
+        Photo("v", 4, 51.75, 10.0, is_video=True, city="Lakeside"),
+    ]
     assert most_common_city(photos, exclude_home=S) == "Hillside"
     assert pick_cover(photos) == "a", "landscape images first"
-    assert pick_cover([Photo("f", 1, 1, 1, is_favorite=True)] + photos) == "f", "favourites win"
+    assert pick_cover([Photo("f", 1, 1, 1, is_favorite=True), *photos]) == "f", "favourites win"
     assert pick_cover([]) is None

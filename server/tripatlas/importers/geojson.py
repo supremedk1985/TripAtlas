@@ -1,5 +1,6 @@
 """GeoJSON FeatureCollections of Point features with a time property (as exported by Dawarich, OwnTracks
 recorders and many apps). Accepted time properties: timestamp (seconds or ms), time, datetime (ISO)."""
+
 from __future__ import annotations
 
 import json

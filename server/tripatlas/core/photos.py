@@ -1,8 +1,9 @@
 """Which photos belong to a tracker's journey, and where were they taken? Pure functions."""
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from typing import Sequence
 
 from .detection import DetectionSettings
 from .geo import Point, distance_km, location_at, position_at
@@ -58,8 +59,12 @@ def claimed_by(points: Sequence[Point], photo: Photo, s: DetectionSettings, radi
     return not s.is_home(loc[0], loc[1])
 
 
-def place_photos(points: Sequence[Point], photos: Sequence[Photo], s: DetectionSettings,
-                 higher_priority: Sequence[Sequence[Point]] = ()) -> tuple[list[Photo], int]:
+def place_photos(
+    points: Sequence[Point],
+    photos: Sequence[Photo],
+    s: DetectionSettings,
+    higher_priority: Sequence[Sequence[Point]] = (),
+) -> tuple[list[Photo], int]:
     """Photos of this tracker's journey, with a location for each. Photos without GPS get the tracker's position at
     capture time, marked `estimated` (on foot one can be far from the vehicle). Returns (placed, without_location)."""
     placed, unplaced = [], 0
@@ -79,8 +84,12 @@ def place_photos(points: Sequence[Point], photos: Sequence[Photo], s: DetectionS
     return placed, unplaced
 
 
-def most_common_city(photos: Sequence[Photo], near: tuple[float, float] | None = None, within_km: float = 30,
-                     exclude_home: DetectionSettings | None = None) -> str | None:
+def most_common_city(
+    photos: Sequence[Photo],
+    near: tuple[float, float] | None = None,
+    within_km: float = 30,
+    exclude_home: DetectionSettings | None = None,
+) -> str | None:
     """The city that appears most often among photos with real GPS — a good name for a place."""
     counts: dict[str, int] = {}
     for ph in photos:
@@ -100,8 +109,12 @@ def pick_cover(photos: Sequence[Photo], near: tuple[float, float] | None = None)
     images = [p for p in photos if not p.is_video]
     if not images:
         return None
-    for pool in ([p for p in images if p.is_favorite], [p for p in images if p.landscape and not p.estimated],
-                 [p for p in images if not p.estimated], images):
+    for pool in (
+        [p for p in images if p.is_favorite],
+        [p for p in images if p.landscape and not p.estimated],
+        [p for p in images if not p.estimated],
+        images,
+    ):
         if pool:
             if near:
                 return min(pool, key=lambda p: distance_km(near[0], near[1], p.lat, p.lon)).id

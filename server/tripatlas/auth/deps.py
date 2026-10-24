@@ -6,6 +6,7 @@ Clients authenticate with either
 
 Cookie-authenticated requests that change something must come from our own origin (CSRF protection on top of
 SameSite=Lax). Bearer requests are not affected — browsers never attach that header on their own."""
+
 from __future__ import annotations
 
 from urllib.parse import urlparse
@@ -32,7 +33,7 @@ def _token(request: Request) -> tuple[str | None, bool]:
 def _check_origin(request: Request) -> None:
     origin = request.headers.get("origin") or request.headers.get("referer")
     if not origin:
-        return   # non-browser client with a cookie (rare); SameSite already blocks cross-site form posts
+        return  # non-browser client with a cookie (rare); SameSite already blocks cross-site form posts
     host = request.headers.get("x-forwarded-host") or request.headers.get("host", "")
     if urlparse(origin).netloc != host:
         raise HTTPException(403, "Cross-site request refused")

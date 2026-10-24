@@ -1,6 +1,7 @@
 """Process-level configuration from environment variables (prefix TRIPATLAS_). Everything a household configures
 (home location, Traccar, Immich, ...) lives in the database and is set through the setup wizard — see
 services/settings.py."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -19,10 +20,10 @@ class Config(BaseSettings):
     session_days: int = 30
     sync_interval_minutes: int = 5
     # Directory with the built web UI (served at /). Empty: API only.
-    web_dir: Path | None = Path(__file__).resolve().parent.parent.parent / "web" / "build"
+    web_dir: Path | None = Path(__file__).resolve().parent.parent.parent / "web" / "build"  # Docker: /app/web
     log_level: str = "INFO"
     # Contact for the User-Agent sent to Wikipedia/Nominatim (their policies require one).
-    contact: str = "https://github.com/tripatlas/tripatlas"
+    contact: str = "https://github.com/supremedk1985/tripatlas"
 
     @property
     def db_url(self) -> str:

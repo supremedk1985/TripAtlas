@@ -1,0 +1,24 @@
+# Example for running TripAtlas next to Traccar and Immich. Copy to compose.yaml and adjust.
+#   docker compose up -d   → open http://<server>:8097 and follow the setup wizard
+services:
+  tripatlas:
+    image: ghcr.io/supremedk1985/tripatlas:latest
+    # or build it yourself:  build: { context: .., dockerfile: docker/Dockerfile }
+    container_name: tripatlas
+    restart: unless-stopped
+    ports:
+      - "8097:8097"
+    volumes:
+      - ./data:/data          # database + secret.key — back up both together
+    environment:
+      TZ: Europe/Berlin
+      # Set to true when TripAtlas is served over HTTPS (reverse proxy)
+      TRIPATLAS_SECURE_COOKIES: "false"
+      # How often new positions are fetched from Traccar
+      TRIPATLAS_SYNC_INTERVAL_MINUTES: "5"
+    mem_limit: 512m
+    # If Traccar/Immich run in other compose projects, join their network, e.g.:
+    # networks: [default, immich_default]
+# networks:
+#   immich_default:
+#     external: true

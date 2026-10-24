@@ -3,6 +3,7 @@
 The key comes from TRIPATLAS_SECRET_KEY or is generated once into <data_dir>/secret.key. It protects the database
 file on its own (e.g. a copied backup) — anyone with access to both the key and the database can decrypt. Back up
 secret.key together with the database, otherwise stored credentials must be re-entered."""
+
 from __future__ import annotations
 
 import os

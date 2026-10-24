@@ -3,28 +3,28 @@
 Conventions: timestamps of recorded data are Unix seconds (int/float, UTC); `day_key` is a local calendar date
 'YYYY-MM-DD' used to attach user content (titles, notes) to detected trips and stays — detection may shift a trip's
 start by minutes when points are added later, the day almost never changes."""
+
 from __future__ import annotations
 
 import enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import (JSON, Boolean, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text,
-                        UniqueConstraint)
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class Role(str, enum.Enum):
-    admin = "admin"     # everything, including users and connections
-    member = "member"   # sees assigned trackers, edits titles/notes, imports into assigned trackers
-    child = "child"     # read-only, simplified interface, never sees live positions
+class Role(enum.StrEnum):
+    admin = "admin"  # everything, including users and connections
+    member = "member"  # sees assigned trackers, edits titles/notes, imports into assigned trackers
+    child = "child"  # read-only, simplified interface, never sees live positions
 
 
 class User(Base):
@@ -39,15 +39,17 @@ class User(Base):
     immich_api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     can_see_live: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    trackers: Mapped[list["Tracker"]] = relationship(secondary="user_trackers", back_populates="users")
+    trackers: Mapped[list[Tracker]] = relationship(secondary="user_trackers", back_populates="users")
 
 
 class Session(Base):
     __tablename__ = "sessions"
     id: Mapped[int] = mapped_column(primary_key=True)
-    token_hash: Mapped[str] = mapped_column(String(64), unique=True)   # sha256 of the token; the token itself is never stored
+    token_hash: Mapped[str] = mapped_column(
+        String(64), unique=True
+    )  # sha256 of the token; the token itself is never stored
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    kind: Mapped[str] = mapped_column(String(16), default="web")       # web | app
+    kind: Mapped[str] = mapped_column(String(16), default="web")  # web | app
     label: Mapped[str] = mapped_column(String(200), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -57,18 +59,20 @@ class Session(Base):
 
 class Setting(Base):
     """Household settings as key/value. Secrets are stored encrypted (services/secrets.py)."""
+
     __tablename__ = "settings"
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[dict | list | str | int | float | bool | None] = mapped_column(JSON)
 
 
-class TrackerKind(str, enum.Enum):
+class TrackerKind(enum.StrEnum):
     vehicle = "vehicle"
     person = "person"
 
 
 class Tracker(Base):
     """Something that moves: a camper van, a car, a person. Positions come from Traccar and/or imports."""
+
     __tablename__ = "trackers"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
@@ -101,11 +105,12 @@ class Position(Base):
     lon: Mapped[float] = mapped_column(Float)
     speed_kmh: Mapped[float] = mapped_column(Float, default=0)
     altitude_m: Mapped[float] = mapped_column(Float, default=0)
-    source: Mapped[str] = mapped_column(String(32), default="traccar")   # traccar | gpx | google | ...
+    source: Mapped[str] = mapped_column(String(32), default="traccar")  # traccar | gpx | google | ...
 
 
 class Trip(Base):
     """Detected trip — a cache, recomputed whenever positions change. User content lives in Annotation."""
+
     __tablename__ = "trips"
     __table_args__ = (UniqueConstraint("tracker_id", "day_key"),)
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -120,11 +125,13 @@ class Trip(Base):
     dest_lat: Mapped[float] = mapped_column(Float)
     dest_lon: Mapped[float] = mapped_column(Float)
     auto_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    places: Mapped[list | None] = mapped_column(JSON, nullable=True)        # names of the stays, in order
+    places: Mapped[list | None] = mapped_column(JSON, nullable=True)  # names of the stays, in order
     countries: Mapped[list | None] = mapped_column(JSON, nullable=True)
     photo_count: Mapped[int] = mapped_column(Integer, default=0)
     cover_asset: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    stays: Mapped[list["Stay"]] = relationship(back_populates="trip", cascade="all, delete-orphan", order_by="Stay.arrival")
+    stays: Mapped[list[Stay]] = relationship(
+        back_populates="trip", cascade="all, delete-orphan", order_by="Stay.arrival"
+    )
 
 
 class Stay(Base):
@@ -147,11 +154,12 @@ class Stay(Base):
 
 class Annotation(Base):
     """Custom title and rich-text note for a trip or a stay, keyed by tracker + kind + local start day."""
+
     __tablename__ = "annotations"
     __table_args__ = (UniqueConstraint("tracker_id", "kind", "day_key"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     tracker_id: Mapped[int] = mapped_column(ForeignKey("trackers.id", ondelete="CASCADE"))
-    kind: Mapped[str] = mapped_column(String(8))   # trip | stay
+    kind: Mapped[str] = mapped_column(String(8))  # trip | stay
     day_key: Mapped[str] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(200), default="")
     note_html: Mapped[str] = mapped_column(Text, default="")
@@ -162,6 +170,7 @@ class Annotation(Base):
 class Place(Base):
     """Cached knowledge about a place: reverse-geocoded name plus an encyclopedia summary. Keyed by a coarse grid
     cell (~1 km) and language so nearby stays share one lookup."""
+
     __tablename__ = "places"
     __table_args__ = (UniqueConstraint("cell", "lang"),)
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -178,7 +187,7 @@ class Place(Base):
     # Child-friendly text (e.g. Klexikon for German) — None if no such source has an article.
     kids_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     kids_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    sights: Mapped[list | None] = mapped_column(JSON, nullable=True)   # nearby articles [{title, url, distance_m}]
+    sights: Mapped[list | None] = mapped_column(JSON, nullable=True)  # nearby articles [{title, url, distance_m}]
     fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -189,7 +198,7 @@ class ImportJob(Base):
     tracker_id: Mapped[int] = mapped_column(ForeignKey("trackers.id", ondelete="CASCADE"))
     kind: Mapped[str] = mapped_column(String(16))
     filename: Mapped[str] = mapped_column(String(300))
-    status: Mapped[str] = mapped_column(String(16), default="pending")   # pending | running | done | failed
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending | running | done | failed
     added: Mapped[int] = mapped_column(Integer, default=0)
     skipped: Mapped[int] = mapped_column(Integer, default=0)
     message: Mapped[str] = mapped_column(Text, default="")

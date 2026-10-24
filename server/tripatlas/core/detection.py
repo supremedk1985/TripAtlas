@@ -1,11 +1,12 @@
 """Trip, stay and drive detection. Pure functions over a time-sorted list of `Point`s; everything configurable lives
 in `DetectionSettings`. These rules were tuned on real camper-van data — the docstrings say why each threshold is what
 it is, so please keep them up to date when changing a rule (and add a test for the case that motivated it)."""
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
-from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from .geo import Point, distance_km, index_before, path_length_km, point_distance_km, slice_by_time
@@ -110,9 +111,16 @@ def detect_trips(points: Sequence[Point], s: DetectionSettings, margin_s: float 
         if nights < s.min_nights or m["farthest"] < s.min_distance_km:
             continue
         start, end = m["start"] - margin_s, m["end"] + margin_s
-        trips.append(Trip(start=start, end=end, distance_km=round(path_length_km(slice_by_time(points, start, end)), 1),
-                          farthest_km=round(m["farthest"], 1), nights=nights,
-                          destination=(round(m["dest"][0], 5), round(m["dest"][1], 5))))
+        trips.append(
+            Trip(
+                start=start,
+                end=end,
+                distance_km=round(path_length_km(slice_by_time(points, start, end)), 1),
+                farthest_km=round(m["farthest"], 1),
+                nights=nights,
+                destination=(round(m["dest"][0], 5), round(m["dest"][1], 5)),
+            )
+        )
     return trips
 
 
@@ -141,9 +149,10 @@ def detect_stays(points: Sequence[Point], s: DetectionSettings) -> list[Stay]:
         i = index_before(points, instant)
         if i < 0:
             continue
-        if instant - points[i].t > s.night_max_age_h * 3600:
-            if i + 1 >= len(points) or point_distance_km(points[i], points[i + 1]) > 2:
-                continue
+        # A long silence only counts if the vehicle is at the same place afterwards (dashcam case, see docstring).
+        too_old = instant - points[i].t > s.night_max_age_h * 3600
+        if too_old and (i + 1 >= len(points) or point_distance_km(points[i], points[i + 1]) > 2):
+            continue
         p = points[i]
         if s.is_home(p.lat, p.lon):
             continue
@@ -164,11 +173,21 @@ def detect_stays(points: Sequence[Point], s: DetectionSettings) -> list[Stay]:
         while a > 0 and distance_km(g[0][1], g[0][2], points[a - 1].lat, points[a - 1].lon) <= s.stay_near_km:
             a -= 1
         b = g[-1][0]
-        while b + 1 < len(points) and distance_km(g[-1][1], g[-1][2], points[b + 1].lat, points[b + 1].lon) <= s.stay_near_km:
+        while (
+            b + 1 < len(points)
+            and distance_km(g[-1][1], g[-1][2], points[b + 1].lat, points[b + 1].lon) <= s.stay_near_km
+        ):
             b += 1
         arrival = max(points[a].t, stays[-1].departure if stays else points[a].t)
-        stays.append(Stay(arrival=arrival, departure=max(points[b].t, arrival), lat=round(lat, 5), lon=round(lon, 5),
-                          nights=len(g)))
+        stays.append(
+            Stay(
+                arrival=arrival,
+                departure=max(points[b].t, arrival),
+                lat=round(lat, 5),
+                lon=round(lon, 5),
+                nights=len(g),
+            )
+        )
     return stays
 
 
@@ -190,8 +209,9 @@ def detect_drives(points: Sequence[Point], s: DetectionSettings) -> list[Drive]:
     A point is "moving" if it reports > 5 km/h or lies > 50 m from the previous point. A stop is a pause of at least
     drive_pause_s between two moving points — including a gap without any points (tracker asleep). Drives shorter
     than drive_min_km are manoeuvring and dropped."""
-    moving = [i for i, p in enumerate(points)
-              if (p.speed_kmh or 0) > 5 or (i and point_distance_km(points[i - 1], p) > 0.05)]
+    moving = [
+        i for i, p in enumerate(points) if (p.speed_kmh or 0) > 5 or (i and point_distance_km(points[i - 1], p) > 0.05)
+    ]
     groups: list[list[int]] = []
     for i in moving:
         if groups and points[i].t - points[groups[-1][-1]].t < s.drive_pause_s:
@@ -200,14 +220,22 @@ def detect_drives(points: Sequence[Point], s: DetectionSettings) -> list[Drive]:
             groups.append([i])
     drives = []
     for g in groups:
-        a, b = max(g[0] - 1, 0), g[-1]   # start at the standing point before the first movement
-        part = points[a:b + 1]
+        a, b = max(g[0] - 1, 0), g[-1]  # start at the standing point before the first movement
+        part = points[a : b + 1]
         length = path_length_km(part)
         if length < s.drive_min_km:
             continue
         o, d = points[a], points[b]
-        drives.append(Drive(start=o.t, end=d.t, distance_km=round(length, 1),
-                            max_speed_kmh=round(max((x.speed_kmh or 0) for x in part)),
-                            origin=(round(o.lat, 5), round(o.lon, 5)), destination=(round(d.lat, 5), round(d.lon, 5)),
-                            origin_is_home=s.is_home(o.lat, o.lon), destination_is_home=s.is_home(d.lat, d.lon)))
+        drives.append(
+            Drive(
+                start=o.t,
+                end=d.t,
+                distance_km=round(length, 1),
+                max_speed_kmh=round(max((x.speed_kmh or 0) for x in part)),
+                origin=(round(o.lat, 5), round(o.lon, 5)),
+                destination=(round(d.lat, 5), round(d.lon, 5)),
+                origin_is_home=s.is_home(o.lat, o.lon),
+                destination_is_home=s.is_home(d.lat, d.lon),
+            )
+        )
     return drives

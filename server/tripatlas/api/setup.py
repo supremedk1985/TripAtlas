@@ -8,6 +8,7 @@ Wizard flow (the web UI walks through it in this order):
   5. POST /api/trackers              one per vehicle/person (from a Traccar device or empty for imports)
   6. POST /api/setup/complete        starts the background sync
 Every step after the first is also reachable later from the admin settings."""
+
 from __future__ import annotations
 
 from zoneinfo import available_timezones
@@ -35,8 +36,12 @@ router = APIRouter(tags=["setup"])
 @router.get("/api/setup/status")
 def status(db: Session = Depends(get_db)):
     hh = settings.household(db)
-    return {"has_admin": db.scalar(select(func.count()).select_from(User)) > 0,
-            "setup_complete": hh.setup_complete, "name": hh.name, "default_locale": hh.default_locale}
+    return {
+        "has_admin": db.scalar(select(func.count()).select_from(User)) > 0,
+        "setup_complete": hh.setup_complete,
+        "name": hh.name,
+        "default_locale": hh.default_locale,
+    }
 
 
 class AdminIn(BaseModel):
@@ -50,8 +55,14 @@ class AdminIn(BaseModel):
 def create_admin(body: AdminIn, request: Request, response: Response, db: Session = Depends(get_db)):
     if db.scalar(select(func.count()).select_from(User)) > 0:
         raise HTTPException(409, "Setup has already been started — sign in instead")
-    user = User(username=body.username, display_name=body.display_name, password_hash=hash_password(body.password),
-                role=Role.admin, locale=body.locale if body.locale in LOCALES else "en", can_see_live=True)
+    user = User(
+        username=body.username,
+        display_name=body.display_name,
+        password_hash=hash_password(body.password),
+        role=Role.admin,
+        locale=body.locale if body.locale in LOCALES else "en",
+        can_see_live=True,
+    )
     db.add(user)
     db.commit()
     hh = settings.household(db)
@@ -73,6 +84,7 @@ def complete(db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
 
 # --- household ----------------------------------------------------------------------------------------------------
+
 
 @router.get("/api/settings/household", response_model=HouseholdSettings)
 def get_household(db: Session = Depends(get_db), _: User = Depends(require_admin)):
@@ -97,12 +109,26 @@ def put_household(body: HouseholdIn, db: Session = Depends(get_db), _: User = De
     if body.timezone not in available_timezones():
         raise HTTPException(400, "Unknown time zone")
     hh = settings.household(db)
-    changed = (hh.home_lat, hh.home_lon, hh.home_radius_km, hh.timezone, hh.history_start, hh.min_trip_nights,
-               hh.min_trip_distance_km) != (body.home_lat, body.home_lon, body.home_radius_km, body.timezone,
-                                            body.history_start, body.min_trip_nights, body.min_trip_distance_km)
+    changed = (
+        hh.home_lat,
+        hh.home_lon,
+        hh.home_radius_km,
+        hh.timezone,
+        hh.history_start,
+        hh.min_trip_nights,
+        hh.min_trip_distance_km,
+    ) != (
+        body.home_lat,
+        body.home_lon,
+        body.home_radius_km,
+        body.timezone,
+        body.history_start,
+        body.min_trip_nights,
+        body.min_trip_distance_km,
+    )
     new = hh.model_copy(update=body.model_dump())
     settings.save(db, "household", new)
-    if changed:   # detection depends on these — recompute everything
+    if changed:  # detection depends on these — recompute everything
         for t in db.scalars(select(Tracker)):
             t.dirty = True
         db.commit()
@@ -117,6 +143,7 @@ def timezones():
 
 # --- Traccar ------------------------------------------------------------------------------------------------------
 
+
 class TraccarIn(BaseModel):
     url: str = Field(max_length=300)
     token: str = ""
@@ -127,9 +154,12 @@ class TraccarIn(BaseModel):
 
 def _merged_traccar(db: Session, body: TraccarIn) -> TraccarSettings:
     old = settings.traccar(db)
-    return TraccarSettings(url=body.url.strip(), email=body.email.strip(),
-                           token=body.token or (old.token if not body.email else ""),
-                           password=body.password or (old.password if body.email == old.email else ""))
+    return TraccarSettings(
+        url=body.url.strip(),
+        email=body.email.strip(),
+        token=body.token or (old.token if not body.email else ""),
+        password=body.password or (old.password if body.email == old.email else ""),
+    )
 
 
 @router.get("/api/settings/traccar")
@@ -146,9 +176,11 @@ def test_traccar(body: TraccarIn, db: Session = Depends(get_db), _: User = Depen
             info = client.server_info()
             devices = client.devices()
     except TraccarError as e:
-        raise HTTPException(400, str(e))
-    return {"version": info.get("version"), "devices": [{"id": d["id"], "name": d.get("name"), "status": d.get("status")}
-                                                         for d in devices]}
+        raise HTTPException(400, str(e)) from e
+    return {
+        "version": info.get("version"),
+        "devices": [{"id": d["id"], "name": d.get("name"), "status": d.get("status")} for d in devices],
+    }
 
 
 @router.put("/api/settings/traccar")
@@ -165,17 +197,20 @@ def traccar_devices(db: Session = Depends(get_db), _: User = Depends(require_adm
         with TraccarClient(c.url, c.token, c.email, c.password, timeout=15) as client:
             devices = client.devices()
     except TraccarError as e:
-        raise HTTPException(502, str(e))
+        raise HTTPException(502, str(e)) from e
     linked = {t.traccar_device_id: t.id for t in db.scalars(select(Tracker))}
-    return [{"id": d["id"], "name": d.get("name"), "status": d.get("status"), "tracker_id": linked.get(d["id"])}
-            for d in devices]
+    return [
+        {"id": d["id"], "name": d.get("name"), "status": d.get("status"), "tracker_id": linked.get(d["id"])}
+        for d in devices
+    ]
 
 
 # --- Immich -------------------------------------------------------------------------------------------------------
 
+
 class ImmichIn(BaseModel):
     url: str = Field(max_length=300)
-    api_key: str = ""   # empty in an update keeps the stored key
+    api_key: str = ""  # empty in an update keeps the stored key
 
 
 @router.get("/api/settings/immich")
@@ -192,21 +227,24 @@ def test_immich(body: ImmichIn, db: Session = Depends(get_db), _: User = Depends
             version = client.version()
             me = client.me()
     except ImmichError as e:
-        raise HTTPException(400, str(e))
+        raise HTTPException(400, str(e)) from e
     return {"version": version, "user": me.get("name") or me.get("email")}
 
 
 @router.put("/api/settings/immich")
 def put_immich(body: ImmichIn, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    settings.save(db, "immich", ImmichSettings(url=body.url.strip(), api_key=body.api_key or settings.immich(db).api_key))
+    settings.save(
+        db, "immich", ImmichSettings(url=body.url.strip(), api_key=body.api_key or settings.immich(db).api_key)
+    )
     for t in db.scalars(select(Tracker)):
-        t.dirty = True   # photo counts and covers change
+        t.dirty = True  # photo counts and covers change
     db.commit()
     jobs.trigger()
     return {"ok": True}
 
 
 # --- background jobs ----------------------------------------------------------------------------------------------
+
 
 @router.get("/api/admin/jobs")
 def job_status(_: User = Depends(require_admin)):
