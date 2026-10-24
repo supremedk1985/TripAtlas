@@ -32,7 +32,7 @@
 	let allMarkers = $state<[string, number, number][]>([]);
 	let photoNote = $state('');
 	let tracks = new Map<number, TrackPoint[]>();
-	let viewer = $state<{ ids: string[]; index: number; times: Record<string, number>; videos?: Set<string> } | null>(null);
+	let viewer = $state<{ ids: string[]; index: number; times: Record<string, number>; videos?: Set<string>; overview?: boolean } | null>(null);
 	let selectedPoints: TrackPoint[] = [];
 	let selectedStays: { lat: number; lon: number }[] = [];
 
@@ -119,7 +119,7 @@
 
 	function onReady(m: maplibregl.Map) {
 		map = m;
-		photoLayer = new PhotoLayer(m, (ids, index) => (viewer = { ids, index, times: {} }));
+		photoLayer = new PhotoLayer(m, (ids, index) => (viewer = { ids, index, times: {}, overview: true }));
 		trackLayer = new TrackLayer(m, (id) => selectTrip(id));
 		installLayers(m);
 		loadData().then(() => {
@@ -287,7 +287,7 @@
 </div>
 
 {#if viewer}
-	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} onclose={() => (viewer = null)} />
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} overview={viewer.overview} onclose={() => (viewer = null)} />
 {/if}
 
 <style>

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import re
+from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -71,6 +73,33 @@ def photo_info(asset_id: str, db: Session = Depends(get_db), user: User = Depend
         "taken_at": a.get("localDateTime"),
         "duration": a.get("duration"),
     }
+
+
+class KindsIn(BaseModel):
+    ids: list[str] = Field(max_length=200)
+
+
+# Whether an asset is a video never changes: remember it for the lifetime of the process
+_IS_VIDEO: dict[str, bool] = {}
+_IS_VIDEO_MAX = 50_000
+
+
+@router.post("/api/photos/kinds")
+def photo_kinds(body: KindsIn, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Which of these assets are videos — for the overview grid, which shows many entries at once."""
+    ids = [i for i in dict.fromkeys(body.ids) if _ASSET_ID.match(i)]
+    unknown = [i for i in ids if i not in _IS_VIDEO]
+    if unknown:
+        with photo_service.client_for(db, user) as c, ThreadPoolExecutor(max_workers=8) as pool:
+            def kind(asset_id: str) -> tuple[str, bool | None]:
+                try:
+                    return asset_id, c.asset(asset_id).get("type") == "VIDEO"
+                except ImmichError:
+                    return asset_id, None   # not visible to this user or gone: just not marked
+            for asset_id, is_video in pool.map(kind, unknown):
+                if is_video is not None and len(_IS_VIDEO) < _IS_VIDEO_MAX:
+                    _IS_VIDEO[asset_id] = is_video
+    return {"videos": [i for i in ids if _IS_VIDEO.get(i)]}
 
 
 @router.get("/api/photos/{asset_id}/video")

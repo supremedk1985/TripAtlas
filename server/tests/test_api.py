@@ -227,3 +227,35 @@ def test_admin_status_and_home_suggestion_without_data(client):
     assert st["trips"] == 0 and st["trackers"] == [] and "last_run_at" in st
     assert client.get("/api/setup/home-suggestion", params={"tz": "Europe/Berlin"}).json() is None
     assert "busy" in client.get("/api/setup/status").json()
+
+
+def test_photo_kinds_marks_videos_and_skips_unknown(client, monkeypatch):
+    from tripatlas.api import photos as photos_api
+    from tripatlas.integrations.immich import ImmichError
+
+    vid, img, gone = ("a" * 8 + "-0000-0000-0000-" + "0" * 12, "b" * 8 + "-0000-0000-0000-" + "0" * 12,
+                      "c" * 8 + "-0000-0000-0000-" + "0" * 12)
+    calls = []
+
+    class Fake:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def asset(self, asset_id):
+            calls.append(asset_id)
+            if asset_id == gone:
+                raise ImmichError("not found")
+            return {"type": "VIDEO" if asset_id == vid else "IMAGE"}
+
+    monkeypatch.setattr(photos_api.photo_service, "client_for", lambda db, user: Fake())
+    monkeypatch.setattr(photos_api, "_IS_VIDEO", {})
+    setup_household(client)
+    r = client.post("/api/photos/kinds", json={"ids": [vid, img, gone, "not-an-id", vid]})
+    assert r.status_code == 200 and r.json() == {"videos": [vid]}
+    assert sorted(calls) == sorted([vid, img, gone])
+    # known kinds are not asked again; the missing one is
+    client.post("/api/photos/kinds", json={"ids": [vid, img, gone]})
+    assert calls.count(vid) == 1 and calls.count(gone) == 2

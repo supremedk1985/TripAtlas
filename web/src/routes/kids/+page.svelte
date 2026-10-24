@@ -16,10 +16,10 @@
 	let visited = $state<Visited | null>(null);
 	let pin = $state<Pin | null>(null);
 	let flight = $state<Flight | null>(null);
-	let viewer = $state<{ ids: string[]; index: number } | null>(null);
+	let viewer = $state<{ ids: string[]; index: number; overview?: boolean } | null>(null);
 	async function openPinPhotos(p: Pin) {
 		const v = await pinPhotos(p, p.cover_asset);
-		if (v.ids.length) viewer = v;
+		if (v.ids.length) viewer = { ...v, overview: true };
 	}
 
 	api.get<TripSummary[]>('/api/trips').then((r) => (trips = r));
@@ -81,7 +81,7 @@
 </div>
 
 {#if viewer}
-	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} onclose={() => (viewer = null)} />
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} overview={viewer.overview} onclose={() => (viewer = null)} />
 {/if}
 
 <style>
