@@ -62,17 +62,49 @@ def thumbnail(
 
 @router.get("/api/photos/{asset_id}/info")
 def photo_info(asset_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
-    """Whether an asset is a video (the map markers do not say), when it was taken, how long it runs."""
+    """What the viewer shows under a photo and behind its i button: when, where, with what, how big."""
     if not _ASSET_ID.match(asset_id):
         raise HTTPException(400, "Invalid request")
     with photo_service.client_for(db, user) as c:
         a = c.asset(asset_id)
+    x = a.get("exifInfo") or {}
     return {
         "id": asset_id,
         "is_video": a.get("type") == "VIDEO",
+        # local time of the place where it was taken, without zone (as the camera wrote it)
         "taken_at": a.get("localDateTime"),
+        "time_zone": x.get("timeZone"),
         "duration": a.get("duration"),
+        "filename": a.get("originalFileName"),
+        "mime": a.get("originalMimeType"),
+        "file_size": x.get("fileSizeInByte"),
+        "width": x.get("exifImageWidth"),
+        "height": x.get("exifImageHeight"),
+        "city": x.get("city"),
+        "state": x.get("state"),
+        "country": x.get("country"),
+        "lat": x.get("latitude"),
+        "lon": x.get("longitude"),
+        "make": x.get("make"),
+        "model": x.get("model"),
+        "lens": x.get("lensModel"),
+        "f_number": x.get("fNumber"),
+        "exposure_time": x.get("exposureTime"),
+        "iso": x.get("iso"),
+        "focal_length": x.get("focalLength"),
+        "description": x.get("description") or None,
+        "rating": x.get("rating"),
+        "is_favorite": a.get("isFavorite", False),
     }
+
+
+@router.get("/api/photos/{asset_id}/exif")
+def photo_exif(asset_id: str, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """All EXIF tags from the file itself, for the viewer's "everything in the file" list."""
+    if not _ASSET_ID.match(asset_id):
+        raise HTTPException(400, "Invalid request")
+    with photo_service.client_for(db, user) as c:
+        return {"tags": c.exif_tags(asset_id)}
 
 
 class KindsIn(BaseModel):

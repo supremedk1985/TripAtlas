@@ -58,7 +58,15 @@ Eine Reise in der Liste oder ihre Linie auf der Karte antippen:
 Jedes Foto lässt sich groß ansehen. Wischen oder die Pfeiltasten blättern weiter; Videos laufen im selben
 Betrachter, Esc schließt ihn. Der Raster-Knopf oben links zeigt **alle Fotos und Videos auf einmal** – 3, 2 oder 1
 nebeneinander, Videos mit ▶; antippen öffnet ein Bild groß. Fotostapel auf der Karte öffnen gleich in dieser
-Übersicht. Fotos ohne GPS (etwa von einer Kamera) setzt TripAtlas an die Stelle, an der das Fahrzeug zu der Zeit war.
+Übersicht. Unter jedem Foto steht dezent, wann und wo es entstand (am Computer auch die Kamera); der Knopf **i**
+unten rechts zeigt alles Weitere – Koordinaten, Kamera und Objektiv, Belichtung, Größe, Datei – und auf Wunsch jede
+EXIF-Angabe aus der Datei.
+
+**Zettel auf der Karte:** Im Betrachter heftet **📌 Zettel** einen kurzen Text an den Ort, an dem das gezeigte Foto
+entstand („Unser erster Campingplatz“). Alle im Haushalt sehen ihn als kleinen gelben Zettel auf der Karte;
+antippen öffnet *Fotos von hier*, Ändern und Entfernen. Kinder können Zettel lesen, aber keine anlegen.
+
+Fotos ohne GPS (etwa von einer Kamera) setzt TripAtlas an die Stelle, an der das Fahrzeug zu der Zeit war.
 
 ## Wo war ich schon
 

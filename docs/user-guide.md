@@ -57,7 +57,13 @@ Tap a trip in the list or its line on the map:
 
 Tap any photo to see it large. Swipe or use the arrow keys to move on; videos play in the same viewer, Esc closes it.
 The grid button at the top left shows **all photos and videos at once** — 3, 2 or 1 per row, videos marked with ▶;
-tap one to see it large. Photo stacks on the map open in this overview straight away. Photos without GPS (from a
+tap one to see it large. Photo stacks on the map open in this overview straight away. Under each photo a quiet line
+says when and where it was taken (on a computer also the camera); the **i** button at the bottom right shows
+everything else — coordinates, camera and lens, exposure, size, file — and, on request, every EXIF entry in the file.
+
+**Notes on the map:** in the viewer, **📌 Note** pins a short note where the photo shown was taken ("our first
+campsite"). Everyone in the household sees it as a small yellow note on the map; tap it for *Photos from here*, to
+change or to remove it. Children can read notes but not add any. Photos without GPS (from a
 camera, for example) are placed where the vehicle was at that time.
 
 ## Where I've been

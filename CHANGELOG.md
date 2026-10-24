@@ -11,6 +11,9 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - Notes on the map: pin a note to the place of a photo ("our first campsite"); everyone sees them, children
   cannot change them; *Photos from here* opens the photos around a note
 
+- Photo viewer: date, place and camera under each photo; the i button shows all details and every EXIF
+  entry of the file
+
 ### Changed
 - GPX is imported as a stream (files of several hundred MB, e.g. a bike app's export of all rides)
 - Imports keep at most one point every 10 seconds; the import message says how many were read, kept and new

@@ -5,6 +5,7 @@
 	import { tick } from 'svelte';
 	import { api, thumbUrl, videoUrl } from '$lib/api';
 	import { dateTime } from '$lib/format';
+	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
 	import { t } from '$lib/i18n/index.svelte';
 
 	let {
@@ -58,13 +59,43 @@
 	let known = $state<Record<string, boolean>>({});
 	const isVideo = $derived(videos ? videos.has(id) : known[id]);
 
+	// what is known about each photo (date, place, camera …): the quiet line underneath and the i panel
+	let infos = $state<Record<string, PhotoInfo | null>>({});
+	const info = $derived(infos[id]);
+	let showInfo = $state(false);
+	let exifTags = $state<Record<string, Record<string, string> | null>>({});
+	let exifOpen = $state(false);
+
 	$effect(() => {
 		const current = id;
-		if (videos || current in known) return;
+		if (current in infos) return;
+		infos[current] = null;
 		api
-			.get<{ is_video: boolean }>(`/api/photos/${current}/info`)
-			.then((r) => (known[current] = r.is_video))
-			.catch(() => (known[current] = false));
+			.get<PhotoInfo>(`/api/photos/${current}/info`)
+			.then((r) => {
+				infos[current] = r;
+				known[current] = r.is_video;
+			})
+			.catch(() => {
+				if (!(current in known)) known[current] = false;
+			});
+	});
+
+	function loadExif() {
+		exifOpen = true;
+		const current = id;
+		if (current in exifTags) return;
+		exifTags[current] = null;
+		api
+			.get<{ tags: Record<string, string> }>(`/api/photos/${current}/exif`)
+			.then((r) => (exifTags[current] = r.tags))
+			.catch(() => (exifTags[current] = {}));
+	}
+
+	// a different photo: the full EXIF list folds up again
+	$effect(() => {
+		void id;
+		exifOpen = false;
 	});
 
 	// Overview: ask for the kinds of everything in one go (in chunks the server accepts)
@@ -101,6 +132,10 @@
 	}
 
 	function key(e: KeyboardEvent) {
+		if (e.key === 'Escape' && showInfo) {
+			showInfo = false;
+			return;
+		}
 		if (e.key === 'Escape') {
 			// opened as an overview: a photo goes back to the grid, the grid closes; otherwise the other way round
 			if (grid === (overview && ids.length > 1)) onclose();
@@ -179,9 +214,53 @@
 		<button class="nav next icon-btn" onclick={() => go(1)} aria-label={t('next')}>›</button>
 	{/if}
 	<div class="caption">
-		{index + 1} / {ids.length}
-		{#if times[id]}· {dateTime(times[id])}{/if}
+		<span class="line">
+			{#if info && takenAt(info)}{takenAt(info)}{:else if times[id]}{dateTime(times[id])}{/if}
+			{#if info && place(info)}<span class="sep">·</span>{place(info)}{/if}
+			{#if info && camera(info)}<span class="sep wide">·</span><span class="wide">{camera(info)}</span>{/if}
+		</span>
+		<span class="count">{index + 1} / {ids.length}</span>
 	</div>
+	<button class="info-btn" class:active={showInfo} onclick={() => (showInfo = !showInfo)} aria-expanded={showInfo}
+		aria-label={t('photo_info')} title={t('photo_info')}>i</button>
+	{#if showInfo}
+		<aside class="info-panel" aria-label={t('photo_info')}>
+			<button class="close-info" onclick={() => (showInfo = false)} aria-label={t('close')}>✕</button>
+			{#if !info}
+				<p class="muted">{t('loading')}</p>
+			{:else}
+				<dl>
+					{#if takenAt(info, true)}<dt>{t('photo_taken')}</dt><dd>{takenAt(info, true)}{#if info.time_zone}<small> ({info.time_zone})</small>{/if}</dd>{/if}
+					{#if place(info) || info.state}<dt>{t('photo_place')}</dt><dd>{[info.city, info.state, info.country].filter(Boolean).join(', ')}</dd>{/if}
+					{#if info.lat != null && info.lon != null}
+						<dt>{t('photo_coordinates')}</dt>
+						<dd><a href="https://www.openstreetmap.org/?mlat={info.lat}&mlon={info.lon}#map=16/{info.lat}/{info.lon}" target="_blank" rel="noopener noreferrer">{info.lat.toFixed(5)}, {info.lon.toFixed(5)}</a></dd>
+					{/if}
+					{#if camera(info)}<dt>{t('photo_camera')}</dt><dd>{camera(info)}</dd>{/if}
+					{#if info.lens}<dt>{t('photo_lens')}</dt><dd>{info.lens}</dd>{/if}
+					{#if exposure(info)}<dt>{t('photo_exposure')}</dt><dd>{exposure(info)}</dd>{/if}
+					{#if info.width && info.height}<dt>{t('photo_dimensions')}</dt><dd>{info.width} × {info.height} px{#if info.width * info.height > 0} ({(Math.round((info.width * info.height) / 1e5) / 10).toLocaleString()} MP){/if}</dd>{/if}
+					{#if duration(info.duration) && info.is_video}<dt>{t('photo_duration')}</dt><dd>{duration(info.duration)}</dd>{/if}
+					{#if info.filename}<dt>{t('photo_file')}</dt><dd class="break">{info.filename}</dd>{/if}
+					{#if info.mime || info.file_size}<dt>{t('photo_type')}</dt><dd>{[info.mime, fileSize(info.file_size)].filter(Boolean).join(' · ')}</dd>{/if}
+					{#if info.description}<dt>{t('photo_description')}</dt><dd>{info.description}</dd>{/if}
+					{#if info.rating}<dt>{t('photo_rating')}</dt><dd>{'★'.repeat(info.rating)}</dd>{/if}
+				</dl>
+				{#if !exifOpen}
+					<button class="link-btn" onclick={loadExif}>{t('photo_all_exif')}</button>
+				{:else if exifTags[id] === null || exifTags[id] === undefined}
+					<p class="muted">{t('loading')}</p>
+				{:else if Object.keys(exifTags[id] ?? {}).length === 0}
+					<p class="muted">{t('photo_no_exif')}</p>
+				{:else}
+					<h4>{t('photo_all_exif')}</h4>
+					<dl class="exif">
+						{#each Object.entries(exifTags[id] ?? {}) as [k, v] (k)}<dt>{k}</dt><dd class="break">{v}</dd>{/each}
+					</dl>
+				{/if}
+			{/if}
+		</aside>
+	{/if}
 	{/if}
 </div>
 
@@ -352,8 +431,107 @@
 	}
 	.caption {
 		position: absolute;
-		bottom: 14px;
-		color: #ddd;
+		left: 56px;
+		right: 56px;
+		bottom: 12px;
+		display: flex;
+		justify-content: center;
+		align-items: baseline;
+		gap: 12px;
+		color: rgb(255 255 255 / 75%);
+		font-size: 0.85em;
+		text-shadow: 0 1px 2px rgb(0 0 0 / 70%);
+		pointer-events: none;
+	}
+	.caption .line {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.caption .sep {
+		margin: 0 6px;
+		opacity: 0.6;
+	}
+	.caption .count {
+		flex: none;
+		opacity: 0.7;
+	}
+	@media (max-width: 600px) {
+		.caption .wide {
+			display: none;
+		}
+	}
+	.info-btn {
+		position: absolute;
+		right: 12px;
+		bottom: 8px;
+		z-index: 3;
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		border: 1.5px solid rgb(255 255 255 / 70%);
+		background: rgb(0 0 0 / 35%);
+		color: #fff;
+		font: italic 700 15px/1 Georgia, serif;
+		cursor: pointer;
+	}
+	.info-btn.active {
+		background: #fff;
+		color: #111;
+	}
+	.info-panel {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		z-index: 4;
+		width: min(380px, 100%);
+		max-height: 70%;
+		overflow-y: auto;
+		background: var(--surface);
+		color: var(--text);
+		border-radius: 14px 14px 0 0;
+		padding: 16px 16px 20px;
+		box-shadow: 0 -6px 24px rgb(0 0 0 / 35%);
+	}
+	.close-info {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		border: 0;
+		background: none;
+		color: var(--text-2);
+		font-size: 1.1em;
+		cursor: pointer;
+	}
+	.info-panel dl {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 6px 12px;
+		margin: 4px 0 12px;
 		font-size: 0.9em;
+	}
+	.info-panel dt {
+		color: var(--text-2);
+	}
+	.info-panel dd {
+		margin: 0;
+	}
+	.info-panel .break {
+		overflow-wrap: anywhere;
+	}
+	.info-panel dl.exif {
+		font-size: 0.8em;
+	}
+	.info-panel h4 {
+		margin: 8px 0 4px;
+	}
+	.link-btn {
+		border: 0;
+		background: none;
+		color: var(--accent);
+		padding: 0;
+		font: inherit;
+		cursor: pointer;
+		text-decoration: underline;
 	}
 </style>

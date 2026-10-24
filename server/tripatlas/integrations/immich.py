@@ -127,6 +127,25 @@ class ImmichClient:
             value = -value
         return round(value, 1)
 
+    def exif_tags(self, asset_id: str, head_bytes: int = 262144) -> dict[str, str]:
+        """Every EXIF tag of the original as text, read from the first bytes only (EXIF sits at the start of the
+        file). Binary blobs — embedded thumbnails, maker notes — are left out. Empty for formats without EXIF."""
+        r = self._call(
+            "GET", f"/api/assets/{asset_id}/original", headers={"Accept": "*/*", "Range": f"bytes=0-{head_bytes - 1}"}
+        )
+        try:
+            tags = exifread.process_file(io.BytesIO(r.content), details=False)
+        except Exception:  # unreadable / unsupported container
+            return {}
+        out = {}
+        for name, tag in sorted(tags.items()):
+            if name in ("JPEGThumbnail", "TIFFThumbnail") or "MakerNote" in name or name.startswith("Thumbnail"):
+                continue
+            text = str(tag.printable if hasattr(tag, "printable") else tag).strip()
+            if (text and len(text) <= 300 and not text.startswith("[")) or (text.startswith("[") and len(text) <= 120):
+                out[name] = text
+        return out
+
     def asset(self, asset_id: str) -> dict:
         return self._call("GET", f"/api/assets/{asset_id}").json()
 
