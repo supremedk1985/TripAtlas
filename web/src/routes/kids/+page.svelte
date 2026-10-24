@@ -1,14 +1,14 @@
 <script lang="ts">
 	// The children's home: a globe with every place they have been, and their trips as big picture cards.
 	// Read-only by design — the API refuses every change from a child account anyway.
-	import { goto } from '$app/navigation';
 	import { api, pinPhotos, thumbUrl } from '$lib/api';
+	import AccountMenu from '$lib/components/AccountMenu.svelte';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import PlaceCard from '$lib/components/PlaceCard.svelte';
 	import VisitedMap from '$lib/components/VisitedMap.svelte';
 	import { countryName, date, flag, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
-	import { session, setUser } from '$lib/stores/session.svelte';
+	import { session } from '$lib/stores/session.svelte';
 	import FlightSheet from '$lib/components/FlightSheet.svelte';
 	import type { Flight, Pin, TripSummary, Visited } from '$lib/types';
 
@@ -24,18 +24,13 @@
 
 	api.get<TripSummary[]>('/api/trips').then((r) => (trips = r));
 
-	async function logout() {
-		await api.post('/api/auth/logout');
-		setUser(null);
-		goto('/login');
-	}
 </script>
 
 <div class="kids">
 	<header class="row">
 		<h1>{t('kids_hello', { name: session.user?.display_name ?? '' })}</h1>
 		<span class="spacer"></span>
-		<button class="btn small" onclick={logout}>{t('logout')}</button>
+		<AccountMenu variant="button" />
 	</header>
 
 	<section class="globe card">

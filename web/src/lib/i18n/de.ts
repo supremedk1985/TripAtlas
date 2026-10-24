@@ -44,6 +44,12 @@ const de: Dictionary = {
 	login: 'Anmelden',
 	login_failed: 'Benutzername oder Passwort falsch.',
 	login_throttled: 'Zu viele Versuche. Bitte 15 Minuten warten.',
+	account_menu: 'Konto',
+	account_switch: 'Konto wechseln',
+	account_other: 'Anderes Konto …',
+	account_forget: 'Von diesem Gerät entfernen',
+	account_fingerprint: 'meldet sich mit Fingerabdruck an',
+	login_saved_failed: 'Das gespeicherte Passwort passt nicht mehr. Bitte neu anmelden.',
 
 	layer_routes: 'Strecken',
 	layer_photos: 'Fotos',

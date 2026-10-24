@@ -1,26 +1,44 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { api, ApiError } from '$lib/api';
+	import { ApiError } from '$lib/api';
+	import { homeOf, knownAccounts, offerSave, signIn, switchTo, type KnownAccount } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
-	import { session, setUser } from '$lib/stores/session.svelte';
-	import type { User } from '$lib/types';
+	import { session } from '$lib/stores/session.svelte';
 
-	let username = $state('');
+	const failed = page.url.searchParams.get('failed');
+	let username = $state(page.url.searchParams.get('user') ?? '');
 	let password = $state('');
-	let error = $state('');
+	let error = $state(failed === 'saved' ? t('login_saved_failed') : failed === 'throttled' ? t('login_throttled') : '');
 	let busy = $state(false);
+	let passwordField: HTMLInputElement | undefined = $state();
+	const accounts = knownAccounts();
+
+	$effect(() => {
+		if (username && passwordField) passwordField.focus();
+	});
+
+	function pick(a: KnownAccount) {
+		error = '';
+		if (a.saved) switchTo(a);   // the app asks for the fingerprint and signs in
+		else {
+			username = a.username;
+			password = '';
+			passwordField?.focus();
+		}
+	}
 
 	async function submit(e: SubmitEvent) {
 		e.preventDefault();
 		busy = true;
 		error = '';
 		try {
-			const r = await api.post<{ user: User }>('/api/auth/login', { username, password });
-			setUser(r.user);
+			const user = await signIn(username, password);
+			offerSave(password, user);
 			// back to where the user was when the session ended (only paths inside TripAtlas)
 			const next = page.url.searchParams.get('next');
-			goto(next && next.startsWith('/') && !next.startsWith('//') ? next : r.user.role === 'child' ? '/kids' : '/');
+			const fits = next && next.startsWith('/') && !next.startsWith('//') && next.startsWith('/kids') === (user.role === 'child');
+			goto(fits ? next : homeOf(user));
 		} catch (err) {
 			error = err instanceof ApiError && err.status === 429 ? t('login_throttled') : t('login_failed');
 		} finally {
@@ -33,13 +51,26 @@
 	<form class="card" onsubmit={submit}>
 		<img src="/favicon.svg" alt="" width="48" height="48" />
 		<h1>{session.status?.name ?? 'TripAtlas'}</h1>
+		{#if accounts.length}
+			<div class="accounts">
+				{#each accounts as a (a.username)}
+					<button type="button" class:current={a.username.toLowerCase() === username.toLowerCase()} onclick={() => pick(a)}>
+						<span class="avatar">{a.display_name.slice(0, 1).toUpperCase()}</span>
+						<span class="name">{a.display_name}</span>
+						{#if a.saved}
+							<svg viewBox="0 0 24 24" aria-label={t('account_fingerprint')}><path d="M12 11v3a6 6 0 0 1-1.5 4" /><path d="M8.5 9.5A4 4 0 0 1 16 11v2.5a10 10 0 0 1-1 4.3" /><path d="M5.6 7.6A7.5 7.5 0 0 1 19.5 11v1.5" /><path d="M8 13.5a14 14 0 0 1-1.6 4.5" /></svg>
+						{/if}
+					</button>
+				{/each}
+			</div>
+		{/if}
 		<label class="field">
 			<span>{t('username')}</span>
-			<input type="text" bind:value={username} autocomplete="username" autocapitalize="none" required />
+			<input type="text" name="username" bind:value={username} autocomplete="username" autocapitalize="none" required />
 		</label>
 		<label class="field">
 			<span>{t('password')}</span>
-			<input type="password" bind:value={password} autocomplete="current-password" required />
+			<input type="password" name="password" bind:value={password} bind:this={passwordField} autocomplete="current-password" required />
 		</label>
 		{#if error}<p class="error">{error}</p>{/if}
 		<button class="btn primary" disabled={busy}>{t('login')}</button>
@@ -65,5 +96,48 @@
 	h1 {
 		text-align: center;
 		margin: 10px 0 20px;
+	}
+	.accounts {
+		display: grid;
+		gap: 6px;
+		margin-bottom: 16px;
+	}
+	.accounts button {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 8px 10px;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--surface);
+		color: var(--text);
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+	.accounts button.current {
+		border-color: var(--accent);
+	}
+	.accounts .name {
+		flex: 1;
+		font-weight: 600;
+	}
+	.avatar {
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		display: grid;
+		place-items: center;
+		background: var(--accent);
+		color: #fff;
+		font-weight: 700;
+	}
+	.accounts svg {
+		width: 20px;
+		height: 20px;
+		fill: none;
+		stroke: var(--accent);
+		stroke-width: 1.8;
+		stroke-linecap: round;
 	}
 </style>

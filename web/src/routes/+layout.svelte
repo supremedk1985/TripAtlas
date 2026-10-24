@@ -6,6 +6,7 @@
 	import { onUnauthorized } from '$lib/api';
 	import DialogHost from '$lib/components/DialogHost.svelte';
 	import { loadSession, session } from '$lib/stores/session.svelte';
+	import { installAppSignIn, remember } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
 
 	let { children } = $props();
@@ -25,6 +26,11 @@
 
 	// Session expired or ended elsewhere: forget the user; the guard above then shows the sign-in page.
 	onUnauthorized(() => (session.user = null));
+	// Whoever is signed in on this device shows up under "Switch account" later
+	$effect(() => {
+		if (session.user) remember(session.user);
+	});
+	installAppSignIn();
 	loadSession().catch((e) => (error = e instanceof Error ? e.message : String(e)));
 </script>
 

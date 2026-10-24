@@ -46,6 +46,12 @@ export default {
 	login: 'Sign in',
 	login_failed: 'Wrong username or password.',
 	login_throttled: 'Too many attempts. Please wait 15 minutes.',
+	account_menu: 'Account',
+	account_switch: 'Switch account',
+	account_other: 'Another account…',
+	account_forget: 'Remove from this device',
+	account_fingerprint: 'signs in with your fingerprint',
+	login_saved_failed: 'The saved password no longer works. Please sign in again.',
 
 	// map page
 	layer_routes: 'Routes',
