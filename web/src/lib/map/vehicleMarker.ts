@@ -6,6 +6,9 @@ import type { Tracker } from '$lib/types';
 const CAR =
 	'<path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11h.5a1.5 1.5 0 0 1 1.5 1.5V17a1 1 0 0 1-1 1h-1v1.5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V18H8v1.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V18H4a1 1 0 0 1-1-1v-4.5A1.5 1.5 0 0 1 4.5 11z" class="body"/>' +
 	'<path d="M7.3 11l1.1-3.3h7.2l1.1 3.3z" class="glass"/><circle cx="6.6" cy="14.4" r="1.3" class="glass"/><circle cx="17.4" cy="14.4" r="1.3" class="glass"/>';
+const BIKE =
+	'<circle cx="6" cy="16" r="4" class="ring"/><circle cx="18" cy="16" r="4" class="ring"/>' +
+	'<path d="M6 16l4.5-7.5h6L18 16M10.5 8.5L13 16h-7M15 6h3" class="ring"/>';
 const PERSON =
 	'<circle cx="12" cy="6.5" r="3.5" class="body"/><path d="M5 21v-3.5A5.5 5.5 0 0 1 10.5 12h3a5.5 5.5 0 0 1 5.5 5.5V21z" class="body"/>';
 
@@ -18,7 +21,8 @@ export function vehicleMarker(opts: { color: string; kind?: Tracker['kind']; ava
 		el.style.backgroundImage = `url(${opts.avatarUrl})`;
 	} else {
 		el.className = 'vehicle-icon' + (opts.live ? ' live' : '');
-		el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${opts.kind === 'person' ? PERSON : CAR}</svg>`;
+		const shape = opts.kind === 'person' ? PERSON : opts.kind === 'bike' ? BIKE : CAR;
+		el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`;
 	}
 	return el;
 }

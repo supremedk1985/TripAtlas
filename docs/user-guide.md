@@ -120,7 +120,17 @@ Trips from before you had a tracker: **Settings → Import**, choose the vehicle
   the Google Maps app (Android: *Settings → Location → Location services → Timeline → Export*).
 - **GeoJSON** with timestamps (e.g. from Dawarich or OwnTracks).
 
-Importing the same file twice does no harm — positions that already exist are skipped.
+Importing the same file twice does no harm — positions that already exist are skipped. Recordings with a point
+every second are thinned to at most one point every 10 seconds (about 70 m by bike); that keeps years of rides small
+and still draws the route.
+
+### Bike rides
+
+Create a tracker of the kind **Bicycle** (*Settings → Trackers*, name it e.g. "Bike", choose *Bicycle*). For a
+bicycle every ride counts, also a day ride without a night away (shown as *day ride*), as soon as it leaves the
+home area by more than a kilometre. Several rides from a campsite during a holiday become one trip. Then import the
+rides as GPX into that tracker — a bike app's export of all rides in one file works (for example *CurruBike →
+Settings → All rides as GPX*). Import it again later with newer rides: the ones already there are skipped.
 
 ## On the phone
 

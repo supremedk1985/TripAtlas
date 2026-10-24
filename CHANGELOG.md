@@ -3,6 +3,16 @@
 All notable changes. The format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Added
+- Tracker kind *Bicycle*: every ride counts, also without a night away ("day ride"); bike pictogram on the map
+- Tracker kind can be chosen in *Settings → Trackers*
+
+### Changed
+- GPX is imported as a stream (files of several hundred MB, e.g. a bike app's export of all rides)
+- Imports keep at most one point every 10 seconds; the import message says how many were read, kept and new
+
 ## [0.1.0] – 2026-10-24
 
 First public version.

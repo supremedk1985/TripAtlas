@@ -27,16 +27,18 @@
 		busy = true;
 		result = null;
 		try {
-			let added = 0, total = 0;
+			let added = 0, total = 0, read = 0;
 			for (const f of files) {
 				const form = new FormData();
 				form.append('tracker_id', String(trackerId));
 				form.append('file', f);
-				const r = await api.post<{ points: number; added: number }>('/api/imports', form);
+				const r = await api.post<{ points: number; kept: number; added: number }>('/api/imports', form);
 				added += r.added;
-				total += r.points;
+				total += r.kept;
+				read += r.points;
 			}
-			result = { ok: true, text: t('import_done', { added: added.toLocaleString(), total: total.toLocaleString() }) };
+			const n = { added: added.toLocaleString(), total: total.toLocaleString(), read: read.toLocaleString() };
+			result = { ok: true, text: read > total ? t('import_done_thinned', n) : t('import_done', n) };
 			await load();
 		} catch (err) {
 			result = { ok: false, text: errorText(err) };

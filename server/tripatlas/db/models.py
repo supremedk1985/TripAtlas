@@ -84,6 +84,8 @@ class Setting(Base):
 class TrackerKind(enum.StrEnum):
     vehicle = "vehicle"
     person = "person"
+    # A bicycle: every ride is an entry of its own, also without a night away (see services/trips.py)
+    bike = "bike"
 
 
 class Tracker(Base):

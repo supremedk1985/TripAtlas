@@ -72,6 +72,8 @@ def update_tracker(
     data = body.model_dump(exclude_unset=True)
     if "traccar_device_id" in data and data["traccar_device_id"] != t.traccar_device_id:
         t.synced_until = None  # a different device: fetch its whole history
+    if "kind" in data and data["kind"] != t.kind:
+        t.dirty = True  # a bike counts every ride: its trips have to be recognised again
     if "photo_priority" in data:
         for other in db.scalars(select(Tracker)):
             other.dirty = True  # priorities decide which tracker gets a photo

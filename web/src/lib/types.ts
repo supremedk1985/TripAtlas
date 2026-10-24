@@ -25,7 +25,7 @@ export interface SetupStatus {
 export interface Tracker {
 	id: number;
 	name: string;
-	kind: 'vehicle' | 'person';
+	kind: 'vehicle' | 'person' | 'bike';
 	color: string;
 	traccar_device_id: number | null;
 	photo_priority: number;

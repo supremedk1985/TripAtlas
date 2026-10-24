@@ -119,7 +119,18 @@ Reisen aus der Zeit vor dem Tracker: **Einstellungen → Import**, Fahrzeug wäh
   Google Maps (Android: *Einstellungen → Standort → Standortdienste → Zeitachse → Exportieren*).
 - **GeoJSON** mit Zeitstempeln (etwa aus Dawarich oder OwnTracks).
 
-Dieselbe Datei zweimal zu importieren schadet nicht – schon vorhandene Positionen werden übersprungen.
+Dieselbe Datei zweimal zu importieren schadet nicht – schon vorhandene Positionen werden übersprungen. Aufzeichnungen
+mit einem Punkt je Sekunde werden auf höchstens einen Punkt alle 10 Sekunden ausgedünnt (mit dem Rad etwa 70 m); so
+bleiben auch Jahre an Fahrten klein, und die Strecke ist trotzdem gut zu sehen.
+
+### Radtouren
+
+Einen Tracker der Art **Fahrrad** anlegen (*Einstellungen → Tracker*, Name z. B. „Fahrrad“, Art *Fahrrad*). Beim
+Fahrrad zählt jede Tour, auch ohne Übernachtung (angezeigt als *Tagestour*), sobald sie mehr als einen Kilometer
+über das Zuhause hinausgeht. Mehrere Touren vom Campingplatz aus während eines Urlaubs ergeben eine Reise. Dann die
+Fahrten als GPX in diesen Tracker importieren – auch der Export aller Fahrten einer Fahrrad-App in einer Datei
+(etwa *CurruBike → Einstellungen → Alle Fahrten als GPX*). Später mit neueren Fahrten einfach wieder importieren:
+was schon da ist, wird übersprungen.
 
 ## Auf dem Handy
 

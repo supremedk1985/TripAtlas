@@ -311,3 +311,40 @@ def test_trip_ids_survive_recompute(client):
         after = {tr.day_key: tr.id for tr in db.scalars(select(Trip).where(Trip.tracker_id == tid))}
     assert len(after) == 2
     assert after[first[0][1]] == first[0][0]
+
+
+def test_bike_gpx_import_thinned_deduplicated_and_rides_recognised(client):
+    """A CurruBike export: every ride as a track, a point per second. Thinned on import, a second import adds
+    nothing, and each day ride becomes an entry of its own for a bike tracker."""
+    from datetime import UTC, datetime
+
+    from tripatlas.services.trips import recompute
+
+    setup_household(client)   # home in Paris (48.85, 2.35)
+    bike = client.post("/api/trackers", json={"name": "Fahrrad", "kind": "bike"}).json()
+    assert bike["kind"] == "bike"
+
+    def ride(day: int) -> str:
+        t0 = datetime(2026, 6, day, 10, tzinfo=UTC).timestamp()
+        pts = []
+        for s in range(0, 3600):                       # one hour out and back, 1 Hz
+            frac = s / 1800 if s < 1800 else (3600 - s) / 1800
+            lat = 48.85 + 0.06 * frac                    # up to ~6.7 km north and back
+            ts = datetime.fromtimestamp(t0 + s, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+            pts.append(f'<trkpt lat="{lat:.6f}" lon="2.35"><ele>40</ele><time>{ts}</time></trkpt>')
+        return "<trk><name>ride</name><trkseg>" + "".join(pts) + "</trkseg></trk>"
+
+    gpx = ('<?xml version="1.0"?><gpx version="1.1" creator="CurruBike" xmlns="http://www.topografix.com/GPX/1/1">'
+           + ride(5) + ride(3) + "</gpx>").encode()   # newest ride first, as an app may export
+    up = lambda: client.post("/api/imports", data={"tracker_id": str(bike["id"])},  # noqa: E731
+                             files={"file": ("currubike.gpx", gpx, "application/gpx+xml")}).json()
+    first = up()
+    assert first["points"] == 7200 and first["kept"] == 720 and first["added"] == 720
+    again = up()
+    assert again["added"] == 0 and again["skipped"] == 720
+
+    with db_session() as db:
+        recompute(db, db.get(Tracker, bike["id"]), now=datetime(2026, 7, 1, tzinfo=UTC).timestamp())
+        trips = list(db.scalars(select(Trip).where(Trip.tracker_id == bike["id"]).order_by(Trip.start)))
+    assert [t.nights for t in trips] == [0, 0]
+    assert [t.day_key for t in trips] == ["2026-06-03", "2026-06-05"]

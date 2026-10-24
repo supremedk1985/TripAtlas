@@ -320,6 +320,15 @@ button:focus-visible {
 	stroke-linejoin: round;
 	paint-order: stroke;
 }
+.vehicle-icon .ring {
+	/* the bike is drawn with lines: the colour as a thick line over a white one, like the car's outline */
+	fill: none;
+	stroke: var(--c);
+	stroke-width: 2.2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	filter: drop-shadow(0 0 1.2px #fff) drop-shadow(0 0 1.2px #fff);
+}
 .vehicle-icon .glass {
 	fill: #fff;
 	opacity: 0.9;

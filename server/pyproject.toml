@@ -13,7 +13,6 @@ dependencies = [
   "argon2-cffi>=23.1",
   "cryptography>=42",
   "pydantic-settings>=2.4",
-  "gpxpy>=1.6",
   "python-multipart>=0.0.9",
   "nh3>=0.2",
   "exifread>=3.0",

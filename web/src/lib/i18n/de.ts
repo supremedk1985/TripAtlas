@@ -23,6 +23,7 @@ const de: Dictionary = {
 	positions: 'Positionen',
 	error_server: 'Der Server ist nicht erreichbar.',
 
+	nights_zero: 'Tagestour',
 	nights_one: '{n} Nacht',
 	nights_other: '{n} Nächte',
 	photos_one: '{n} Foto',
@@ -44,6 +45,11 @@ const de: Dictionary = {
 	login: 'Anmelden',
 	login_failed: 'Benutzername oder Passwort falsch.',
 	login_throttled: 'Zu viele Versuche. Bitte 15 Minuten warten.',
+	tracker_kind: 'Art',
+	tracker_kind_hint: 'Beim Fahrrad zählt jede Tour, auch ohne Übernachtung',
+	tracker_kind_vehicle: 'Fahrzeug',
+	tracker_kind_bike: 'Fahrrad',
+	tracker_kind_person: 'Person',
 	place_about: 'Über {name}:',
 	avatar_crop: 'Bild zuschneiden',
 	avatar_crop_hint: 'Zum Verschieben ziehen, vergrößern mit dem Regler oder zwei Fingern.',
@@ -204,6 +210,7 @@ const de: Dictionary = {
 	import_hint:
 		'GPX-Dateien, Google-Standortverlauf (Records.json aus Takeout oder der neuere Zeitachsen-Export) und GeoJSON. Schon vorhandene Positionen werden übersprungen.',
 	import_done: '{added} von {total} Positionen waren neu.',
+	import_done_thinned: '{read} Punkte gelesen, auf {total} ausgedünnt (höchstens einer alle 10 Sekunden) – davon {added} neu, der Rest war schon da.',
 	import_history: 'Letzte Importe',
 
 	status_hint: 'TripAtlas holt alle paar Minuten neue Positionen, erkennt Reisen und schlägt Orte nach.',

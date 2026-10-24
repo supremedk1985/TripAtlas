@@ -23,6 +23,7 @@ export default {
 	error_server: 'The server cannot be reached.',
 
 	// plurals
+	nights_zero: 'day ride',
 	nights_one: '{n} night',
 	nights_other: '{n} nights',
 	photos_one: '{n} photo',
@@ -46,6 +47,11 @@ export default {
 	login: 'Sign in',
 	login_failed: 'Wrong username or password.',
 	login_throttled: 'Too many attempts. Please wait 15 minutes.',
+	tracker_kind: 'Kind',
+	tracker_kind_hint: 'A bike counts every ride, also without a night away',
+	tracker_kind_vehicle: 'Vehicle',
+	tracker_kind_bike: 'Bicycle',
+	tracker_kind_person: 'Person',
 	place_about: 'About {name}:',
 	avatar_crop: 'Crop picture',
 	avatar_crop_hint: 'Drag to move, zoom with the slider or two fingers.',
@@ -218,6 +224,7 @@ export default {
 	import_hint:
 		'GPX files, Google location history (Records.json from Takeout or the newer Timeline export) and GeoJSON. Positions that already exist are skipped.',
 	import_done: '{added} of {total} positions were new.',
+	import_done_thinned: '{read} points read, thinned to {total} (at most one every 10 seconds) – {added} of them new, the rest was already there.',
 	import_history: 'Recent imports',
 
 	// status

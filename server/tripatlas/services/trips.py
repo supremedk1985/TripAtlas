@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import logging
 import time
 from datetime import datetime
@@ -14,7 +15,7 @@ from ..core.countries import country_code
 from ..core.detection import DetectionSettings, detect_stays, detect_trips
 from ..core.geo import iso_to_ts, slice_by_time
 from ..core.photos import most_common_city, pick_cover
-from ..db.models import Stay, Tracker, Trip
+from ..db.models import Stay, Tracker, TrackerKind, Trip
 from ..integrations.immich import ImmichError
 from . import photos as photo_service
 from . import settings
@@ -28,6 +29,11 @@ def day_key(ts: float, s: DetectionSettings) -> str:
     return datetime.fromtimestamp(ts, s.tz).strftime("%Y-%m-%d")
 
 
+# Bikes: the home area is smaller (a ride starts at the front door) and a short ride is a ride.
+BIKE_HOME_RADIUS_KM = 1.0
+BIKE_MIN_DISTANCE_KM = 3.0
+
+
 def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
     """Replace the tracker's detected trips and stays. Returns the number of trips. Titles and notes live in
     `annotations` and survive this."""
@@ -35,6 +41,12 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
     s = hh.detection()
     if s is None:
         return 0
+    if tracker.kind == TrackerKind.bike:
+        # A bike ride rarely includes a night away, and a ride round the village is already worth keeping: every
+        # ride leaving the home area counts (a holiday with daily rides from the campsite stays ONE trip, because
+        # the bike never comes home at night in between).
+        s = dataclasses.replace(s, min_nights=0, home_radius_km=min(s.home_radius_km, BIKE_HOME_RADIUS_KM),
+                                min_distance_km=BIKE_MIN_DISTANCE_KM)
     now = now or time.time()
     start = iso_to_ts(hh.history_start) if hh.history_start else None
     points = load_points(db, tracker.id, start=start)

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from itertools import islice
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -23,9 +24,30 @@ def load_points(db: Session, tracker_id: int, start: float | None = None, end: f
     return [Point(*row) for row in db.execute(q.order_by(Position.t))]
 
 
-def add_points(db: Session, tracker: Tracker, points: Iterable[Point], source: str, batch: int = 2000) -> int:
-    """Insert points, ignoring timestamps the tracker already has. Returns the number of new rows."""
-    rows = [
+IMPORT_MIN_GAP_S = 10
+
+
+def thin(points: Iterable[Point], min_gap_s: float = IMPORT_MIN_GAP_S) -> Iterator[Point]:
+    """At most one point per `min_gap_s` seconds. Recording apps write every second; for trips a point every
+    10 s is plenty (about 70 m by bike) and keeps a decade of rides small. Deterministic, so importing the same file
+    again keeps the same timestamps — and those are then recognised as duplicates. Files need not be sorted: a jump
+    back in time (the next ride of an export listed newest first) starts a new run."""
+    last: float | None = None
+    for p in points:
+        if last is None or abs(p.t - last) >= min_gap_s:
+            last = p.t
+            yield p
+
+
+def add_points_counted(
+    db: Session, tracker: Tracker, points: Iterable[Point], source: str, batch: int = 2000
+) -> tuple[int, int]:
+    """Insert points in batches straight from an iterator (nothing is held beyond one batch), ignoring timestamps
+    the tracker already has. Returns (new rows, points read)."""
+    added = seen = 0
+    dialect = db.bind.dialect.name if db.bind else "sqlite"
+    it = iter(points)
+    while chunk := [
         {
             "tracker_id": tracker.id,
             "t": p.t,
@@ -35,12 +57,9 @@ def add_points(db: Session, tracker: Tracker, points: Iterable[Point], source: s
             "altitude_m": p.altitude_m or 0,
             "source": source,
         }
-        for p in points
-    ]
-    added = 0
-    dialect = db.bind.dialect.name if db.bind else "sqlite"
-    for i in range(0, len(rows), batch):
-        chunk = rows[i : i + batch]
+        for p in islice(it, batch)
+    ]:
+        seen += len(chunk)
         if dialect == "sqlite":
             stmt = sqlite_insert(Position).values(chunk).on_conflict_do_nothing(index_elements=["tracker_id", "t"])
         else:
@@ -51,7 +70,12 @@ def add_points(db: Session, tracker: Tracker, points: Iterable[Point], source: s
     if added:
         tracker.dirty = True
     db.commit()
-    return added
+    return added, seen
+
+
+def add_points(db: Session, tracker: Tracker, points: Iterable[Point], source: str, batch: int = 2000) -> int:
+    """Insert points, ignoring timestamps the tracker already has. Returns the number of new rows."""
+    return add_points_counted(db, tracker, points, source, batch)[0]
 
 
 def bounds(db: Session, tracker_id: int) -> tuple[float | None, float | None, int]:
