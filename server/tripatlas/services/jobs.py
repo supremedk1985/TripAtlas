@@ -12,6 +12,7 @@ from ..config import get_config
 from ..db.models import Stay, Tracker
 from ..db.session import db_session
 from . import settings
+from .backup import make_snapshot
 from .flights import refresh as refresh_flights
 from .places import cached, get_place
 from .sync import sync_all
@@ -63,6 +64,11 @@ class BackgroundJobs:
                     result["sync_error"] = str(e)
                 result["recomputed"] = recompute_dirty(db)
                 result["places"] = enrich_places(db)
+                try:
+                    if make_snapshot():
+                        result["snapshot"] = True
+                except Exception as e:  # a full disk must not stop sync and detection
+                    log.warning("Database snapshot failed: %s", e)
                 try:
                     result["flights"] = refresh_flights(db)
                 except Exception as e:  # photos are optional; never stop the loop over them

@@ -22,6 +22,8 @@ class Config(BaseSettings):
     # Directory with the built web UI (served at /). Empty: API only.
     web_dir: Path | None = Path(__file__).resolve().parent.parent.parent / "web" / "build"  # Docker: /app/web
     log_level: str = "INFO"
+    # Daily consistent SQLite snapshots in <data_dir>/backups (services/backup.py); 0 = off.
+    backup_keep: int = 7
     # Contact for the User-Agent sent to Wikipedia/Nominatim (their policies require one).
     contact: str = "https://github.com/supremedk1985/tripatlas"
 

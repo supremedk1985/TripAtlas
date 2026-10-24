@@ -64,8 +64,12 @@ Almost everything is configured in the web UI (*Settings*). Environment variable
 | `TRIPATLAS_SECURE_COOKIES` | `false` | `true` behind HTTPS |
 | `TRIPATLAS_SYNC_INTERVAL_MINUTES` | `5` | how often Traccar is polled |
 | `TRIPATLAS_SESSION_DAYS` | `30` | web sign-in lifetime |
+| `TRIPATLAS_BACKUP_KEEP` | `7` | daily database snapshots kept in `data/backups/` (0 = off) |
 
-**Backup:** the data directory (database + `secret.key`). Positions imported from files exist only there.
+**Backup:** the data directory. TripAtlas writes a consistent copy of its SQLite database to `data/backups/` once a
+day (keeps 7, `TRIPATLAS_BACKUP_KEEP`), so a file-level backup of the folder is safe even while it runs. Restore =
+stop the container, copy a snapshot over `tripatlas.db`, start. Keep `secret.key` with it (it decrypts the stored
+Traccar/Immich credentials). Positions imported from files exist only here.
 
 ## How trips are recognised
 
