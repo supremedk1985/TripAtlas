@@ -25,7 +25,8 @@ Fotos dabei entstanden sind und was es über die Orte zu wissen gibt. Zu jedem A
 - **Auf der Karte** ist jede Reise eine Linie in der Farbe ihres Fahrzeugs. Darüber liegen eure Fotos als kleine
   Stapel; die Zahl sagt, wie viele Fotos darin stecken. Antippen öffnet sie.
 - **Strecken** und **Fotos** schalten die Ebenen ein und aus. Bei mehreren Fahrzeugen blenden die farbigen Knöpfe
-  jedes einzeln ein oder aus. **Straßen / Hell / Dunkel** wechselt den Kartenstil.
+  jedes einzeln ein oder aus. Den Kartenstil (Straßen, Hell, Dunkel) wählt die Auswahlliste neben den Ebenen; der Knopf **⛶** oben links auf der
+  Karte zeigt nur die Karte, im Vollbild.
 - Die Fotoebene zeigt **alle** Fotos mit Ort – auch von Reisen ohne Tracker, etwa einer Städtereise mit dem Zug.
 
 ### Was zählt als Reise?
@@ -55,14 +56,16 @@ Eine Reise in der Liste oder ihre Linie auf der Karte antippen:
 ### Fotos und Videos
 
 Jedes Foto lässt sich groß ansehen. Wischen oder die Pfeiltasten blättern weiter; Videos laufen im selben
-Betrachter. Fotos ohne GPS (etwa von einer Kamera) setzt TripAtlas an die Stelle, an der das Fahrzeug zu der Zeit war.
+Betrachter, Esc schließt ihn. Der Raster-Knopf oben links zeigt **alle Fotos und Videos auf einmal** – 3, 2 oder 1
+nebeneinander, Videos mit ▶; antippen öffnet ein Bild groß. Fotostapel auf der Karte öffnen gleich in dieser
+Übersicht. Fotos ohne GPS (etwa von einer Kamera) setzt TripAtlas an die Stelle, an der das Fahrzeug zu der Zeit war.
 
 ## Wo war ich schon
 
 ![Der Globus mit allen Orten und den besuchten Ländern](../images/de/visited.png)
 
 Ein Globus mit einem Punkt für jeden Ort, an dem ihr wart – Übernachtungen und jeder Ort aus euren Fotos – und den
-besuchten Ländern eingefärbt. Unten (am Computer: links) die Zahl der Länder und Orte; antippen klappt die Liste auf.
+besuchten Ländern eingefärbt. Unten (am Computer: links) die Zahl der Länder und Orte und dazu die Länder mit der Zahl ihrer Orte.
 
 Einen Punkt antippen: Name, Nächte, Fotos, der Wikipedia-Text – und **Fotos ansehen** öffnet alle Fotos dieses Ortes.
 
@@ -89,11 +92,13 @@ Benutzer** an und bestimmt, welche Fahrzeuge jemand sieht.
 
 ### Konto wechseln
 
-Das Personen-Symbol oben rechts öffnet das Kontomenü: wer angemeldet ist, die anderen Konten, die auf diesem Gerät
-schon benutzt wurden, *Anderes Konto …* und *Abmelden*. Wer ein Konto antippt, kommt zur Anmeldeseite mit
+Dein Bild (oder das Personen-Symbol) oben rechts öffnet das Kontomenü – in der Kinderansicht ist es der Knopf
+**Konto wechseln**: wer angemeldet ist, die anderen Konten, die auf diesem Gerät schon benutzt wurden, *Anderes
+Konto …* und *Abmelden*. Wechseln meldet das bisherige Konto immer ab. Wer ein Konto antippt, kommt zur Anmeldeseite mit
 eingetragenem Namen — das Passwort trägt der Passwortmanager des Browsers ein. In einer App, die das unterstützt,
 bietet TripAtlas nach der Anmeldung an, das Passwort hinter dem Fingerabdruck zu speichern; dann genügen beim
-Wechseln ein Tipp und der Finger. Ein Kind kommt ohne den Finger der Eltern nicht in deren Konto zurück.
+Wechseln ein Tipp und der Finger. Ein Kind kommt ohne den Finger der Eltern nicht in deren Konto zurück. Im normalen Browser ist das Passwort das einzige
+Schloss: Wer es kennt, kann sich anmelden.
 
 ### Die Ansicht für Kinder
 
@@ -123,8 +128,9 @@ TripAtlas im Browser des Handys öffnen und *Zum Startbildschirm hinzufügen* w�
 
 ## Eigene Einstellungen
 
-**Einstellungen → Profil**: Name, Sprache, Passwort und auf Wunsch ein eigener Immich-Schlüssel (dann siehst du genau
-deine Fotos und die mit dir geteilten).
+**Einstellungen → Profil**: dein Bild (wählen, im runden Rahmen zuschneiden oder entfernen), Name, Sprache,
+Passwort und auf Wunsch ein eigener Immich-Schlüssel (dann siehst du genau deine Fotos und die mit dir geteilten).
+Die Bilder der anderen Konten, etwa der Kinder, setzt der Administrator unter **Einstellungen → Benutzer**.
 
 ## Häufige Fragen
 

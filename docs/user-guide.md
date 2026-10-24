@@ -25,7 +25,8 @@ what is worth knowing about the places. Every section has a short video.
 - **On the map** each trip is a line in the colour of its vehicle. Your photos lie on top as small stacks; the
   number says how many photos are in a stack. Tap a stack to look through them.
 - **Routes** and **Photos** switch the layers on and off. With several vehicles, the coloured buttons show or hide
-  each one. **Streets / Light / Dark** changes the map style.
+  each one. The map style (streets, light, dark) is chosen in the drop-down next to the layers; the **⛶** button at the top left
+of the map shows only the map, full screen.
 - The photo layer shows **all** photos with a location — also from trips without a tracker, like a city trip by
   train.
 
@@ -54,15 +55,17 @@ Tap a trip in the list or its line on the map:
 
 ### Photos and videos
 
-Tap any photo to see it large. Swipe or use the arrow keys to move on; videos play in the same viewer. Photos without
-GPS (from a camera, for example) are placed where the vehicle was at that time.
+Tap any photo to see it large. Swipe or use the arrow keys to move on; videos play in the same viewer, Esc closes it.
+The grid button at the top left shows **all photos and videos at once** — 3, 2 or 1 per row, videos marked with ▶;
+tap one to see it large. Photo stacks on the map open in this overview straight away. Photos without GPS (from a
+camera, for example) are placed where the vehicle was at that time.
 
 ## Where I've been
 
 ![The globe with every place and the visited countries](images/en/visited.png)
 
 A globe with a pin for every place you have been — overnight stays and every town in your photos — and the visited
-countries filled in. At the bottom (on a computer: left) the number of countries and places; tap it for the list.
+countries filled in. At the bottom (on a computer: left) the number of countries and places, and the countries with how many places each.
 
 Tap a pin: name, nights, photos, the Wikipedia summary — and **Show photos** opens all photos of that place.
 
@@ -89,11 +92,13 @@ Everybody signs in with their own name and password. The administrator creates a
 
 ### Switching accounts
 
-The person icon at the top right opens the account menu: who is signed in, the other accounts used on this device,
-*Another account…* and *Sign out*. Picking an account opens the sign-in page with the name filled in — your browser's
-password manager can fill in the password. In an app that supports it (see [App bridge](architecture.md#app-bridge)),
-TripAtlas offers to keep the password behind your fingerprint; switching is then one tap and a fingerprint. A child
-cannot switch back to a parent's account without the parent's fingerprint.
+Your picture (or the person icon) at the top right opens the account menu — in the children's view it is the
+**Switch account** button: who is signed in, the other accounts used on this device, *Another account…* and *Sign
+out*. Switching always signs the current account out. Picking an account opens the sign-in page with the name filled
+in — your browser's password manager can fill in the password. In an app that supports it (see
+[App bridge](architecture.md#app-bridge)), TripAtlas offers to keep the password behind your fingerprint; switching
+is then one tap and a fingerprint, and a child cannot get back into a parent's account without the parent's
+fingerprint. In a plain browser the password is the only lock: anyone who knows it can sign in.
 
 ### The children's view
 
@@ -124,8 +129,9 @@ The layout adapts: the map on top, the list below; the photo viewer works with s
 
 ## Your settings
 
-**Settings → Profile**: name, language, password, and optionally your own Immich API key (then you see exactly your
-photos and those shared with you).
+**Settings → Profile**: your picture (choose one, crop it in the round frame, or remove it), name, language,
+password, and optionally your own Immich API key (then you see exactly your photos and those shared with you).
+Administrators set the pictures of the other accounts, for example the children's, under **Settings → Users**.
 
 ## Questions
 

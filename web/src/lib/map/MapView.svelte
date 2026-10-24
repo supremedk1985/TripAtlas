@@ -36,11 +36,13 @@
 		});
 		currentStyle = style;
 		map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
-		map.on('style.load', () => {
-			if (globe) map!.setProjection({ type: 'globe' });
-			onstyle?.(map!);
+		// the handlers keep their own reference: `map` may already be cleared when a late event arrives
+		const m = map;
+		m.on('style.load', () => {
+			if (globe) m.setProjection({ type: 'globe' });
+			onstyle?.(m);
 		});
-		map.once('load', () => onready?.(map!));
+		m.once('load', () => onready?.(m));
 	});
 
 	$effect(() => {

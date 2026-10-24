@@ -7,9 +7,11 @@ services:
     container_name: tripatlas
     restart: unless-stopped
     ports:
-      - "8097:8097"
+      - "8097:8097"           # left side = port on your server; change it if 8097 is taken
     volumes:
-      - ./data:/data          # database + secret.key — back up both together
+      # database + secret.key — back up both together. Create ./data yourself before the first start
+      # (mkdir data): TripAtlas runs as uid 1000 and cannot write to a folder Docker created as root.
+      - ./data:/data
     environment:
       TZ: Europe/Berlin
       # Set to true when TripAtlas is served over HTTPS (reverse proxy)

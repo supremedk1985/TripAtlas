@@ -18,10 +18,17 @@ Just want to look around first? The **[demo](demo.md)** brings its own made-up f
 ## 1. Start TripAtlas
 
 ```bash
-mkdir tripatlas && cd tripatlas
+mkdir -p tripatlas/data && cd tripatlas
 curl -o compose.yaml https://raw.githubusercontent.com/supremedk1985/tripatlas/main/docker/compose.example.yaml
 docker compose up -d
 ```
+
+Create `data` **before** the first start, as your own user, as above: TripAtlas runs as user 1000 and must be able
+to write there. If Docker created the folder first, it belongs to root and TripAtlas stops with *"cannot write to
+/data"* — `sudo chown -R 1000:1000 data` fixes it.
+
+**Port or name already taken?** Change the left side of `ports:` in `compose.yaml` (e.g. `"8100:8097"` → open
+`http://<your-server>:8100`) and, if another container is called `tripatlas`, the `container_name`.
 
 Open `http://<your-server>:8097`. If Traccar and Immich run on the same machine in other Docker projects, either use
 the server's IP address in the wizard (e.g. `http://192.168.1.10:8082`) or join their Docker networks
@@ -54,7 +61,7 @@ one, everybody (including children) uses the household key from the wizard.
 | **Account** | Create the administrator. Choose the language. |
 | **Connections** | Traccar address + token (or e-mail and password), Immich address + API key. *Test & save* checks them; *Next* also saves whatever you typed. Both are optional. |
 | **Trackers** | Click the Traccar devices you want to follow. Without Traccar, create a tracker by name for imports. |
-| **Home** | TripAtlas suggests your home from where the trackers spend most nights. Search or tap the map to correct it. **This matters:** a trip is a time away from home with at least one night away. |
+| **Home** | TripAtlas suggests your home from where the trackers spend most nights. Search or tap the map to correct it. **This matters:** a trip is a time away from home with at least one night away. The **time zone** next to it decides what "night" means (TripAtlas looks where the tracker was at 3 a.m.); it starts as the server's `TZ` from `compose.yaml`. |
 | **Done** | TripAtlas fetches the history (up to three years) and recognises your trips. The map says so while it works and fills in by itself — a few minutes for a year of data. |
 
 ![The wizard suggests the home location](images/en/setup-home.png)

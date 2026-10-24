@@ -6,6 +6,7 @@ Results are cached in the `places` table (services/places.py), so each place is 
 
 from __future__ import annotations
 
+import re
 import threading
 import time
 import urllib.parse
@@ -150,7 +151,7 @@ class PlaceLookup:
             for page in ((d or {}).get("query", {}).get("pages", {}) or {}).values():
                 text = (page.get("extract") or "").strip()
                 if text and "missing" not in page:
-                    return text, base + urllib.parse.quote(page["title"].replace(" ", "_"))
+                    return clean_text(text), base + urllib.parse.quote(page["title"].replace(" ", "_"))
         return None
 
     def lookup(self, lat: float, lon: float, lang: str) -> PlaceInfo:
@@ -162,17 +163,48 @@ class PlaceLookup:
         info.country = addr.get("country")
         info.country_code = (addr.get("country_code") or "").upper() or None
         info.wikidata = (rev.get("extratags") or {}).get("wikidata")
-        if info.wikidata:
-            found = self.wikipedia_title(info.wikidata, lang)
-            if found:
-                wlang, title = found
-                s = self.summary(wlang, title) or {}
-                info.article_title = s.get("title") or title
-                info.article_url = (s.get("content_urls", {}).get("desktop", {}) or {}).get("page")
-                info.summary = s.get("extract")
-                info.thumbnail_url = (s.get("thumbnail") or {}).get("source")
+        found = self.wikipedia_title(info.wikidata, lang) if info.wikidata else None
+        article = None
+        if found and found[0] == lang:
+            article = self.summary(lang, found[1])
+        else:
+            # A village often has no article in the reader's language, its municipality or region usually has:
+            # better German text about the surroundings than an English one about the village.
+            for larger in (addr.get("municipality"), addr.get("county"), addr.get("state_district"), info.region):
+                if not larger or larger == info.name:
+                    continue
+                cand = self.summary(lang, larger)
+                if cand and cand.get("type") == "standard" and cand.get("extract"):
+                    article = cand
+                    break
+            if article is None and found:
+                article = self.summary(*found)   # last resort: the article in another language
+        if article:
+            info.article_title = article.get("title") or (found[1] if found else None)
+            info.article_url = (article.get("content_urls", {}).get("desktop", {}) or {}).get("page")
+            info.summary = clean_text(article.get("extract"))
+            info.thumbnail_url = (article.get("thumbnail") or {}).get("source")
         info.sights = [x for x in self.nearby(lat, lon, lang) if x["title"] != info.article_title][:6]
         kids = self.kids_intro(lang, [info.name, info.region, info.country])
         if kids:
             info.kids_summary, info.kids_url = kids
         return info
+
+
+_IPA = re.compile(r"\s*\[[^\]]*\]")             # pronunciation: [ˈɪnsbʁʊk]
+_EMPTY = re.compile(r"\s*\(\s*[;,]?\s*\)")      # what remains of a removed audio link: (), (;)
+_BARE_LABEL = re.compile(r"\b[A-Z][\w-]*:\s*(?=[;,)])")  # "German: " whose value was removed
+
+
+def clean_text(text: str | None) -> str | None:
+    """Wikipedia intros carry pronunciation and audio remnants that read as noise outside Wikipedia."""
+    if not text:
+        return text
+    for _ in range(3):
+        text = _IPA.sub("", text)
+        text = _BARE_LABEL.sub("", text)
+        text = re.sub(r"\(\s*[;,]\s*", "(", text)
+        text = re.sub(r"\s*[;,]\s*\)", ")", text)
+        text = _EMPTY.sub("", text)
+    return re.sub(r"[ \t]{2,}", " ", text).strip()
+

@@ -61,6 +61,7 @@
 				type="button"
 				class:on={tick >= 0 && editor?.isActive(tool.active)}
 				title={t(tool.title)}
+				onmousedown={(e) => e.preventDefault()}
 				onclick={tool.run}>{tool.label}</button
 			>
 		{/each}

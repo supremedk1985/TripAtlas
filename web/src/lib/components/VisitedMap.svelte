@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Globe with pins for every visited place and the visited countries filled. Used by /visited and the kids' area.
 	import maplibregl from 'maplibre-gl';
+	import { onDestroy } from 'svelte';
 	import { api } from '$lib/api';
 	import MapView from '$lib/map/MapView.svelte';
 	import { installFlights, installPins } from '$lib/map/pinsLayer';
@@ -22,6 +23,9 @@
 
 	let visited: Visited | null = null;
 	let flightMarkers: maplibregl.Marker[] = [];
+	// /api/visited can answer after the page was left and the map removed (its style is gone then)
+	let alive = true;
+	onDestroy(() => (alive = false));
 
 	function colors() {
 		const css = getComputedStyle(document.documentElement);
@@ -29,7 +33,7 @@
 	}
 
 	function draw(map: maplibregl.Map) {
-		if (!visited) return;
+		if (!visited || !alive) return;
 		installPins(map, visited.pins, visited.countries.map((c) => c.country), colors());
 		flightMarkers.forEach((m) => m.remove());
 		flightMarkers = installFlights(map, visited.flights ?? [], colors().pin, (f) => onflight?.(f));
@@ -37,6 +41,7 @@
 
 	function onReady(map: maplibregl.Map) {
 		api.get<Visited>('/api/visited').then((v) => {
+			if (!alive) return;
 			visited = v;
 			onloaded?.(v);
 			draw(map);

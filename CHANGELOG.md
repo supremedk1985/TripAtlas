@@ -3,16 +3,6 @@
 All notable changes. The format follows [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
-
-### Added
-- Account menu: switch between the accounts used on a device without retyping the user name; sign-in page lists them
-- Optional app bridge (`window.TripAtlasApp`) so a host app can keep passwords behind the fingerprint
-
-### Fixed
-- After signing out or switching, the next account no longer lands on the previous account's page
-- Country names were missing from a fresh clone (excluded by `.gitignore`)
-
 ## [0.1.0] – 2026-10-24
 
 First public version.
@@ -27,7 +17,7 @@ First public version.
 ### Photos
 - Photos from Immich on the map as clustered stacks — per trip and all of them, independent of any tracker
 - Photos without GPS placed along the route; priority between vehicles travelling together
-- Videos play in the viewer (streamed from Immich, seekable)
+- Videos play in the viewer (streamed from Immich, seekable); overview of all photos and videos, 3/2/1 per row
 - Photos taken on board an aircraft recognised by GPS altitude and shown as flights
 
 ### Places
@@ -38,6 +28,10 @@ First public version.
 ### Family
 - Accounts with roles: administrator, member, child; trackers assigned per person
 - Children's view: picture cards, trips as stories, read-only, never live positions (enforced by the API)
+
+### Accounts
+- Account menu with the accounts used on a device; profile pictures, cropped in the browser
+- Optional app bridge (`window.TripAtlasApp`) so a host app can keep passwords behind the fingerprint
 
 ### Running it
 - One Docker image (web UI + API), SQLite, migrations at start, daily consistent database snapshot

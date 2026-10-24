@@ -18,10 +18,17 @@ Erst einmal umschauen? Die **[Demo](../demo.md)** bringt eine erfundene Familie 
 ## 1. TripAtlas starten
 
 ```bash
-mkdir tripatlas && cd tripatlas
+mkdir -p tripatlas/data && cd tripatlas
 curl -o compose.yaml https://raw.githubusercontent.com/supremedk1985/tripatlas/main/docker/compose.example.yaml
 docker compose up -d
 ```
+
+Den Ordner `data` **vor** dem ersten Start mit dem eigenen Benutzer anlegen, wie oben: TripAtlas läuft als Benutzer
+1000 und muss dort schreiben dürfen. Hat Docker den Ordner zuerst angelegt, gehört er root, und TripAtlas bricht mit
+*„cannot write to /data“* ab — `sudo chown -R 1000:1000 data` behebt das.
+
+**Port oder Name schon belegt?** In `compose.yaml` die linke Zahl bei `ports:` ändern (z. B. `"8100:8097"` → dann
+`http://<euer-server>:8100` öffnen) und, falls schon ein anderer Container `tripatlas` heißt, den `container_name`.
 
 `http://<euer-server>:8097` öffnen. Laufen Traccar und Immich auf demselben Rechner in anderen Docker-Projekten,
 im Assistenten die IP-Adresse des Servers angeben (z. B. `http://192.168.1.10:8082`) oder den Docker-Netzen beitreten
@@ -54,7 +61,7 @@ Ohne eigenen Schlüssel nutzen alle (auch Kinder) den Schlüssel aus dem Assiste
 | **Konto** | Administrator anlegen, Sprache wählen. |
 | **Verbindungen** | Traccar-Adresse und Token (oder E-Mail und Passwort), Immich-Adresse und API-Schlüssel. *Testen & speichern* prüft sie; *Weiter* speichert Eingetipptes ebenfalls. Beides ist freiwillig. |
 | **Tracker** | Die Traccar-Geräte anklicken, denen ihr folgen wollt. Ohne Traccar einen Tracker mit Namen für Importe anlegen. |
-| **Zuhause** | TripAtlas schlägt das Zuhause vor – dort, wo die Tracker die meisten Nächte stehen. Mit der Suche oder per Antippen korrigieren. **Das ist wichtig:** Eine Reise ist eine Zeit fern von zu Hause mit mindestens einer Nacht auswärts. |
+| **Zuhause** | TripAtlas schlägt das Zuhause vor – dort, wo die Tracker die meisten Nächte stehen. Mit der Suche oder per Antippen korrigieren. **Das ist wichtig:** Eine Reise ist eine Zeit fern von zu Hause mit mindestens einer Nacht auswärts. Die **Zeitzone** daneben legt fest, was „Nacht“ heißt (TripAtlas sieht nach, wo der Tracker um 3 Uhr war); sie startet mit dem `TZ` des Servers aus `compose.yaml`. |
 | **Fertig** | TripAtlas holt den Verlauf (bis zu drei Jahre) und erkennt eure Reisen. Die Karte zeigt das an und füllt sich von selbst – ein paar Minuten für ein Jahr Daten. |
 
 ![Der Assistent schlägt das Zuhause vor](../images/de/setup-home.png)

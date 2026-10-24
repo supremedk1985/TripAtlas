@@ -4,6 +4,7 @@ services/settings.py."""
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -36,4 +37,10 @@ class Config(BaseSettings):
 def get_config() -> Config:
     cfg = Config()
     cfg.data_dir.mkdir(parents=True, exist_ok=True)
+    if not os.access(cfg.data_dir, os.W_OK):
+        # The usual cause: Docker created the bind-mounted folder as root before TripAtlas (uid 1000) first ran.
+        raise SystemExit(
+            f"TripAtlas cannot write to {cfg.data_dir} (running as uid {os.getuid()}). On the host, give the data "
+            f"folder to that user, e.g.  sudo chown -R {os.getuid()}:{os.getgid()} ./data  — then start again."
+        )
     return cfg

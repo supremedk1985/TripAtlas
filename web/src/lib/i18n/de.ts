@@ -44,6 +44,7 @@ const de: Dictionary = {
 	login: 'Anmelden',
 	login_failed: 'Benutzername oder Passwort falsch.',
 	login_throttled: 'Zu viele Versuche. Bitte 15 Minuten warten.',
+	place_about: 'Über {name}:',
 	avatar_crop: 'Bild zuschneiden',
 	avatar_crop_hint: 'Zum Verschieben ziehen, vergrößern mit dem Regler oder zwei Fingern.',
 	avatar_zoom: 'Vergrößern',

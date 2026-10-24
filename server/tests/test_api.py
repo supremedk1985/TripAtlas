@@ -4,6 +4,7 @@ positions; nobody sees trackers they were not given."""
 import time
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from tripatlas.core.geo import Point
 from tripatlas.db.models import Tracker, Trip
@@ -278,3 +279,35 @@ def test_avatar_own_admin_and_child(client):
     login(client, "admin", ADMIN["password"])
     assert client.delete("/api/auth/me/avatar").json()["avatar_version"] is None
     assert client.get(f"/api/users/{me['id']}/avatar").status_code == 404
+
+
+def test_trip_ids_survive_recompute(client):
+    """Links like /?trip=<id> must keep working when new positions arrive and the trips are detected again."""
+    from tripatlas.services.trips import recompute
+
+    setup_household(client)   # home in Paris
+    tid = client.post("/api/trackers", json={"name": "Van"}).json()["id"]
+    t0 = 1_780_000_000.0      # a Tuesday in 2026, 00:00 UTC-ish
+
+    def stay(lat, lon, start_h, hours):
+        return [Point(t0 + (start_h + h) * 3600, lat, lon) for h in range(hours)]
+
+    with db_session() as db:
+        t = db.get(Tracker, tid)
+        add_points(db, t, stay(48.85, 2.35, 0, 10) + stay(45.76, 4.83, 12, 60) + stay(48.85, 2.35, 74, 30), "test")
+        recompute(db, t, now=t0 + 200 * 3600)
+        first = [(tr.id, tr.day_key) for tr in db.scalars(select(Trip).where(Trip.tracker_id == tid))]
+        assert len(first) == 1
+        # another vehicle's trip now holds the highest id, as in any real household
+        other = Tracker(name="Car")
+        db.add(other)
+        db.flush()
+        db.add(Trip(tracker_id=other.id, day_key="2026-01-01", start=t0, end=t0 + 1, distance_km=1, farthest_km=1,
+                    nights=1, dest_lat=0, dest_lon=0))
+        db.commit()
+        # more positions later: a second trip; the first keeps its id
+        add_points(db, t, stay(43.30, 5.37, 110, 60) + stay(48.85, 2.35, 172, 20), "test")
+        recompute(db, t, now=t0 + 300 * 3600)
+        after = {tr.day_key: tr.id for tr in db.scalars(select(Trip).where(Trip.tracker_id == tid))}
+    assert len(after) == 2
+    assert after[first[0][1]] == first[0][0]

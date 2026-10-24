@@ -46,6 +46,7 @@ export default {
 	login: 'Sign in',
 	login_failed: 'Wrong username or password.',
 	login_throttled: 'Too many attempts. Please wait 15 minutes.',
+	place_about: 'About {name}:',
 	avatar_crop: 'Crop picture',
 	avatar_crop_hint: 'Drag to move, zoom with the slider or two fingers.',
 	avatar_zoom: 'Zoom',

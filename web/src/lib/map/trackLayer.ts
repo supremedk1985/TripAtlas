@@ -84,7 +84,7 @@ export class TrackLayer {
 			id: 'stays-label',
 			type: 'symbol',
 			source: 'stays',
-			layout: { 'text-field': ['get', 'n'], 'text-size': 12, 'text-allow-overlap': true },
+			layout: { 'text-field': ['get', 'n'], 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-allow-overlap': true },
 			paint: { 'text-color': '#1c2330' }
 		});
 	}

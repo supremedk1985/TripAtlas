@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -10,13 +13,23 @@ from ..db.models import Setting
 from .secrets import decrypt, encrypt
 
 
+def server_timezone() -> str:
+    zone = os.environ.get("TZ", "")
+    try:
+        ZoneInfo(zone)
+        return zone
+    except (ValueError, ZoneInfoNotFoundError):
+        return "UTC"
+
+
 class HouseholdSettings(BaseModel):
     name: str = "TripAtlas"
     setup_complete: bool = False
     home_lat: float | None = None
     home_lon: float | None = None
     home_radius_km: float = Field(4.0, ge=0.5, le=50)
-    timezone: str = "UTC"
+    # Until the household chooses one: the server's own zone (TZ in compose.yaml), which is usually right
+    timezone: str = Field(default_factory=lambda: server_timezone())
     default_locale: str = "en"
     # Ignore positions before this date (ISO), e.g. test data from the tracker's first days.
     history_start: str | None = None

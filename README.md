@@ -35,12 +35,12 @@ every trip you have taken: where you drove, where you slept, what you saw, and w
 ## Quick start
 
 ```bash
-mkdir tripatlas && cd tripatlas
-curl -O https://raw.githubusercontent.com/supremedk1985/tripatlas/main/docker/compose.example.yaml
-mv compose.example.yaml compose.yaml
+mkdir -p tripatlas/data && cd tripatlas
+curl -o compose.yaml https://raw.githubusercontent.com/supremedk1985/tripatlas/main/docker/compose.example.yaml
 docker compose up -d
 ```
 
+(`data` must exist before the first start, see [installation](docs/installation.md).)
 Open `http://<your-server>:8097` — the setup wizard asks for
 
 1. an administrator account,

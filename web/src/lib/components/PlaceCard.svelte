@@ -24,6 +24,11 @@
 
 	// For children the server already answers with the child-friendly text.
 	const text = $derived(place?.summary);
+	// When the article is about something larger (no article for the village itself), say what it is about
+	const about = $derived.by(() => {
+		const title = place?.title?.replace(/\s*\(.*\)$/, '');
+		return title && place?.name && !title.toLowerCase().includes(place.name.toLowerCase()) ? title : null;
+	});
 </script>
 
 <div class="place">
@@ -41,6 +46,7 @@
 			{#if place.country_code}<span class="muted">· {countryName(place.country_code)}</span>{/if}
 		</p>
 		{#if text}
+			{#if about}<p class="about muted small">{t('place_about', { name: about })}</p>{/if}
 			<p class="summary">{text}</p>
 			{#if place.url}
 				<a href={place.url} target="_blank" rel="noopener noreferrer">{kids ? t('kids_read_more') : t('place_read_more')}</a>
@@ -77,6 +83,9 @@
 	}
 	.where {
 		margin: 0 0 0.4em;
+	}
+	.about {
+		margin: 0 0 2px;
 	}
 	.summary {
 		margin: 0 0 0.4em;

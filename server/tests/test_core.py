@@ -228,3 +228,14 @@ def test_suggest_home_is_where_most_nights_are_spent():
     assert abs(s["lat"] - HOME[0]) < 0.01 and abs(s["lon"] - HOME[1]) < 0.01
     assert s["nights"] >= 19 and s["total"] >= s["nights"]
     assert suggest_home([[]], "Europe/Berlin") is None
+
+
+def test_wikipedia_text_without_pronunciation_remnants():
+    from tripatlas.integrations.places import clean_text
+
+    assert clean_text("Innsbruck (German: [ˈɪnsbʁʊk] (); Bavarian: Innschbruck, [ˈɪnʃbrʊk]) is the capital.") == (
+        "Innsbruck (Bavarian: Innschbruck) is the capital."
+    )
+    assert clean_text("Paris ([paʁi] ) ist die Hauptstadt.") == "Paris ist die Hauptstadt."
+    kept = "Lazise ist eine Gemeinde (am Lago di Garda: Venetien) am See."
+    assert clean_text(kept) == kept

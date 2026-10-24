@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import urllib.parse
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
@@ -64,7 +65,9 @@ def place_dict(p: Place | None, kids: bool = False) -> dict | None:
         return None
     d = {"name": p.name, "country": p.country, "country_code": p.country_code}
     if kids:
-        d.update(summary=p.kids_summary, url=p.kids_url, thumbnail_url=p.thumbnail_url)
+        # the children's source may describe the region instead (no article for the village): say which
+        title = urllib.parse.unquote(p.kids_url.rsplit("/", 1)[-1]).replace("_", " ") if p.kids_url else None
+        d.update(summary=p.kids_summary, url=p.kids_url, title=title, thumbnail_url=p.thumbnail_url)
     else:
         d.update(
             summary=p.summary,

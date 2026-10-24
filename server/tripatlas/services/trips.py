@@ -112,7 +112,13 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
     if immich is not None:
         immich.close()
 
+    # Keep each trip's id when it starts on the same day as before: links (/?trip=<id>) and bookmarks must survive
+    # the recomputation that runs whenever new positions arrive.
+    old_ids = dict(db.execute(select(Trip.day_key, Trip.id).where(Trip.tracker_id == tracker.id)).all())
     db.execute(delete(Trip).where(Trip.tracker_id == tracker.id))
+    db.flush()
+    for trip in rows:
+        trip.id = old_ids.get(trip.day_key)
     db.add_all(rows)
     tracker.dirty = False
     db.commit()
