@@ -61,11 +61,14 @@ class BackgroundJobs:
             with db_session() as db:
                 if not settings.household(db).setup_complete:
                     return result
+                sync_errors: list[str] = []
                 try:
-                    result["synced"] = sync_all(db)
+                    result["synced"] = sync_all(db, sync_errors)
                 except Exception as e:  # a failing source must not stop the other steps
                     log.warning("Sync failed: %s", e)
-                    result["sync_error"] = str(e)
+                    sync_errors.append(str(e))
+                if sync_errors:
+                    result["sync_error"] = "; ".join(sync_errors)[:500]
                 result["recomputed"] = recompute_dirty(db)
                 result["places"] = enrich_places(db)
                 try:

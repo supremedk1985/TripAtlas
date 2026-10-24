@@ -80,6 +80,14 @@ def end_session(db: DbSession, token: str) -> None:
     db.commit()
 
 
+def end_other_sessions(db: DbSession, user_id: int, keep_token: str | None) -> None:
+    q = delete(Session).where(Session.user_id == user_id)
+    if keep_token:
+        q = q.where(Session.token_hash != _token_hash(keep_token))
+    db.execute(q)
+    db.commit()
+
+
 def end_all_sessions(db: DbSession, user_id: int) -> None:
     db.execute(delete(Session).where(Session.user_id == user_id))
     db.commit()
@@ -114,4 +122,7 @@ class LoginThrottle:
                 self._fails.pop(k, None)
 
 
-login_throttle = LoginThrottle()
+login_throttle = LoginThrottle()                     # per account and address
+address_throttle = LoginThrottle(limit=30)           # per address, across all names
+# verified against when the name does not exist, so that takes as long as a wrong password
+DUMMY_HASH = hash_password("no such user — timing equaliser")

@@ -24,6 +24,9 @@ _cache: dict[tuple, tuple[float, object]] = {}
 _lock = threading.Lock()
 
 
+# How far back accounts without live access see (positions, ongoing trips, photos)
+LIVE_DELAY_S = 6 * 3600
+
 def cached[T](key: tuple, seconds: float, fetch: Callable[[], T]) -> T:
     with _lock:
         hit = _cache.get(key)
@@ -61,15 +64,19 @@ def key_id(db: Session, user: User | None) -> str:
 
 
 def markers(db: Session, user: User) -> list[dict]:
+    # Without live access a fresh photo would tell where someone is right now: only photos older than the live
+    # delay (in steps of 10 minutes, so the cache still works)
+    before = None if user.can_see_live else int((time.time() - LIVE_DELAY_S) // 600 * 600)
+
     def fetch():
         with client_for(db, user) as c:
             return [
                 {"id": m["id"], "lat": m["lat"], "lon": m["lon"], "city": m.get("city"), "country": m.get("country")}
-                for m in c.map_markers()
+                for m in c.map_markers(taken_before=ts_to_iso(before) if before else None)
                 if m.get("lat") is not None and m.get("lon") is not None
             ]
 
-    return cached(("markers", key_id(db, user)), 300, fetch)
+    return cached(("markers", key_id(db, user), before), 300, fetch)
 
 
 def photos_between(db: Session, user: User | None, start: float, end: float) -> list[Photo]:

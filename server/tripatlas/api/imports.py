@@ -61,6 +61,8 @@ async def upload(
 
         added, kept = await run_in_threadpool(add_points_counted, db, tracker, thin(counted(source)), fmt)
     except Exception as e:  # any parser error is the file's fault — report it
+        db.rollback()   # nothing of a broken file stays: the batches written so far are undone
+        job = db.get(ImportJob, job.id)
         job.status, job.message = "failed", f"Could not read the file: {e}"[:500]
         db.commit()
         raise HTTPException(400, job.message) from e

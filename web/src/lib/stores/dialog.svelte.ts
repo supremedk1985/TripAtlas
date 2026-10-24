@@ -9,6 +9,7 @@ export interface DialogRequest {
 	confirmLabel?: string;
 	danger?: boolean;
 	minLength?: number;
+	maxLength?: number;
 	resolve: (value: string | boolean | null) => void;
 }
 
@@ -22,7 +23,7 @@ export function confirmDialog(title: string, opts: { text?: string; confirmLabel
 
 export function promptDialog(
 	title: string,
-	opts: { text?: string; value?: string; inputType?: 'text' | 'password' | 'url'; confirmLabel?: string; minLength?: number } = {}
+	opts: { text?: string; value?: string; inputType?: 'text' | 'password' | 'url'; confirmLabel?: string; minLength?: number; maxLength?: number } = {}
 ) {
 	return new Promise<string | null>((resolve) => {
 		dialog.current = { kind: 'prompt', title, ...opts, resolve: (v) => resolve(typeof v === 'string' ? v : null) };

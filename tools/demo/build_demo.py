@@ -14,6 +14,7 @@ import io
 import json
 import math
 import random
+import re
 import time
 import urllib.parse
 import urllib.request
@@ -274,7 +275,9 @@ def main() -> None:
                        "city": None if key == "plane" else place[0], "country": None if key == "plane" else place[3],
                        "width": w, "height": h, "favorite": first_of_place})
         link = src.get("foreign_landing_url") or src.get("landing") or src["url"]
-        credits.append(f"| {pid[:8]} | {src.get('title') or ''} | {src.get('creator') or 'unknown'} "
+        # credits show names, never e-mail addresses (some creators enter theirs as the name)
+        creator = re.sub(r"\S+@\S+\.\w+", "", src.get("creator") or "").strip() or "unknown"
+        credits.append(f"| {pid[:8]} | {src.get('title') or ''} | {creator} "
                        f"| {src['license'].upper()} | {link} |")
         time.sleep(0.3)
 

@@ -6,7 +6,7 @@
 	import { api, thumbUrl, videoUrl } from '$lib/api';
 	import { dateTime } from '$lib/format';
 	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
-	import { t } from '$lib/i18n/index.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 
 	let {
 		ids,
@@ -36,6 +36,8 @@
 	// columns of the overview, remembered on this device
 	const COLS_KEY = 'tripatlas.viewer.columns';
 	let cols = $state(readCols());
+	// tiles wider than the 250 px thumbnails (computer screens) get the preview size, so they are not blurry
+	const wide = typeof window !== 'undefined' && window.innerWidth > 900;
 	function readCols(): number {
 		try {
 			const n = Number(localStorage.getItem(COLS_KEY));
@@ -193,7 +195,7 @@
 			<div class="tiles" class:wide={cols < 3} style="--cols:{cols}">
 				{#each ids as gid, i (gid + i)}
 					<button class="tile" class:current={i === index} onclick={() => pick(i)}>
-						<img src={thumbUrl(gid, cols < 3 ? 'preview' : 'thumbnail')} alt="" loading="lazy" />
+						<img src={thumbUrl(gid, cols < 3 || wide ? 'preview' : 'thumbnail')} alt="" loading="lazy" />
 						{#if markedVideo(gid)}<span class="play" aria-label={t('video')}>▶</span>{/if}
 					</button>
 				{/each}
@@ -239,7 +241,7 @@
 					{#if camera(info)}<dt>{t('photo_camera')}</dt><dd>{camera(info)}</dd>{/if}
 					{#if info.lens}<dt>{t('photo_lens')}</dt><dd>{info.lens}</dd>{/if}
 					{#if exposure(info)}<dt>{t('photo_exposure')}</dt><dd>{exposure(info)}</dd>{/if}
-					{#if info.width && info.height}<dt>{t('photo_dimensions')}</dt><dd>{info.width} × {info.height} px{#if info.width * info.height > 0} ({(Math.round((info.width * info.height) / 1e5) / 10).toLocaleString()} MP){/if}</dd>{/if}
+					{#if info.width && info.height}<dt>{t('photo_dimensions')}</dt><dd>{info.width} × {info.height} px{#if info.width * info.height > 0} ({(Math.round((info.width * info.height) / 1e5) / 10).toLocaleString(i18n.locale)} MP){/if}</dd>{/if}
 					{#if duration(info.duration) && info.is_video}<dt>{t('photo_duration')}</dt><dd>{duration(info.duration)}</dd>{/if}
 					{#if info.filename}<dt>{t('photo_file')}</dt><dd class="break">{info.filename}</dd>{/if}
 					{#if info.mime || info.file_size}<dt>{t('photo_type')}</dt><dd>{[info.mime, fileSize(info.file_size)].filter(Boolean).join(' · ')}</dd>{/if}

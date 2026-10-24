@@ -46,7 +46,8 @@
 			<h3 id="dialog-title">{d.title}</h3>
 			{#if d.text}<p class="muted">{d.text}</p>{/if}
 			{#if d.kind === 'prompt'}
-				<input bind:this={input} type={d.inputType ?? 'text'} bind:value autocomplete="off" />
+				<input bind:this={input} type={d.inputType ?? 'text'} bind:value autocomplete="off" maxlength={d.maxLength} />
+				{#if d.maxLength && value.length > d.maxLength * 0.8}<small class="muted">{value.length} / {d.maxLength}</small>{/if}
 				{#if tooShort}<p class="error small">{t('password_too_short')}</p>{/if}
 			{/if}
 			<div class="row actions">

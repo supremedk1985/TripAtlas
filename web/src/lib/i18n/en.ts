@@ -47,6 +47,7 @@ export default {
 	login: 'Sign in',
 	login_failed: 'Wrong username or password.',
 	login_throttled: 'Too many attempts. Please wait 15 minutes.',
+	note_no_place: 'This photo has no location, so there is nowhere to pin the note.',
 	photo_info: 'Photo information',
 	photo_taken: 'Taken',
 	photo_place: 'Place',

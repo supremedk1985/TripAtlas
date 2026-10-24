@@ -163,4 +163,5 @@ export interface MapNote {
 	photo_id: string | null;
 	created_at: string;
 	author: string | null;
+	created_by: number | null;
 }

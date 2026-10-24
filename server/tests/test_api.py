@@ -4,7 +4,7 @@ positions; nobody sees trackers they were not given."""
 import time
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from tripatlas.core.geo import Point
 from tripatlas.db.models import Tracker, Trip
@@ -368,3 +368,42 @@ def test_map_notes_editors_write_children_read(client):
     login(client, "admin", ADMIN["password"])
     assert client.delete(f"/api/notes/{n['id']}").status_code == 204
     assert client.get("/api/notes").json() == []
+
+
+def test_login_throttle_is_per_account(client):
+    """A child mistyping five times does not lock the parent out of the same computer."""
+    setup_household(client)
+    client.post("/api/users", json={"username": "kid", "display_name": "Kid", "password": "kid-password",
+                                    "role": "child"})
+    client.cookies.clear()
+    for _ in range(5):
+        assert client.post("/api/auth/login", json={"username": "kid", "password": "wrong!!"}).status_code == 401
+    assert client.post("/api/auth/login", json={"username": "kid", "password": "kid-password"}).status_code == 429
+    assert client.post("/api/auth/login", json={"username": "admin", "password": ADMIN["password"]}).status_code == 200
+
+
+def test_role_change_to_child_takes_live_access(client):
+    setup_household(client)
+    u = client.post("/api/users", json={"username": "tim", "display_name": "Tim", "password": "tim-password",
+                                        "role": "member"}).json()
+    assert u["can_see_live"] is True
+    assert client.patch(f"/api/users/{u['id']}", json={"role": "child"}).json()["can_see_live"] is False
+
+
+def test_failed_import_leaves_nothing(client):
+    setup_household(client)
+    tid = client.post("/api/trackers", json={"name": "Van"}).json()["id"]
+    from datetime import UTC, datetime
+
+    t0 = datetime(2026, 6, 1, 10, tzinfo=UTC).timestamp()
+    # 10 s apart (nothing thinned away), more than one write batch before the file breaks off
+    pts = "".join(f'<trkpt lat="50.{i:04d}" lon="8.0"><time>'
+                  f'{datetime.fromtimestamp(t0 + 10 * i, UTC):%Y-%m-%dT%H:%M:%SZ}</time></trkpt>' for i in range(3000))
+    broken = ('<?xml version="1.0"?><gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg>'
+              + pts + "<trkpt lat=").encode()   # cut off mid-way
+    files = {"file": ("x.gpx", broken, "application/gpx+xml")}
+    r = client.post("/api/imports", data={"tracker_id": str(tid)}, files=files)
+    assert r.status_code == 400
+    with db_session() as db:
+        from tripatlas.db.models import Position
+        assert db.scalar(select(func.count()).select_from(Position).where(Position.tracker_id == tid)) == 0

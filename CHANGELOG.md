@@ -18,6 +18,21 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - GPX is imported as a stream (files of several hundred MB, e.g. a bike app's export of all rides)
 - Imports keep at most one point every 10 seconds; the import message says how many were read, kept and new
 
+### Fixed (independent release review)
+- Making an account a child now takes live access away (it kept seeing current positions)
+- A failed import leaves nothing behind (part of a broken file used to stay); impossible coordinates are skipped
+- "Where I've been" works without Immich (tracker pins only) instead of failing
+- Place search no longer breaks when two results have the same label
+- Accounts without live access no longer see photos from the last 6 hours (they could tell where someone is)
+- Sparse recordings (a point every 10–15 min) count their distance; GPS jumps still do not
+- Login throttle per account and device instead of locking every account behind an address; unknown user names
+  take as long as wrong passwords; `X-Forwarded-For` trusted only from private networks (`FORWARDED_ALLOW_IPS`)
+- Map notes can be changed or removed only by their author or an administrator; long notes are limited in the
+  dialog and errors are shown; notes can also be pinned from a trip's photos
+- Status page shows Traccar errors; database files are readable for TripAtlas only; changing your password signs
+  out your other devices; children cannot rename themselves; numbers in the UI language; day rides named after
+  where they went; sharper overview tiles on large screens; a missing video answers 404
+
 ## [0.1.0] – 2026-10-24
 
 First public version.

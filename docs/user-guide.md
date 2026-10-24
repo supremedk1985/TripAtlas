@@ -63,7 +63,8 @@ everything else — coordinates, camera and lens, exposure, size, file — and, 
 
 **Notes on the map:** in the viewer, **📌 Note** pins a short note where the photo shown was taken ("our first
 campsite"). Everyone in the household sees it as a small yellow note on the map; tap it for *Photos from here*, to
-change or to remove it. Children can read notes but not add any. Photos without GPS (from a
+change or to remove it. Only its author or an administrator can change a note. Notes are not shown in the
+children's view. Photos without GPS (from a
 camera, for example) are placed where the vehicle was at that time.
 
 ## Where I've been
@@ -132,6 +133,9 @@ and still draws the route.
 
 ### Bike rides
 
+Tracker kinds: **Vehicle** (trips need a night away), **Bicycle** (below) and **Person** (a tracker someone
+carries, e.g. a phone app — counted like a vehicle, shown with a person pictogram).
+
 Create a tracker of the kind **Bicycle** (*Settings → Trackers*, name it e.g. "Bike", choose *Bicycle*). For a
 bicycle every ride counts, also a day ride without a night away (shown as *day ride*), as soon as it leaves the
 home area by more than a kilometre. Several rides from a campsite during a holiday become one trip. Then import the
@@ -159,4 +163,8 @@ location, the home radius, the minimum number of nights.
 **Where are my photos stored?** In Immich, as before. TripAtlas shows them but never copies or changes them.
 
 **Who can see where we are?** Only accounts that may see live positions, and only for the vehicles they were
-given. Children never.
+given. Children never: they see positions and photos only after a delay of 6 hours, and a trip only once it is
+over. Making an account a child takes live access away.
+
+**Who can see which photos?** Everyone who uses the household's Immich key sees all photos of that key; an account
+with its own Immich key (*Settings → Profile*) sees exactly what that key may see.

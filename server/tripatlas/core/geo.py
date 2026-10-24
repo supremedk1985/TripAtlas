@@ -34,17 +34,19 @@ def point_distance_km(a: Point, b: Point) -> float:
     return distance_km(a.lat, a.lon, b.lat, b.lon)
 
 
-# Consecutive points further apart than this are treated as a gap (tracker off, GPS jump),
-# not as distance travelled.
+# Consecutive points further apart than this count only if the implied speed is plausible on the ground: sparse
+# recordings (a point every 10–15 minutes, e.g. Google location history) still add up, GPS jumps do not.
 MAX_SEGMENT_KM = 5.0
+MAX_GROUND_KMH = 200.0
 
 
 def path_length_km(points: Sequence[Point]) -> float:
-    """Length of a track, skipping implausible jumps (see MAX_SEGMENT_KM)."""
+    """Length of a track, skipping implausible jumps (see MAX_SEGMENT_KM, MAX_GROUND_KMH)."""
     total = 0.0
     for a, b in itertools.pairwise(points):
         d = point_distance_km(a, b)
-        if d < MAX_SEGMENT_KM:
+        hours = (b.t - a.t) / 3600
+        if d < MAX_SEGMENT_KM or (hours > 0 and d / hours <= MAX_GROUND_KMH):
             total += d
     return total
 

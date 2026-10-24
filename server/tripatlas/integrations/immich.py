@@ -62,9 +62,12 @@ class ImmichClient:
     def me(self) -> dict:
         return self._call("GET", "/api/users/me").json()
 
-    def map_markers(self) -> list[dict]:
-        """All geotagged assets the key can see, including partner-shared ones."""
-        return self._call("GET", "/api/map/markers", params={"withPartners": "true", "isArchived": "false"}).json()
+    def map_markers(self, taken_before: str | None = None) -> list[dict]:
+        """All geotagged assets the key can see, including partner-shared ones; optionally only older ones."""
+        params = {"withPartners": "true", "isArchived": "false"}
+        if taken_before:
+            params["fileCreatedBefore"] = taken_before
+        return self._call("GET", "/api/map/markers", params=params).json()
 
     def photos_between(self, start_iso: str, end_iso: str) -> list[Photo]:
         out, page = [], 1

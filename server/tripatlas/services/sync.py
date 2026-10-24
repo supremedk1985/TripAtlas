@@ -49,8 +49,9 @@ def sync_tracker(db: Session, client: TraccarClient, tracker: Tracker, now: floa
     return added
 
 
-def sync_all(db: Session) -> dict[str, int]:
-    """Sync every tracker linked to a Traccar device. Returns {tracker name: new positions}."""
+def sync_all(db: Session, errors: list[str] | None = None) -> dict[str, int]:
+    """Sync every tracker linked to a Traccar device. Returns {tracker name: new positions}; trackers that failed
+    are listed in `errors` (so the status page can say so instead of "ready")."""
     trackers = list(db.scalars(select(Tracker).where(Tracker.traccar_device_id.is_not(None))))
     if not trackers:
         return {}
@@ -62,4 +63,6 @@ def sync_all(db: Session) -> dict[str, int]:
             except TraccarError as e:
                 log.warning("Sync of %s failed: %s", t.name, e)
                 db.rollback()
+                if errors is not None:
+                    errors.append(f"{t.name}: {e}")
     return out

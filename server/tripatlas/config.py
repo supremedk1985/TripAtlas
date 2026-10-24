@@ -4,6 +4,7 @@ services/settings.py."""
 
 from __future__ import annotations
 
+import contextlib
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -36,7 +37,12 @@ class Config(BaseSettings):
 @lru_cache
 def get_config() -> Config:
     cfg = Config()
+    # The database holds positions and notes of the whole household: readable for TripAtlas only
+    os.umask(0o077)
     cfg.data_dir.mkdir(parents=True, exist_ok=True)
+    for f in [*cfg.data_dir.glob("tripatlas.db*"), *cfg.data_dir.glob("backups/*")]:
+        with contextlib.suppress(OSError):
+            f.chmod(0o600)
     if not os.access(cfg.data_dir, os.W_OK):
         # The usual cause: Docker created the bind-mounted folder as root before TripAtlas (uid 1000) first ran.
         raise SystemExit(

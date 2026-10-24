@@ -120,6 +120,10 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
         named = [x for x in trip.stays if x.place_name]
         main = max(named, key=lambda x: (x.nights, -x.arrival)) if named else None
         trip.auto_title = (main.place_name if main else None) or most_common_city(placed, exclude_home=s)
+        if not trip.auto_title:
+            # a day ride has no stay: name it after where it went (the farthest point), if that place is known
+            dest = cached_place(db, tr.destination[0], tr.destination[1], hh.default_locale)
+            trip.auto_title = dest.name if dest else None
         rows.append(trip)
     if immich is not None:
         immich.close()

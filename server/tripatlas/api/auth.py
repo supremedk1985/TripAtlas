@@ -8,7 +8,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..auth.deps import COOKIE_NAME, current_user
-from ..auth.security import create_session, end_session, hash_password, login_throttle, verify_password
+from ..auth.security import (
+    DUMMY_HASH,
+    address_throttle,
+    create_session,
+    end_other_sessions,
+    end_session,
+    hash_password,
+    login_throttle,
+    verify_password,
+)
 from ..config import get_config
 from ..db.models import Role, User
 from ..db.session import get_db
@@ -56,14 +65,19 @@ class LoginIn(BaseModel):
 @router.post("/login")
 def login(body: LoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = request.client.host if request.client else "?"
-    keys = (f"user:{body.username.lower()}", f"ip:{ip}")
-    if login_throttle.blocked(*keys):
+    # Per account AND address: a child mistyping on the family PC must not lock the parents out. A whole address is
+    # only slowed down after many failures (someone trying many names).
+    account = f"user:{body.username.lower()}|ip:{ip}"
+    if login_throttle.blocked(account) or address_throttle.blocked(f"ip:{ip}"):
         raise HTTPException(429, "Too many failed attempts — try again in 15 minutes")
     user = db.scalar(select(User).where(func.lower(User.username) == body.username.lower()))
-    if user is None or not verify_password(user.password_hash, body.password):
-        login_throttle.failed(*keys)
+    # Unknown names cost the same time as known ones, so response times do not tell which names exist
+    ok = verify_password(user.password_hash if user else DUMMY_HASH, body.password) and user is not None
+    if not ok:
+        login_throttle.failed(account)
+        address_throttle.failed(f"ip:{ip}")
         raise HTTPException(401, "Wrong username or password")
-    login_throttle.succeeded(*keys)
+    login_throttle.succeeded(account)
     if body.client == "app":
         token = create_session(db, user, kind="app", label=body.device_name or "App")
         return {"token": token, "user": user_out(user)}
@@ -95,8 +109,12 @@ class ProfileIn(BaseModel):
 
 
 @router.put("/me", response_model=UserOut)
-def update_me(body: ProfileIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def update_me(
+    body: ProfileIn, request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)
+):
     if body.display_name is not None:
+        if user.role == Role.child:
+            raise HTTPException(403, "Read-only account")
         user.display_name = body.display_name
     if body.locale is not None:
         if body.locale not in LOCALES:
@@ -108,6 +126,10 @@ def update_me(body: ProfileIn, user: User = Depends(current_user), db: Session =
         if not body.current_password or not verify_password(user.password_hash, body.current_password):
             raise HTTPException(400, "Current password is wrong")
         user.password_hash = hash_password(body.new_password)
+        # a new password signs out every other device (someone may have known the old one)
+        auth = request.headers.get("authorization", "")
+        current = auth[7:] if auth.lower().startswith("bearer ") else request.cookies.get(COOKIE_NAME)
+        end_other_sessions(db, user.id, current)
     if body.immich_api_key is not None:
         if user.role == Role.child:
             raise HTTPException(403, "Read-only account")

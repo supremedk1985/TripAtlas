@@ -30,9 +30,12 @@ def get_avatar(user_id: int, db: Session = Depends(get_db), _: User = Depends(cu
 
 
 async def _store(u: User, request: Request, db: Session) -> UserOut:
-    data = await request.body()
-    if len(data) > MAX_BYTES:
-        raise HTTPException(413, "Picture too large")
+    data = bytearray()
+    async for chunk in request.stream():   # stop reading as soon as it is too big
+        data += chunk
+        if len(data) > MAX_BYTES:
+            raise HTTPException(413, "Picture too large")
+    data = bytes(data)
     if not data.startswith(b"\xff\xd8\xff"):
         raise HTTPException(400, "Expected a JPEG picture")
     u.avatar = data

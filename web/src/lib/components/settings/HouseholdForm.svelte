@@ -136,7 +136,7 @@
 			</div>
 			{#if hits.length}
 				<ul class="hits card">
-					{#each hits as hit (hit.label)}
+					{#each hits as hit, i (i)}
 						<li><button type="button" onclick={() => ((hits = []), setHome(hit.lat, hit.lon))}>{hit.label}</button></li>
 					{/each}
 				</ul>

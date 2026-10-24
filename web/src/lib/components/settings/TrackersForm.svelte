@@ -2,7 +2,7 @@
 	// Trackers: link Traccar devices, create empty trackers for imports, colour, photo priority, avatar.
 	import { api, errorText } from '$lib/api';
 	import { dateTime } from '$lib/format';
-	import { t } from '$lib/i18n/index.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 	import { confirmDialog } from '$lib/stores/dialog.svelte';
 	import type { Tracker } from '$lib/types';
 
@@ -93,7 +93,7 @@
 						</label>
 						<span class="muted">
 							{tk.traccar_device_id ? `Traccar #${tk.traccar_device_id}` : t('import_only')} ·
-							{(tk.position_count ?? 0).toLocaleString()} {t('positions')}
+							{(tk.position_count ?? 0).toLocaleString(i18n.locale)} {t('positions')}
 							{#if tk.last}· {t('last_seen', { when: dateTime(tk.last) })}{/if}
 						</span>
 					</div>

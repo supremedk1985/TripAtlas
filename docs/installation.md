@@ -78,7 +78,10 @@ TripAtlas holds your family's whereabouts — expose it carefully:
   }
   ```
 - Or don't expose it at all and use a VPN (WireGuard, Tailscale) to reach your home network.
-- Passwords: at least 8 characters; after 5 wrong attempts an account pauses for 15 minutes.
+- Passwords: at least 8 characters; after 5 wrong attempts an account pauses for 15 minutes on that device
+  (other accounts are not affected).
+- Client addresses (for that limit) are taken from `X-Forwarded-For` only when the request comes from a private
+  network, i.e. your proxy. If your proxy is elsewhere, set `FORWARDED_ALLOW_IPS` to its address.
 
 Installed as an app: open TripAtlas over HTTPS in Chrome/Safari on the phone → *Add to home screen*.
 

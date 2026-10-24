@@ -64,7 +64,7 @@ EXIF-Angabe aus der Datei.
 
 **Zettel auf der Karte:** Im Betrachter heftet **📌 Zettel** einen kurzen Text an den Ort, an dem das gezeigte Foto
 entstand („Unser erster Campingplatz“). Alle im Haushalt sehen ihn als kleinen gelben Zettel auf der Karte;
-antippen öffnet *Fotos von hier*, Ändern und Entfernen. Kinder können Zettel lesen, aber keine anlegen.
+antippen öffnet *Fotos von hier*, Ändern und Entfernen. Ändern kann ihn nur, wer ihn angelegt hat, oder ein Administrator. In der Kinderansicht erscheinen keine Zettel.
 
 Fotos ohne GPS (etwa von einer Kamera) setzt TripAtlas an die Stelle, an der das Fahrzeug zu der Zeit war.
 
@@ -133,6 +133,9 @@ bleiben auch Jahre an Fahrten klein, und die Strecke ist trotzdem gut zu sehen.
 
 ### Radtouren
 
+Tracker-Arten: **Fahrzeug** (eine Reise braucht eine Nacht auswärts), **Fahrrad** (unten) und **Person** (ein Tracker,
+den jemand bei sich trägt, etwa eine Handy-App – zählt wie ein Fahrzeug, mit Personen-Piktogramm).
+
 Einen Tracker der Art **Fahrrad** anlegen (*Einstellungen → Tracker*, Name z. B. „Fahrrad“, Art *Fahrrad*). Beim
 Fahrrad zählt jede Tour, auch ohne Übernachtung (angezeigt als *Tagestour*), sobald sie mehr als einen Kilometer
 über das Zuhause hinausgeht. Mehrere Touren vom Campingplatz aus während eines Urlaubs ergeben eine Reise. Dann die
@@ -161,4 +164,8 @@ Haushalt* das Zuhause, den Radius und die Mindestzahl an Nächten.
 **Wo liegen meine Fotos?** Weiter in Immich. TripAtlas zeigt sie an, kopiert oder ändert sie aber nie.
 
 **Wer kann sehen, wo wir sind?** Nur Konten, die Live-Positionen sehen dürfen, und nur für die Fahrzeuge, die ihnen
-zugeteilt sind. Kinder nie.
+zugeteilt sind. Kinder nie: Sie sehen Positionen und Fotos erst nach 6 Stunden und eine Reise erst, wenn sie vorbei
+ist. Wird ein Konto zum Kinderkonto gemacht, verliert es den Live-Zugang.
+
+**Wer sieht welche Fotos?** Alle, die den Immich-Schlüssel des Haushalts nutzen, sehen alle Fotos dieses Schlüssels;
+ein Konto mit eigenem Immich-Schlüssel (*Einstellungen → Profil*) sieht genau, was dieser Schlüssel darf.

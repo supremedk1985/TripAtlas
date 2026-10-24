@@ -59,6 +59,9 @@ def update_user(user_id: int, body: UserUpdate, db: Session = Depends(get_db), a
         v = getattr(body, f)
         if v is not None:
             setattr(u, f, v)
+    # Becoming a child takes live access away, as for a new child account — unless it is granted in the same request.
+    if body.role == Role.child and body.can_see_live is None:
+        u.can_see_live = False
     if body.locale is not None and body.locale in LOCALES:
         u.locale = body.locale
     if body.password is not None:

@@ -43,7 +43,8 @@ def add_points_counted(
     db: Session, tracker: Tracker, points: Iterable[Point], source: str, batch: int = 2000
 ) -> tuple[int, int]:
     """Insert points in batches straight from an iterator (nothing is held beyond one batch), ignoring timestamps
-    the tracker already has. Returns (new rows, points read)."""
+    the tracker already has and impossible coordinates. Nothing is committed until the end, so a caller can roll a
+    failed import back completely. Returns (new rows, points kept)."""
     added = seen = 0
     dialect = db.bind.dialect.name if db.bind else "sqlite"
     it = iter(points)
@@ -57,7 +58,7 @@ def add_points_counted(
             "altitude_m": p.altitude_m or 0,
             "source": source,
         }
-        for p in islice(it, batch)
+        for p in islice((q for q in it if -90 <= q.lat <= 90 and -180 <= q.lon <= 180), batch)
     ]:
         seen += len(chunk)
         if dialect == "sqlite":

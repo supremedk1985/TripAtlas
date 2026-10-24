@@ -23,7 +23,8 @@ router = APIRouter(prefix="/api/trackers", tags=["trackers"])
 
 AVATAR_MAX_BYTES = 2 * 1024 * 1024
 # Users without live access see positions only after this delay, so a track never reveals where someone is now.
-LIVE_DELAY_S = 6 * 3600
+from ..services.photos import LIVE_DELAY_S  # noqa: E402  (one value for positions and photos)
+
 IMAGE_MAGIC = {b"\x89PNG": "image/png", b"\xff\xd8\xff": "image/jpeg", b"RIFF": "image/webp"}
 
 

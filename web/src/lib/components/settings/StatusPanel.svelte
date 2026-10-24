@@ -2,7 +2,7 @@
 	// What the background job did last and what TripAtlas holds — readable instead of raw JSON.
 	import { api } from '$lib/api';
 	import { dateTime } from '$lib/format';
-	import { t } from '$lib/i18n/index.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 
 	type Status = {
 		running: boolean;
@@ -48,7 +48,7 @@
 	<div class="state row">
 		{#if s.running}<span class="dot busy"></span><strong>{t('status_running')}</strong>
 		{:else}<span class="dot ok"></span><strong>{t('status_idle_short')}</strong>{/if}
-		{#if s.last_run_at}<span class="muted">· {t('status_last_run', { when: dateTime(s.last_run_at), s: s.last_duration_s ?? 0 })}</span>{/if}
+		{#if s.last_run_at}<span class="muted">· {t('status_last_run', { when: dateTime(s.last_run_at), s: (s.last_duration_s ?? 0).toLocaleString(i18n.locale) })}</span>{/if}
 		<span class="spacer"></span>
 		<button class="btn small primary" onclick={run} disabled={s.running}>{t('run_now')}</button>
 	</div>
@@ -56,7 +56,7 @@
 	<h4>{t('status_last_round')}</h4>
 	<ul class="facts">
 		{#if s.last_result.sync_error}<li class="error">{t('status_sync_error')}: {s.last_result.sync_error}</li>{/if}
-		{#each entries(s.last_result.synced) as [name, n] (name)}<li>{t('status_new_positions', { name, n: n.toLocaleString() })}</li>{/each}
+		{#each entries(s.last_result.synced) as [name, n] (name)}<li>{t('status_new_positions', { name, n: n.toLocaleString(i18n.locale) })}</li>{/each}
 		{#each entries(s.last_result.recomputed) as [name, n] (name)}<li>{t('status_recomputed', { name, n })}</li>{/each}
 		{#if s.last_result.places}<li>{t('status_places_looked_up', { n: s.last_result.places })}</li>{/if}
 		{#if s.last_result.flights}<li>{t('status_flights_checked', { n: s.last_result.flights.checked_now, f: s.last_result.flights.flights })}</li>{/if}
@@ -68,7 +68,7 @@
 	<table>
 		<tbody>
 			{#each s.trackers as tk (tk.name)}
-				<tr><td>{tk.name}</td><td>{tk.positions.toLocaleString()} {t('positions')}{#if tk.last}{' · '}{t('last_seen', { when: dateTime(tk.last) })}{/if}</td></tr>
+				<tr><td>{tk.name}</td><td>{tk.positions.toLocaleString(i18n.locale)} {t('positions')}{#if tk.last}{' · '}{t('last_seen', { when: dateTime(tk.last) })}{/if}</td></tr>
 			{/each}
 			<tr><td>{t('status_trips')}</td><td>{s.trips}</td></tr>
 			<tr><td>{t('status_places')}</td><td>{s.places}</td></tr>

@@ -242,3 +242,14 @@ def test_wikipedia_text_without_pronunciation_remnants():
     assert clean_text("Paris ([paʁi] ) ist die Hauptstadt.") == "Paris ist die Hauptstadt."
     kept = "Lazise ist eine Gemeinde (am Lago di Garda: Venetien) am See."
     assert clean_text(kept) == kept
+
+
+def test_path_length_counts_sparse_points_but_not_jumps():
+    from tripatlas.core.geo import Point, path_length_km
+
+    # a point every 15 minutes at 100 km/h along a meridian: ~25 km steps, all real driving
+    sparse = [Point(i * 900, 50 + i * 0.2248, 8.0) for i in range(5)]
+    assert 95 < path_length_km(sparse) < 105
+    # a GPS jump of 300 km within one minute is not distance travelled
+    jump = [Point(0, 50.0, 8.0), Point(60, 52.7, 8.0), Point(120, 50.0, 8.001)]
+    assert path_length_km(jump) < 1

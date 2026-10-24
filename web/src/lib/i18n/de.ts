@@ -45,6 +45,7 @@ const de: Dictionary = {
 	login: 'Anmelden',
 	login_failed: 'Benutzername oder Passwort falsch.',
 	login_throttled: 'Zu viele Versuche. Bitte 15 Minuten warten.',
+	note_no_place: 'Dieses Foto hat keinen Ort – der Zettel lässt sich nirgends anheften.',
 	photo_info: 'Infos zum Foto',
 	photo_taken: 'Aufgenommen',
 	photo_place: 'Ort',

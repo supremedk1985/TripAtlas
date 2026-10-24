@@ -3,7 +3,7 @@
 	// so importing the same file twice is harmless.
 	import { api, errorText } from '$lib/api';
 	import { date } from '$lib/format';
-	import { t } from '$lib/i18n/index.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 	import type { Tracker } from '$lib/types';
 
 	type Job = { id: number; tracker_id: number; kind: string; filename: string; status: string; added: number; skipped: number; message: string; created_at: string };
@@ -37,7 +37,7 @@
 				total += r.kept;
 				read += r.points;
 			}
-			const n = { added: added.toLocaleString(), total: total.toLocaleString(), read: read.toLocaleString() };
+			const n = { added: added.toLocaleString(i18n.locale), total: total.toLocaleString(i18n.locale), read: read.toLocaleString(i18n.locale) };
 			result = { ok: true, text: read > total ? t('import_done_thinned', n) : t('import_done', n) };
 			await load();
 		} catch (err) {
@@ -76,7 +76,7 @@
 					<td>{date(new Date(j.created_at).getTime() / 1000)}</td>
 					<td class="name">{j.filename}</td>
 					<td>{trackers.find((tk) => tk.id === j.tracker_id)?.name}</td>
-					<td class={j.status === 'failed' ? 'error' : ''}>{j.status === 'failed' ? j.message : `+${j.added.toLocaleString()}`}</td>
+					<td class={j.status === 'failed' ? 'error' : ''}>{j.status === 'failed' ? j.message : `+${j.added.toLocaleString(i18n.locale)}`}</td>
 				</tr>
 			{/each}
 		</tbody>

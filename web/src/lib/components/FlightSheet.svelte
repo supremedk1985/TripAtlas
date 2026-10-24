@@ -2,7 +2,7 @@
 	// A flight on the "where I've been" globe: route, date, altitude and the photos taken on board.
 	import { thumbUrl } from '$lib/api';
 	import { dateRange } from '$lib/format';
-	import { t } from '$lib/i18n/index.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 	import type { Flight } from '$lib/types';
 
 	let {
@@ -23,7 +23,7 @@
 	<h3>{route}</h3>
 	<p class="muted">
 		{dateRange(flight.start, flight.end)}
-		{#if !kids}· {t('flight_altitude', { m: Math.round(flight.max_altitude_m).toLocaleString() })}{/if}
+		{#if !kids}· {t('flight_altitude', { m: Math.round(flight.max_altitude_m).toLocaleString(i18n.locale) })}{/if}
 	</p>
 	<button class="link" onclick={() => onphotos(flight.photo_ids, 0)}>{t('flight_photos', { n: flight.photo_ids.length })}</button>
 	<div class="strip">

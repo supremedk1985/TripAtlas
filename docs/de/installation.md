@@ -78,7 +78,10 @@ In TripAtlas steht, wo eure Familie war und ist – nur mit Bedacht nach außen 
   }
   ```
 - Oder gar nicht öffnen und unterwegs per VPN (WireGuard, Tailscale) ins Heimnetz gehen.
-- Passwörter mit mindestens 8 Zeichen; nach 5 Fehlversuchen pausiert ein Konto 15 Minuten.
+- Passwörter mit mindestens 8 Zeichen; nach 5 Fehlversuchen pausiert ein Konto auf diesem Gerät 15 Minuten
+  (andere Konten sind nicht betroffen).
+- Die Adresse des Geräts (für diese Grenze) nimmt TripAtlas nur dann aus `X-Forwarded-For`, wenn die Anfrage aus einem
+  privaten Netz kommt, also vom eigenen Proxy. Steht der Proxy woanders, `FORWARDED_ALLOW_IPS` auf seine Adresse setzen.
 
 Als App: TripAtlas über HTTPS in Chrome/Safari auf dem Handy öffnen → *Zum Startbildschirm hinzufügen*.
 

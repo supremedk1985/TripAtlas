@@ -142,8 +142,10 @@ def video(asset_id: str, request: Request, db: Session = Depends(get_db), user: 
     client = photo_service.client_for(db, user)
     try:
         upstream = client.open_video(asset_id, request.headers.get("range"))
-    except ImmichError:
+    except ImmichError as e:
         client.close()
+        if "404" in str(e) or "not found" in str(e).lower():
+            raise HTTPException(404, "No such video") from e
         raise
 
     def body():
@@ -251,7 +253,8 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
     try:
         marks = photo_service.markers(db, user)
     except ImmichError:
-        marks = []
+        marks = []   # Immich unreachable: the pins of the trackers still show
+    visible = {m["id"] for m in marks}
     # Photos taken on board an aircraft carry positions of places nobody visited — they become flights instead.
     flight_data = flight_service.stored(db)
     in_flight = set(flight_data.get("airborne", {}))
@@ -297,7 +300,6 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
             c["places"] += 1
             c["photos"] += p["photos"]
             c["nights"] += p["nights"]
-    visible = {m["id"] for m in photo_service.markers(db, user)} if marks or in_flight else set()
     flights = []
     for f in flight_data.get("flights", []):
         ids = [i for i in f["photo_ids"] if i in visible]  # only flights with photos this user may see

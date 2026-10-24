@@ -8,8 +8,8 @@ All demo photos are CC0 or public domain (via [Openverse](https://openverse.org)
 | 527b1dba | Notre Dame de Reims | Mustang Joe | CC0 | https://www.flickr.com/photos/63234672@N04/8610727391 |
 | b46bbde9 | Mont Saint Michel pano | tomas.defranceschi | PDM | https://www.flickr.com/photos/107126237@N06/20973641965 |
 | efd2ad34 | Mont Saint Michel Normandie | angelobrathot | PDM | https://www.flickr.com/photos/147755034@N05/43218100575 |
-| 2876c6ea | Mont Saint Michel Abbey 6 | dchelyadnik@yahoo.com | PDM | https://www.flickr.com/photos/53647116@N05/15201654057 |
-| 3373ba5f | Mont Saint Michel Abbey 10 | dchelyadnik@yahoo.com | PDM | https://www.flickr.com/photos/53647116@N05/15201492980 |
+| 2876c6ea | Mont Saint Michel Abbey 6 | | PDM | https://www.flickr.com/photos/53647116@N05/15201654057 |
+| 3373ba5f | Mont Saint Michel Abbey 10 | | PDM | https://www.flickr.com/photos/53647116@N05/15201492980 |
 | cf1954ec | The Holy Well and Chapel of St Trillo | Oneterry AKA Terry Kearney | CC0 | https://www.flickr.com/photos/24490288@N04/53538979380 |
 | 2cf75d2f | Pointe du Raz, Finistère, Bretagne | CampusFrance | CC0 | https://www.flickr.com/photos/9561097@N08/19140460272 |
 | 2857504e | Melody's, McDermott's and Grandma France trip 197x? La Pointe du Raz | barcooter | PDM | https://www.flickr.com/photos/76418553@N04/52460097967 |

@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..auth.deps import current_user, require_editor
-from ..db.models import MapNote, User
+from ..db.models import MapNote, Role, User
 from ..db.session import get_db
 
 router = APIRouter(prefix="/api/notes", tags=["notes"])
@@ -36,6 +36,7 @@ def note_out(n: MapNote, db: Session) -> dict:
         "photo_id": n.photo_id,
         "created_at": n.created_at.isoformat(),
         "author": author.display_name if author else None,
+        "created_by": n.created_by,
     }
 
 
@@ -59,15 +60,23 @@ def _note(db: Session, note_id: int) -> MapNote:
     return n
 
 
+def _own(n: MapNote, user: User) -> None:
+    if n.created_by != user.id and user.role != Role.admin:
+        raise HTTPException(403, "Only its author or an administrator can change this note")
+
+
 @router.patch("/{note_id}")
-def update_note(note_id: int, body: NoteUpdate, db: Session = Depends(get_db), _: User = Depends(require_editor)):
+def update_note(note_id: int, body: NoteUpdate, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     n = _note(db, note_id)
+    _own(n, user)
     n.text = body.text.strip()
     db.commit()
     return note_out(n, db)
 
 
 @router.delete("/{note_id}", status_code=204)
-def delete_note(note_id: int, db: Session = Depends(get_db), _: User = Depends(require_editor)):
-    db.delete(_note(db, note_id))
+def delete_note(note_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    n = _note(db, note_id)
+    _own(n, user)
+    db.delete(n)
     db.commit()

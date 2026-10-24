@@ -5,7 +5,7 @@
 	import maplibregl from 'maplibre-gl';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { api, thumbUrl } from '$lib/api';
+	import { api, errorText, thumbUrl } from '$lib/api';
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import TripPanel from '$lib/components/TripPanel.svelte';
@@ -16,7 +16,7 @@
 	import { PhotoLayer } from '$lib/map/photoLayer';
 	import { NotesLayer } from '$lib/map/notesLayer';
 	import { confirmDialog, promptDialog } from '$lib/stores/dialog.svelte';
-	import { canEdit } from '$lib/stores/session.svelte';
+	import { canEdit, isAdmin, session } from '$lib/stores/session.svelte';
 	import { MAP_STYLES, preferredStyle, rememberStyle, type MapStyleId } from '$lib/map/styles';
 	import { boundsOf, positionAt, TrackLayer } from '$lib/map/trackLayer';
 	import type { MapNote, Photo, Tracker, TrackPoint, TripSummary } from '$lib/types';
@@ -79,16 +79,24 @@
 	async function pinNote(photoId: string) {
 		// pinned where the photo shown was taken — the middle of a big stack (zoomed out) can be nowhere
 		const at = photoLayer?.position(photoId) ?? viewer?.at;
-		if (!at) return;
-		const text = await promptDialog(t('note_pin_title'), { text: t('note_pin_hint'), confirmLabel: t('note_pin') });
+		if (!at) {
+			await confirmDialog(t('note_no_place'), { confirmLabel: t('ok') });
+			return;
+		}
+		const text = await promptDialog(t('note_pin_title'), { text: t('note_pin_hint'), confirmLabel: t('note_pin'), maxLength: 500 });
 		if (!text?.trim()) return;
-		await api.post('/api/notes', { lat: at.lat, lon: at.lon, text: text.trim(), photo_id: photoId });
+		try {
+			await api.post('/api/notes', { lat: at.lat, lon: at.lon, text: text.trim(), photo_id: photoId });
+		} catch (err) {
+			await confirmDialog(errorText(err), { confirmLabel: t('ok') });
+			return;
+		}
 		viewer = null;
 		await loadNotes();
 	}
 
 	async function editNote(n: MapNote) {
-		const text = await promptDialog(t('note_edit'), { value: n.text, confirmLabel: t('save') });
+		const text = await promptDialog(t('note_edit'), { value: n.text, confirmLabel: t('save'), maxLength: 500 });
 		if (!text?.trim()) return;
 		await api.patch(`/api/notes/${n.id}`, { text: text.trim() });
 		note = null;
@@ -375,7 +383,7 @@
 			{#if photoLayer?.photosNear(note.lat, note.lon).length}
 				<button class="btn small primary" onclick={() => notePhotos(note!)}>{t('note_photos')}</button>
 			{/if}
-			{#if canEdit()}
+			{#if canEdit() && (note.created_by === session.user?.id || isAdmin())}
 				<button class="btn small" onclick={() => editNote(note!)}>{t('note_edit')}</button>
 				<button class="btn small danger" onclick={() => deleteNote(note!)}>{t('delete')}</button>
 			{/if}
@@ -385,7 +393,7 @@
 
 {#if viewer}
 	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} overview={viewer.overview}
-		onnote={viewer.at && canEdit() ? pinNote : undefined} onclose={() => (viewer = null)} />
+		onnote={canEdit() ? pinNote : undefined} onclose={() => (viewer = null)} />
 {/if}
 
 <style>
