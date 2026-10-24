@@ -76,6 +76,8 @@
 					<span class="flags">{tr.countries.map(flag).join(' ')}</span>
 				</div>
 			</a>
+		{:else}
+			<p class="empty-kids">{t('kids_no_trips')}</p>
 		{/each}
 	</div>
 </div>
@@ -202,5 +204,9 @@
 	}
 	.text .flags {
 		font-size: 1.3em;
+	}
+	.empty-kids {
+		font-size: 1.1em;
+		color: var(--text-2);
 	}
 </style>

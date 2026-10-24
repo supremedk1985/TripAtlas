@@ -36,14 +36,29 @@
 		return ok;
 	}
 
+	/** "traccar:8082" → "http://traccar:8082": the scheme is what people leave out most */
+	const withScheme = (url: string) => (url && !/^https?:\/\//i.test(url.trim()) ? `http://${url.trim()}` : url.trim());
+
+	/** Server messages in plain words, with the most likely fix (they come in English from the server). */
+	function explain(service: 'Traccar' | 'Immich', url: string, err: unknown): string {
+		const raw = errorText(err);
+		const local = /\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(url);
+		if (/not reachable/i.test(raw))
+			return t('conn_unreachable', { service }) + ' ' + (local ? t('conn_hint_localhost') : t('conn_hint_address')) + ` (${raw})`;
+		if (/rejected/i.test(raw)) return t(service === 'Traccar' ? 'conn_rejected_traccar' : 'conn_rejected_immich') + ` (${raw})`;
+		if (/answered \d+/i.test(raw)) return t('conn_wrong_service', { service }) + ` (${raw})`;
+		return raw;
+	}
+
 	const traccarBody = () =>
 		traccar.useToken
-			? { url: traccar.url, token: traccar.token }
-			: { url: traccar.url, email: traccar.email, password: traccar.password };
+			? { url: withScheme(traccar.url), token: traccar.token }
+			: { url: withScheme(traccar.url), email: traccar.email, password: traccar.password };
 
 	async function saveTraccar(e?: SubmitEvent): Promise<boolean> {
 		e?.preventDefault();
 		traccarResult = null;
+		traccar.url = withScheme(traccar.url);
 		try {
 			const r = await api.post<{ version: string; devices: unknown[] }>('/api/settings/traccar/test', traccarBody());
 			await api.put('/api/settings/traccar', traccarBody());
@@ -55,7 +70,7 @@
 			onsaved?.();
 			return true;
 		} catch (err) {
-			traccarResult = { ok: false, text: errorText(err) };
+			traccarResult = { ok: false, text: explain('Traccar', traccar.url, err) };
 			return false;
 		}
 	}
@@ -63,6 +78,7 @@
 	async function saveImmich(e?: SubmitEvent): Promise<boolean> {
 		e?.preventDefault();
 		immichResult = null;
+		immich.url = withScheme(immich.url);
 		try {
 			const body = { url: immich.url, api_key: immich.api_key };
 			const r = await api.post<{ version: string; user: string }>('/api/settings/immich/test', body);
@@ -74,7 +90,7 @@
 			onsaved?.();
 			return true;
 		} catch (err) {
-			immichResult = { ok: false, text: errorText(err) };
+			immichResult = { ok: false, text: explain('Immich', immich.url, err) };
 			return false;
 		}
 	}
@@ -86,7 +102,7 @@
 	<form onsubmit={saveTraccar}>
 		<label class="field">
 			<span>{t('server_url')}</span>
-			<input type="url" bind:value={traccar.url} placeholder="http://traccar:8082" required />
+			<input type="text" inputmode="url" autocapitalize="none" bind:value={traccar.url} placeholder={t('conn_placeholder_traccar')} required />
 		</label>
 		<div class="row">
 			<label class="chip" class:on={traccar.useToken}>
@@ -124,7 +140,7 @@
 	<form onsubmit={saveImmich}>
 		<label class="field">
 			<span>{t('server_url')}</span>
-			<input type="url" bind:value={immich.url} placeholder="http://immich-server:2283" required />
+			<input type="text" inputmode="url" autocapitalize="none" bind:value={immich.url} placeholder={t('conn_placeholder_immich')} required />
 		</label>
 		<label class="field">
 			<span>{t('api_key')}</span>

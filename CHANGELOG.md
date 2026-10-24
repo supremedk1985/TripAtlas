@@ -33,6 +33,19 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
   out your other devices; children cannot rename themselves; numbers in the UI language; day rides named after
   where they went; sharper overview tiles on large screens; a missing video answers 404
 
+### Changed (test with a non-technical user)
+- New accounts see every vehicle by default; the role is explained in the form; empty lists say why
+  ("no vehicle shared with your account" instead of "no trips yet")
+- The setup counts as finished as soon as "Done!" shows
+- Connection errors in plain words with the likely fix (e.g. `localhost` means TripAtlas itself); `http://` is
+  added when left out
+- Map labels and country names in the reader's language; times of notes and imports in local time
+- Tracker kind *Camper van* with its own pictogram; trips without photos show the vehicle's symbol
+- Children's texts no longer fall back to an article about the whole country; no links out of the children's view
+- Short explanations next to home radius, minimum distance, photo priority, display and user name
+- Trips get their title as soon as the place name is known (no more "Trip" after an import)
+- Docs: how to edit compose.yaml, Traccar/Immich on the same machine
+
 ## [0.1.0] – 2026-10-24
 
 First public version.

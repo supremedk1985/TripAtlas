@@ -48,7 +48,7 @@
 		{#if text}
 			{#if about}<p class="about muted small">{t('place_about', { name: about })}</p>{/if}
 			<p class="summary">{text}</p>
-			{#if place.url}
+			{#if place.url && !kids}
 				<a href={place.url} target="_blank" rel="noopener noreferrer">{kids ? t('kids_read_more') : t('place_read_more')}</a>
 			{/if}
 		{:else}

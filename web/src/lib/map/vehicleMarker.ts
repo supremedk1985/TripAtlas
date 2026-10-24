@@ -6,6 +6,10 @@ import type { Tracker } from '$lib/types';
 const CAR =
 	'<path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11h.5a1.5 1.5 0 0 1 1.5 1.5V17a1 1 0 0 1-1 1h-1v1.5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V18H8v1.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V18H4a1 1 0 0 1-1-1v-4.5A1.5 1.5 0 0 1 4.5 11z" class="body"/>' +
 	'<path d="M7.3 11l1.1-3.3h7.2l1.1 3.3z" class="glass"/><circle cx="6.6" cy="14.4" r="1.3" class="glass"/><circle cx="17.4" cy="14.4" r="1.3" class="glass"/>';
+const CAMPER =
+	'<path d="M2.5 16.5V7a2 2 0 0 1 2-2h11.5a2 2 0 0 1 1.8 1.1L20 10.5l1.2.8a1.5 1.5 0 0 1 .8 1.3v3.9a1 1 0 0 1-1 1h-1.2a2.5 2.5 0 0 0-4.6 0H9.3a2.5 2.5 0 0 0-4.6 0H3.5a1 1 0 0 1-1-1z" class="body"/>' +
+	'<path d="M15.5 7h1.3l1.9 3.5h-3.2z" class="glass"/><rect x="5" y="7.5" width="7.5" height="3" rx=".6" class="glass"/>' +
+	'<circle cx="7" cy="17.5" r="1.8" class="body"/><circle cx="17.2" cy="17.5" r="1.8" class="body"/>';
 const BIKE =
 	'<circle cx="6" cy="16" r="4" class="ring"/><circle cx="18" cy="16" r="4" class="ring"/>' +
 	'<path d="M6 16l4.5-7.5h6L18 16M10.5 8.5L13 16h-7M15 6h3" class="ring"/>';
@@ -21,7 +25,7 @@ export function vehicleMarker(opts: { color: string; kind?: Tracker['kind']; ava
 		el.style.backgroundImage = `url(${opts.avatarUrl})`;
 	} else {
 		el.className = 'vehicle-icon' + (opts.live ? ' live' : '');
-		const shape = opts.kind === 'person' ? PERSON : opts.kind === 'bike' ? BIKE : CAR;
+		const shape = opts.kind === 'person' ? PERSON : opts.kind === 'bike' ? BIKE : opts.kind === 'camper' ? CAMPER : CAR;
 		el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`;
 	}
 	return el;

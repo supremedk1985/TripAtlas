@@ -83,12 +83,13 @@
 					<div class="row small">
 						<select value={tk.kind} onchange={(e) => update(tk, { kind: e.currentTarget.value as Tracker['kind'] })} aria-label={t('tracker_kind')} title={t('tracker_kind_hint')}>
 							<option value="vehicle">{t('tracker_kind_vehicle')}</option>
+							<option value="camper">{t('tracker_kind_camper')}</option>
 							<option value="bike">{t('tracker_kind_bike')}</option>
 							<option value="person">{t('tracker_kind_person')}</option>
 						</select>
 						<label class="row">{t('color')} <input type="color" value={tk.color} onchange={(e) => update(tk, { color: e.currentTarget.value })} /></label>
 						<label class="row" title={t('photo_priority_hint')}>
-							{t('photo_priority')}
+							{t('photo_priority')} <span class="help" aria-hidden="true">?</span>
 							<input class="num" type="number" min="0" max="100" value={tk.photo_priority} onchange={(e) => update(tk, { photo_priority: Number(e.currentTarget.value) })} />
 						</label>
 						<span class="muted">
@@ -183,5 +184,15 @@
 	.manual {
 		margin-top: 12px;
 		flex-wrap: nowrap;
+	}
+	.help {
+		display: inline-grid;
+		place-items: center;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: var(--surface-2);
+		font-size: 11px;
+		cursor: help;
 	}
 </style>

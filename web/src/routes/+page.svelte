@@ -329,6 +329,9 @@
 						{#if busy}
 							<h3><span class="spin" aria-hidden="true"></span> {t('loading_history_title')}</h3>
 							<p class="muted">{t('loading_history_text')}</p>
+						{:else if !trackers.length}
+							<h3>{t('no_trips_title')}</h3>
+							<p class="muted">{t(isAdmin() ? 'no_trackers_admin' : 'no_trackers_member')}</p>
 						{:else}
 							<h3>{t('no_trips_title')}</h3>
 							<p class="muted">{t('no_trips_text')}</p>
@@ -343,7 +346,7 @@
 							{#if tr.cover_asset}
 								<img src={thumbUrl(tr.cover_asset)} alt="" loading="lazy" />
 							{:else}
-								<span class="noimg" style="background:{tk?.color}">✦</span>
+								<span class="noimg" style="background:{tk?.color}" title={t('trip_no_photos')}>{tk?.kind === 'bike' ? '🚲' : tk?.kind === 'camper' ? '🚐' : tk?.kind === 'person' ? '🚶' : '🚗'}</span>
 							{/if}
 							<span class="info">
 								<strong>{tripTitle(tr, t('trip_untitled'))}</strong>

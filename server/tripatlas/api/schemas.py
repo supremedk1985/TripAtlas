@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from pydantic import BaseModel, Field
 
 from ..db.models import Role, TrackerKind
 
 LOCALES = ("en", "de")
+
+
+def iso_utc(dt: datetime | None) -> str | None:
+    """SQLite hands timestamps back without their zone; they are UTC. Say so, or browsers read them as local time."""
+    if dt is None:
+        return None
+    return (dt if dt.tzinfo else dt.replace(tzinfo=UTC)).isoformat()
 
 
 class UserOut(BaseModel):

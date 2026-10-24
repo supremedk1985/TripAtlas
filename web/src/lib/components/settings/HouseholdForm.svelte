@@ -166,6 +166,7 @@
 				<label class="field">
 					<span>{t('home_radius')}</span>
 					<input type="number" min="0.5" max="50" step="0.5" bind:value={h.home_radius_km} />
+					<small class="muted">{t('home_radius_hint')}</small>
 				</label>
 				<label class="field">
 					<span>{t('min_nights')}</span>
@@ -174,6 +175,7 @@
 				<label class="field">
 					<span>{t('min_distance')}</span>
 					<input type="number" min="1" bind:value={h.min_trip_distance_km} />
+					<small class="muted">{t('min_distance_hint')}</small>
 				</label>
 				<label class="field">
 					<span>{t('history_start')}</span>

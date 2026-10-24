@@ -2,6 +2,7 @@
 	// A MapLibre map filling its container. Parents get the map instance through `onready` and add their own layers.
 	// Layers must be (re-)added in `onstyle`, which also fires after a style switch (a new style drops all layers).
 	import maplibregl from 'maplibre-gl';
+	import { i18n } from '$lib/i18n/index.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { preferredStyle, styleUrl, type MapStyleId } from './styles';
 
@@ -40,6 +41,7 @@
 		const m = map;
 		m.on('style.load', () => {
 			if (globe) m.setProjection({ type: 'globe' });
+			localiseLabels(m);
 			onstyle?.(m);
 		});
 		m.once('load', () => onready?.(m));
@@ -53,6 +55,17 @@
 	});
 
 	onDestroy(() => map?.remove());
+
+	/** Country and place names in the reader's language where the map data has them (otherwise the local name). */
+	function localiseLabels(m: maplibregl.Map) {
+		const lang = i18n.locale;
+		for (const layer of m.getStyle().layers ?? []) {
+			if (layer.type !== 'symbol') continue;
+			const field = m.getLayoutProperty(layer.id, 'text-field');
+			if (!field || !JSON.stringify(field).includes('name')) continue;
+			m.setLayoutProperty(layer.id, 'text-field', ['coalesce', ['get', `name:${lang}`], ['get', 'name']]);
+		}
+	}
 </script>
 
 <div class="map" bind:this={container}></div>

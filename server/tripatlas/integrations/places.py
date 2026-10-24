@@ -185,7 +185,7 @@ class PlaceLookup:
             info.summary = clean_text(article.get("extract"))
             info.thumbnail_url = (article.get("thumbnail") or {}).get("source")
         info.sights = [x for x in self.nearby(lat, lon, lang) if x["title"] != info.article_title][:6]
-        kids = self.kids_intro(lang, [info.name, info.region, info.country])
+        kids = self.kids_intro(lang, [info.name, info.region])
         if kids:
             info.kids_summary, info.kids_url = kids
         return info
@@ -209,5 +209,7 @@ def clean_text(text: str | None) -> str | None:
         text = re.sub(r"\s*[;,]\s*\)", ")", text)
         text = _EMPTY.sub("", text)
     text = _LEAD_NAMES.sub(lambda m: m.group(1).rstrip() + " ", text, count=1)
+    # navigation lines of children's encyclopedias ("⇒ Hier gibt es eine Übersicht …") lead nowhere outside them
+    text = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(("⇒", "→")))
     return re.sub(r"[ \t]{2,}", " ", text).strip()
 

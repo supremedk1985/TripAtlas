@@ -29,6 +29,12 @@ Den Ordner `data` **vor** dem ersten Start mit dem eigenen Benutzer anlegen, wie
 
 **Port oder Name schon belegt?** In `compose.yaml` die linke Zahl bei `ports:` ändern (z. B. `"8100:8097"` → dann
 `http://<euer-server>:8100` öffnen) und, falls schon ein anderer Container `tripatlas` heißt, den `container_name`.
+Die Datei im Terminal bearbeiten: `nano compose.yaml`, Zeile ändern, mit *Strg+O, Enter* speichern, mit *Strg+X*
+schließen, dann noch einmal `docker compose up -d`.
+
+**Traccar und Immich auf demselben Rechner?** Im Assistenten die Adresse des Servers eintragen, nicht `localhost`
+(in TripAtlas meint `localhost` TripAtlas selbst). `hostname -I` im Terminal zeigt sie, z. B. `192.168.1.10` →
+`http://192.168.1.10:8082` für Traccar und `http://192.168.1.10:2283` für Immich.
 
 `http://<euer-server>:8097` öffnen. Laufen Traccar und Immich auf demselben Rechner in anderen Docker-Projekten,
 im Assistenten die IP-Adresse des Servers angeben (z. B. `http://192.168.1.10:8082`) oder den Docker-Netzen beitreten

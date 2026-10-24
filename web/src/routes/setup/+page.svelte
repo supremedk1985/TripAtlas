@@ -36,6 +36,16 @@
 		if (ok) step = 2;
 	}
 
+	// "Done!" already counts: whoever closes the tab here instead of tapping the button finds everything set up
+	async function done() {
+		step = 4;
+		try {
+			await api.post('/api/setup/complete');
+		} catch (err) {
+			error = errorText(err);
+		}
+	}
+
 	async function finish() {
 		error = '';
 		busy = true;
@@ -72,8 +82,8 @@
 						{#each LANGUAGES as l (l.code)}<option value={l.code}>{l.name}</option>{/each}
 					</select>
 				</label>
-				<label class="field"><span>{t('display_name')}</span><input type="text" bind:value={admin.display_name} required /></label>
-				<label class="field"><span>{t('username')}</span><input type="text" bind:value={admin.username} pattern="[A-Za-z0-9._\-]+" required autocapitalize="none" /></label>
+				<label class="field"><span>{t('display_name')}</span><input type="text" bind:value={admin.display_name} required /><small class="muted">{t('display_name_hint')}</small></label>
+				<label class="field"><span>{t('username')}</span><input type="text" bind:value={admin.username} pattern="[A-Za-z0-9._\-]+" required autocapitalize="none" /><small class="muted">{t('username_hint')}</small></label>
 				<label class="field">
 					<span>{t('password')}</span>
 					<input type="password" bind:value={admin.password} minlength="8" required autocomplete="new-password" />
@@ -101,7 +111,7 @@
 		{:else if step === 3}
 			<h2>{t('setup_step_home')}</h2>
 			<p class="muted">{t('setup_home_text')}</p>
-			<HouseholdForm wizard onsaved={() => (step = 4)} />
+			<HouseholdForm wizard onsaved={done} />
 			<div class="nav row"><button class="btn" onclick={() => (step = 2)}>{t('back')}</button></div>
 		{:else}
 			<h2>{t('setup_done_title')}</h2>

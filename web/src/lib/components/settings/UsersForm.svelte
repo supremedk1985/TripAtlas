@@ -14,11 +14,13 @@
 	let form = $state(blank());
 
 	function blank() {
-		return { username: '', display_name: '', password: '', role: 'member' as Role, locale: session.user?.locale ?? 'en', tracker_ids: [] as number[] };
+		// every vehicle preselected: a new account that sees nothing looked broken ("no trips yet")
+		return { username: '', display_name: '', password: '', role: 'member' as Role, locale: session.user?.locale ?? 'en', tracker_ids: trackers.map((tk) => tk.id) };
 	}
 
 	async function load() {
 		[users, trackers] = await Promise.all([api.get<User[]>('/api/users'), api.get<Tracker[]>('/api/trackers')]);
+		if (!form.username && !form.display_name) form = blank();
 	}
 	load();
 
@@ -87,10 +89,11 @@
 			</div>
 			{#if u.role !== 'admin'}
 				<div class="row">
-					<span class="muted small">{t('sees_trackers')}:</span>
+					<span class="muted small">{t('sees_trackers_tap')}:</span>
 					{#each trackers as tk (tk.id)}
 						<button class="chip" class:on={u.tracker_ids.includes(tk.id)} onclick={() => toggleTracker(u, tk.id)}>{tk.name}</button>
 					{/each}
+					{#if !u.tracker_ids.length}<span class="warn small">{t('user_sees_nothing')}</span>{/if}
 				</div>
 			{/if}
 			<div class="row small">
@@ -119,9 +122,10 @@
 			<select bind:value={form.locale}>{#each LANGUAGES as l (l.code)}<option value={l.code}>{l.name}</option>{/each}</select>
 		</label>
 	</div>
+	<p class="muted small">{t(`role_hint_${form.role}`)}</p>
 	{#if form.role !== 'admin'}
 		<div class="row">
-			<span class="muted small">{t('sees_trackers')}:</span>
+			<span class="muted small">{t('sees_trackers_tap')}:</span>
 			{#each trackers as tk (tk.id)}
 				<label class="chip" class:on={form.tracker_ids.includes(tk.id)}>
 					<input type="checkbox" hidden value={tk.id} bind:group={form.tracker_ids} />{tk.name}

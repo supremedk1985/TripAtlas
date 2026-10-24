@@ -133,7 +133,7 @@ bleiben auch Jahre an Fahrten klein, und die Strecke ist trotzdem gut zu sehen.
 
 ### Radtouren
 
-Tracker-Arten: **Fahrzeug** (eine Reise braucht eine Nacht auswärts), **Fahrrad** (unten) und **Person** (ein Tracker,
+Tracker-Arten: **Fahrzeug** und **Wohnmobil** (eine Reise braucht eine Nacht auswärts), **Fahrrad** (unten) und **Person** (ein Tracker,
 den jemand bei sich trägt, etwa eine Handy-App – zählt wie ein Fahrzeug, mit Personen-Piktogramm).
 
 Einen Tracker der Art **Fahrrad** anlegen (*Einstellungen → Tracker*, Name z. B. „Fahrrad“, Art *Fahrrad*). Beim

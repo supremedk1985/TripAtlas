@@ -1,4 +1,5 @@
 // What the photo viewer says about a photo: one quiet line underneath, everything else behind the i button.
+import { countryName } from '$lib/format';
 import { i18n } from '$lib/i18n/index.svelte';
 
 export interface PhotoInfo {
@@ -15,6 +16,7 @@ export interface PhotoInfo {
 	city: string | null;
 	state: string | null;
 	country: string | null;
+	country_code: string | null;
 	lat: number | null;
 	lon: number | null;
 	make: string | null;
@@ -47,7 +49,7 @@ export function takenAt(info: PhotoInfo, long = false): string | null {
 }
 
 export function place(info: PhotoInfo): string | null {
-	return [info.city, info.country].filter(Boolean).join(', ') || null;
+	return [info.city, info.country_code ? countryName(info.country_code) : info.country].filter(Boolean).join(', ') || null;
 }
 
 export function camera(info: PhotoInfo): string | null {

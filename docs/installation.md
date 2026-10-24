@@ -28,7 +28,13 @@ to write there. If Docker created the folder first, it belongs to root and TripA
 /data"* — `sudo chown -R 1000:1000 data` fixes it.
 
 **Port or name already taken?** Change the left side of `ports:` in `compose.yaml` (e.g. `"8100:8097"` → open
-`http://<your-server>:8100`) and, if another container is called `tripatlas`, the `container_name`.
+`http://<your-server>:8100`) and, if another container is called `tripatlas`, the `container_name`. To edit the file
+in the terminal: `nano compose.yaml`, change the line, save with *Ctrl+O, Enter*, leave with *Ctrl+X*, then run
+`docker compose up -d` again.
+
+**Traccar and Immich on the same machine?** In the wizard use the server's own address, not `localhost` (inside
+TripAtlas, `localhost` is TripAtlas itself). `hostname -I` in the terminal shows it, e.g. `192.168.1.10` →
+`http://192.168.1.10:8082` for Traccar and `http://192.168.1.10:2283` for Immich.
 
 Open `http://<your-server>:8097`. If Traccar and Immich run on the same machine in other Docker projects, either use
 the server's IP address in the wizard (e.g. `http://192.168.1.10:8082`) or join their Docker networks

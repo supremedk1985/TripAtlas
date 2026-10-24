@@ -133,7 +133,7 @@ and still draws the route.
 
 ### Bike rides
 
-Tracker kinds: **Vehicle** (trips need a night away), **Bicycle** (below) and **Person** (a tracker someone
+Tracker kinds: **Vehicle** and **Camper van** (trips need a night away), **Bicycle** (below) and **Person** (a tracker someone
 carries, e.g. a phone app — counted like a vehicle, shown with a person pictogram).
 
 Create a tracker of the kind **Bicycle** (*Settings → Trackers*, name it e.g. "Bike", choose *Bicycle*). For a

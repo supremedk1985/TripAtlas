@@ -24,7 +24,10 @@
 </script>
 
 {#if session.user && session.user.role !== 'child'}
+	<h4 class="first">{t('profile_picture')}</h4>
+	<p class="muted small">{t('profile_picture_hint')}</p>
 	<div class="avatar-row"><AvatarPicker user={session.user} path="/api/auth/me/avatar" onchange={setUser} /></div>
+	<h4>{t('profile_details')}</h4>
 {/if}
 
 <form onsubmit={(e) => (e.preventDefault(), send({ display_name: displayName, locale }))}>
@@ -61,6 +64,9 @@
 	}
 	h4 {
 		margin-top: 24px;
+	}
+	h4.first {
+		margin-top: 0;
 	}
 	.avatar-row {
 		margin-bottom: 16px;

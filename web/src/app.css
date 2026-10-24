@@ -334,6 +334,12 @@ button:focus-visible {
 	opacity: 0.9;
 }
 
+/* a quiet warning inside a form */
+.warn {
+	color: #b45309;
+	font-weight: 600;
+}
+
 /* a note pinned on the map (lib/map/notesLayer.ts) */
 .sticky-note {
 	z-index: 3; /* above the photo stacks it was pinned to */

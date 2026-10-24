@@ -61,6 +61,7 @@
 		title={t('avatar_choose')}>
 		<Avatar name={user.display_name} src={avatarUrl(user)} {size} />
 	</button>
+	{#if compact}<span class="edit" aria-hidden="true">✎</span>{/if}
 	{#if compact && user.avatar_version}
 		<button type="button" class="x" onclick={remove} aria-label={t('avatar_remove')} title={t('avatar_remove')}>×</button>
 	{/if}
@@ -94,6 +95,20 @@
 		background: none;
 		cursor: pointer;
 		border-radius: 50%;
+	}
+	.edit {
+		position: absolute;
+		left: calc(100% - 16px);
+		bottom: -2px;
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--accent);
+		color: #fff;
+		font-size: 11px;
+		display: grid;
+		place-items: center;
+		pointer-events: none;
 	}
 	.x {
 		position: absolute;

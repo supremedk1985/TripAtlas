@@ -10,7 +10,7 @@ import time
 from sqlalchemy import select
 
 from ..config import get_config
-from ..db.models import Stay, Tracker
+from ..db.models import Stay, Tracker, Trip
 from ..db.session import db_session
 from . import settings
 from .backup import make_snapshot
@@ -71,6 +71,13 @@ class BackgroundJobs:
                     result["sync_error"] = "; ".join(sync_errors)[:500]
                 result["recomputed"] = recompute_dirty(db)
                 result["places"] = enrich_places(db)
+                if result["places"]:
+                    # names just looked up can give untitled trips (e.g. a fresh import) their title right away
+                    untitled = db.scalars(select(Trip.tracker_id).where(Trip.auto_title.is_(None)).distinct())
+                    for tracker_id in untitled:
+                        db.get(Tracker, tracker_id).dirty = True
+                    db.commit()
+                    result["recomputed"] |= recompute_dirty(db)
                 try:
                     if make_snapshot():
                         result["snapshot"] = True

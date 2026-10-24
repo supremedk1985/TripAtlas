@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..auth.deps import current_user, require_editor
 from ..db.models import MapNote, Role, User
 from ..db.session import get_db
+from .schemas import iso_utc
 
 router = APIRouter(prefix="/api/notes", tags=["notes"])
 
@@ -34,7 +35,7 @@ def note_out(n: MapNote, db: Session) -> dict:
         "lon": n.lon,
         "text": n.text,
         "photo_id": n.photo_id,
-        "created_at": n.created_at.isoformat(),
+        "created_at": iso_utc(n.created_at),
         "author": author.display_name if author else None,
         "created_by": n.created_by,
     }

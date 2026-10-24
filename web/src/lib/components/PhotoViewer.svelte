@@ -4,7 +4,7 @@
 	// markers do not carry the type) unless the caller already knows it.
 	import { tick } from 'svelte';
 	import { api, thumbUrl, videoUrl } from '$lib/api';
-	import { dateTime } from '$lib/format';
+	import { countryName, dateTime } from '$lib/format';
 	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
 	import { i18n, t } from '$lib/i18n/index.svelte';
 
@@ -233,7 +233,7 @@
 			{:else}
 				<dl>
 					{#if takenAt(info, true)}<dt>{t('photo_taken')}</dt><dd>{takenAt(info, true)}{#if info.time_zone}<small> ({info.time_zone})</small>{/if}</dd>{/if}
-					{#if place(info) || info.state}<dt>{t('photo_place')}</dt><dd>{[info.city, info.state, info.country].filter(Boolean).join(', ')}</dd>{/if}
+					{#if place(info) || info.state}<dt>{t('photo_place')}</dt><dd>{[info.city, info.state, info.country_code ? countryName(info.country_code) : info.country].filter(Boolean).join(', ')}</dd>{/if}
 					{#if info.lat != null && info.lon != null}
 						<dt>{t('photo_coordinates')}</dt>
 						<dd><a href="https://www.openstreetmap.org/?mlat={info.lat}&mlon={info.lon}#map=16/{info.lat}/{info.lon}" target="_blank" rel="noopener noreferrer">{info.lat.toFixed(5)}, {info.lon.toFixed(5)}</a></dd>

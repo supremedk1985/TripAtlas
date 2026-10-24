@@ -83,6 +83,7 @@ def photo_info(asset_id: str, db: Session = Depends(get_db), user: User = Depend
         "city": x.get("city"),
         "state": x.get("state"),
         "country": x.get("country"),
+        "country_code": country_code(x.get("country")),   # the browser names it in the reader's language
         "lat": x.get("latitude"),
         "lon": x.get("longitude"),
         "make": x.get("make"),

@@ -14,6 +14,7 @@ from ..importers import IMPORTERS, detect_format
 from ..importers.gpx import iter_gpx
 from ..services.jobs import jobs
 from ..services.positions import add_points_counted, thin
+from .schemas import iso_utc
 
 router = APIRouter(prefix="/api/imports", tags=["imports"])
 
@@ -89,7 +90,7 @@ def history(db: Session = Depends(get_db), user: User = Depends(require_editor))
             "added": j.added,
             "skipped": j.skipped,
             "message": j.message,
-            "created_at": j.created_at,
+            "created_at": iso_utc(j.created_at),
         }
         for j in rows
     ]

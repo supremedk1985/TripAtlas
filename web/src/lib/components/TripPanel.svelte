@@ -270,7 +270,7 @@
 									<span class="muted">
 										{date(e.start, { day: 'numeric', month: 'short' })}
 										{#if e.kind === 'stay'}· {plural('nights', e.nights)}{/if}
-										{#if e.distance_km >= 1}· {km(e.distance_km)}{/if}
+										{#if e.distance_km >= 1}· {e.kind === 'stay' ? t('stay_km', { km: km(e.distance_km) }) : km(e.distance_km)}{/if}
 										{#if e.photo_count}· {plural('photos', e.photo_count)}{/if}
 									</span>
 								</span>
