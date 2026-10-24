@@ -21,6 +21,17 @@ every trip you have taken: where you drove, where you slept, what you saw, and w
 
 > Status: early (0.1). It runs in daily use for one family; expect rough edges. Feedback and contributions welcome.
 
+![TripAtlas: all trips on one map, photos on top](docs/images/en/map.png)
+
+## Documentation
+
+| | English | Deutsch |
+|---|---|---|
+| Setting up (with video) | [docs/installation.md](docs/installation.md) | [docs/de/installation.md](docs/de/installation.md) |
+| User guide (with videos) | [docs/user-guide.md](docs/user-guide.md) | [docs/de/anleitung.md](docs/de/anleitung.md) |
+| Try it with demo data | [docs/demo.md](docs/demo.md) | |
+| How it works inside | [docs/architecture.md](docs/architecture.md) | |
+
 ## Quick start
 
 ```bash

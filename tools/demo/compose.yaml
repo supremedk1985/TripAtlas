@@ -1,0 +1,29 @@
+# Try TripAtlas without Traccar or Immich: a made-up family with a camper van, a car, five trips and a flight.
+#
+#   cd tools/demo
+#   python3 build_demo.py            # once: fetches the routes and the public-domain photos
+#   docker compose up -d             # then open http://localhost:8099 and run the setup wizard with
+#                                    #   Traccar: http://traccar:8082   (any e-mail / password)
+#                                    #   Immich:  http://immich:2283    (any API key)
+#
+# Everything lives in this folder; `docker compose down` and deleting demo-data/ resets it.
+x-fake: &fake
+  image: python:3.12-slim
+  working_dir: /demo
+  volumes: ["./:/demo:ro"]
+  entrypoint: ["sh", "-c", "pip -q install fastapi uvicorn pillow >/dev/null 2>&1 && python fake_services.py $$0"]
+
+services:
+  traccar:
+    <<: *fake
+    command: ["traccar"]
+  immich:
+    <<: *fake
+    command: ["immich"]
+  tripatlas:
+    build: { context: ../.., dockerfile: docker/Dockerfile }
+    ports: ["8099:8097"]
+    volumes: ["./demo-data:/data"]
+    environment:
+      TZ: Europe/Berlin
+    depends_on: [traccar, immich]

@@ -1,0 +1,132 @@
+# TripAtlas user guide
+
+*Deutsch: [de/anleitung.md](de/anleitung.md) · Setting up: [installation.md](installation.md)*
+
+TripAtlas shows every trip your family took on one map — where you drove, where you slept, the photos you took and
+what is worth knowing about the places. Every section has a short video.
+
+| Video | |
+|---|---|
+| [Setting up TripAtlas](videos/en/01-setup.mp4) | the wizard, from the first account to the first trips |
+| [Map and trips](videos/en/02-map-and-trips.mp4) | finding a trip, replaying it, the timeline, titles and notes |
+| [Where I've been](videos/en/03-where-ive-been.mp4) | the globe, places, flights |
+| [Family and children](videos/en/04-family-and-kids.mp4) | accounts, roles and the children's view |
+| [Importing old trips](videos/en/05-import.mp4) | GPX files and Google location history |
+| [On the phone](videos/en/06-phone.mp4) | the same on a small screen |
+
+---
+
+## The map
+
+![All trips on one map](images/en/map.png)
+
+- **Left** (on a phone: below the map) are your trips, newest first, grouped by year. Each card shows the dates,
+  nights, kilometres, photos and the flags of the countries.
+- **On the map** each trip is a line in the colour of its vehicle. Your photos lie on top as small stacks; the
+  number says how many photos are in a stack. Tap a stack to look through them.
+- **Routes** and **Photos** switch the layers on and off. With several vehicles, the coloured buttons show or hide
+  each one. **Streets / Light / Dark** changes the map style.
+- The photo layer shows **all** photos with a location — also from trips without a tracker, like a city trip by
+  train.
+
+### What counts as a trip?
+
+A trip starts when a vehicle is further away from home than the home radius (4 km by default) **and** spends at
+least one night away — the position at 3 a.m. counts. A day trip is not a trip. A quick stop at home during the
+day does not end a trip; a night at home does. Every night's location becomes an **overnight stay**.
+
+## A trip
+
+![A trip with route, photos and replay](images/en/trip.png)
+
+Tap a trip in the list or its line on the map:
+
+- **Cover photo, title, dates** and the numbers: nights, kilometres, photos, countries. The title is the place where
+  you spent most nights — change it with **Title & note**.
+- **Replay**: the slider has two handles. The route between them is drawn on the map, coloured by day; the vehicle
+  stands at the right handle. ▶ drives the route; **Follow** keeps the map on the vehicle. Below are the photos of
+  the selected time.
+- **Timeline**: drives and overnight stays in order, with their photos. Tap an entry to show it on the map.
+- **About this place** on every stay: the Wikipedia summary and sights nearby.
+- **Notes**: a text for the trip and for every stay — bold, italic, lists, links. Everybody with access sees them.
+
+![The timeline with a Wikipedia summary](images/en/timeline.png)
+
+### Photos and videos
+
+Tap any photo to see it large. Swipe or use the arrow keys to move on; videos play in the same viewer. Photos without
+GPS (from a camera, for example) are placed where the vehicle was at that time.
+
+## Where I've been
+
+![The globe with every place and the visited countries](images/en/visited.png)
+
+A globe with a pin for every place you have been — overnight stays and every town in your photos — and the visited
+countries filled in. At the bottom (on a computer: left) the number of countries and places; tap it for the list.
+
+Tap a pin: name, nights, photos, the Wikipedia summary — and **Show photos** opens all photos of that place.
+
+### Flights
+
+Phones record a position in the air too, so photos from the plane window would end up in villages you only flew
+over. TripAtlas recognises them by the altitude stored in the photo (and how fast the position changed) and shows
+the flight instead: a dashed arc from departure to arrival with a ✈. Tap it to see the route, the date, the
+altitude and the photos from the window.
+
+![A flight with the photos from the window](images/en/flight.png)
+
+## Family accounts and roles
+
+Everybody signs in with their own name and password. The administrator creates accounts under
+**Settings → Users** and decides which vehicles each person sees.
+
+| | Administrator | Member | Child |
+|---|---|---|---|
+| Sees trips | all | of the assigned vehicles | of the assigned vehicles |
+| Where someone is right now | ✓ | ✓ (can be turned off) | never (unless allowed) |
+| Titles, notes, imports | ✓ | ✓ | – |
+| Users, vehicles, connections | ✓ | – | – |
+
+### The children's view
+
+![The children's home page](images/en/kids.png)
+
+Children get their own, simple TripAtlas: big pictures, every trip as a story with a chapter per place, and
+**Did you know?** with a text written for children (from [Klexikon](https://klexikon.zum.de) in German, Simple
+English Wikipedia in English). Children cannot change anything, and they never see where someone is right now — the
+server enforces this, not just the screen.
+
+![A trip told as a story](images/en/kids-story.png)
+
+## Importing old trips
+
+Trips from before you had a tracker: **Settings → Import**, choose the vehicle and the files.
+
+- **GPX** from navigation apps, sports watches, bike computers.
+- **Google location history**: `Records.json` from Google Takeout (until 2024), or the newer *Timeline* export from
+  the Google Maps app (Android: *Settings → Location → Location services → Timeline → Export*).
+- **GeoJSON** with timestamps (e.g. from Dawarich or OwnTracks).
+
+Importing the same file twice does no harm — positions that already exist are skipped.
+
+## On the phone
+
+Open TripAtlas in the phone's browser and choose *Add to home screen* — it then starts like an app (needs HTTPS).
+The layout adapts: the map on top, the list below; the photo viewer works with swipes.
+
+## Your settings
+
+**Settings → Profile**: name, language, password, and optionally your own Immich API key (then you see exactly your
+photos and those shared with you).
+
+## Questions
+
+**A trip is missing or two trips are merged.** Ask the administrator to check *Settings → Household*: the home
+location, the home radius, the minimum number of nights.
+
+**A place has no name yet.** Names and encyclopedia texts are looked up in the background, a few per minute.
+
+**Where are my photos stored?** In Immich, as before. TripAtlas shows them but never copies or changes them.
+
+**Who can see where we are?** Only accounts that may see live positions, and only for the vehicles they were
+given. Children never.

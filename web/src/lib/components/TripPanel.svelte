@@ -77,10 +77,13 @@
 		untrack(() => {
 			if (to >= end - 60) to = from + 60;
 		});
-		const stepPerFrame = (end - untrack(() => from)) / (40 * 60);
+		// Time-based, not frame-based: on a slow phone (few frames per second) the replay still takes ~40 s.
+		const perMs = (end - untrack(() => from)) / 40_000;
 		let raf = 0;
-		const frame = () => {
-			to = Math.min(end, to + stepPerFrame);
+		let last = performance.now();
+		const frame = (now: number) => {
+			to = Math.min(end, to + (now - last) * perMs);
+			last = now;
 			if (to >= end) playing = false;
 			else raf = requestAnimationFrame(frame);
 		};

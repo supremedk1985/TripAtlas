@@ -21,3 +21,9 @@ app/.gradle/
 app/build/
 app/app/build/
 app/local.properties
+# Demo: photos are downloaded by tools/demo/build_demo.py, the instance data is throwaway
+tools/demo/photos/
+tools/demo/demo-data/
+tools/demo/data/routes-cache.json
+# …but the demo data itself (positions, photo list, credits) belongs in the repository
+!tools/demo/data/
