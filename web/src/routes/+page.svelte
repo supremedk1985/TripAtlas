@@ -55,6 +55,14 @@
 	let selectedPoints: TrackPoint[] = [];
 	let selectedStays: { lat: number; lon: number }[] = [];
 
+	// Phone held upright: map on top, list below; turned sideways: list and map next to each other, the list a bit
+	// narrower. Measured here and not with CSS media queries: an Android WebView that starts with no height keeps
+	// reporting 0 px height to media queries (so "landscape" on an upright phone), while innerHeight is right.
+	let winW = $state(0);
+	let winH = $state(0);
+	const phone = $derived(
+		winW && winW <= 860 && winH >= winW ? 'portrait' : winW && winW <= 1000 && winW > winH && winH <= 560 ? 'landscape' : null
+	);
 	const selectedId = $derived(Number(page.url.searchParams.get('trip')) || null);
 	const visibleTrips = $derived(trips.filter((tr) => !hidden.has(tr.tracker_id)));
 	const byYear = $derived.by(() => {
@@ -295,10 +303,14 @@
 	}
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && full && !viewer && toggleFull()} />
+<svelte:window
+	bind:innerWidth={winW}
+	bind:innerHeight={winH}
+	onkeydown={(e) => e.key === 'Escape' && full && !viewer && toggleFull()}
+/>
 <svelte:document onfullscreenchange={() => !document.fullscreenElement && (full = false)} />
 
-<div class="layout" class:full>
+<div class="layout" class:full class:portrait={phone === 'portrait'} class:landscape={phone === 'landscape'}>
 	<aside class:trip-open={selectedId !== null}>
 		<AppHeader />
 		{#if selectedId && map}
@@ -590,29 +602,24 @@
 		padding: 16px;
 		box-shadow: none;
 	}
-	/* a phone turned sideways: list and map next to each other, the list a bit narrower */
-	@media (max-width: 1000px) and (orientation: landscape) and (max-height: 560px) {
-		.layout {
-			grid-template-columns: minmax(290px, 42%) 1fr;
-		}
+	.layout.landscape {
+		grid-template-columns: minmax(290px, 42%) 1fr;
 	}
-	@media (max-width: 860px) and (orientation: portrait) {
-		.layout {
-			grid-template-columns: 1fr;
-			grid-template-rows: minmax(240px, 46%) 1fr;
-			grid-template-areas: 'map' 'side';
-		}
-		main {
-			grid-area: map;
-		}
-		/* with a trip open the back button is enough; the header would take a fifth of the screen */
-		aside.trip-open > :global(nav) {
-			display: none;
-		}
-		aside {
-			grid-area: side;
-			border-right: 0;
-			border-top: 1px solid var(--border);
-		}
+	.layout.portrait {
+		grid-template-columns: 1fr;
+		grid-template-rows: minmax(240px, 46%) 1fr;
+		grid-template-areas: 'map' 'side';
+	}
+	.portrait main {
+		grid-area: map;
+	}
+	/* with a trip open the back button is enough; the header would take a fifth of the screen */
+	.portrait aside.trip-open > :global(nav) {
+		display: none;
+	}
+	.portrait aside {
+		grid-area: side;
+		border-right: 0;
+		border-top: 1px solid var(--border);
 	}
 </style>
