@@ -26,6 +26,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- Account menu opened off the left edge of the screen when its button sat on the left (children's view on a
+  phone); the countries note on the children's globe was covered by the map's sources
 - Sign-in page: every letter typed into the user name jumped to the password field
 - A single corrupt GPS fix far away (e.g. one dashcam point near London on a drive in Germany) pulled the map view of
   a trip off centre and zoomed it far out; such spikes are now left out of routes, trips and map bounds

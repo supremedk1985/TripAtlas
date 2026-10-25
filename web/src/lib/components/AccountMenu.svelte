@@ -12,8 +12,13 @@
 	let others = $state<KnownAccount[]>([]);
 	let root: HTMLElement | undefined = $state();
 
+	// The menu opens towards the side with room: from the right edge of the button (top bar, button on the right),
+	// or from its left edge when the button sits near the left of the screen (children's view).
+	let fromLeft = $state(false);
+
 	function toggle() {
 		open = !open;
+		if (open && root) fromLeft = root.getBoundingClientRect().right < 260;
 		if (open) others = knownAccounts().filter((a) => a.username.toLowerCase() !== session.user?.username.toLowerCase());
 	}
 
@@ -44,7 +49,7 @@
 	{/if}
 
 	{#if open}
-		<div class="menu card" role="menu">
+		<div class="menu card" class:from-left={fromLeft} role="menu">
 			{#if session.user}
 				<div class="me">
 					<Avatar name={session.user.display_name} src={avatarUrl(session.user)} size={40} />
@@ -104,6 +109,10 @@
 		display: grid;
 		gap: 2px;
 		box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+	}
+	.menu.from-left {
+		right: auto;
+		left: 0;
 	}
 	.me {
 		display: flex;

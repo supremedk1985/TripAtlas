@@ -98,13 +98,14 @@
 	.badge {
 		position: absolute;
 		left: 14px;
-		bottom: 14px;
+		top: 14px; /* the map's sources fold out along the bottom edge */
 		background: var(--surface);
 		border-radius: 18px;
 		padding: 8px 14px;
 		font-weight: 700;
 		box-shadow: var(--shadow);
-		max-width: calc(100% - 28px);
+		/* leaves the zoom buttons in the top right corner free */
+		max-width: calc(100% - 72px);
 	}
 	.badge .flags {
 		display: block;
