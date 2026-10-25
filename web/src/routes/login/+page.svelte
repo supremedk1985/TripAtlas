@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 	import { ApiError } from '$lib/api';
 	import { homeOf, knownAccounts, offerSave, signIn, switchTo, type KnownAccount } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
@@ -15,8 +16,10 @@
 	let passwordField: HTMLInputElement | undefined = $state();
 	const accounts = knownAccounts();
 
+	// Name already filled in when the page opens (switching accounts): start in the password field. Only then —
+	// reading `username` here without untrack made every typed letter jump to the password field.
 	$effect(() => {
-		if (username && passwordField) passwordField.focus();
+		if (passwordField && untrack(() => username)) passwordField.focus();
 	});
 
 	function pick(a: KnownAccount) {

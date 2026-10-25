@@ -23,6 +23,7 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- Sign-in page: every letter typed into the user name jumped to the password field
 - A single corrupt GPS fix far away (e.g. one dashcam point near London on a drive in Germany) pulled the map view of
   a trip off centre and zoomed it far out; such spikes are now left out of routes, trips and map bounds
 - Back from a trip is a clear "‹ All trips" button, with the vehicle's pictogram and name next to it
