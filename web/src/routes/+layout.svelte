@@ -8,8 +8,10 @@
 	import { loadSession, session } from '$lib/stores/session.svelte';
 	import { installAppSignIn, remember } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
+	import { watchBack } from '$lib/back.svelte';
 
 	let { children } = $props();
+	watchBack();
 	let error = $state('');
 
 	// Route guard: setup → login → children's area. Runs on every navigation.

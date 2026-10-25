@@ -26,6 +26,9 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- Back (Android's gesture, the browser's button) closes what is open first — photo viewer (a photo opened from the
+  overview goes back to the overview), info panel, account menu, map full screen, place cards, notes — instead of
+  leaving the page behind them; "All trips" really goes back, so back afterwards does not reopen the trip
 - A phone turned sideways: list and map side by side instead of a thin strip under the map; a photo fits the screen
   after turning (it stayed at its old size and was cut off); the overview keeps its tile size (more columns instead
   of a few huge tiles); cover photos and the children's globe no longer taller than the screen

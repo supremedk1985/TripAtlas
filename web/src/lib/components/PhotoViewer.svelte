@@ -6,6 +6,7 @@
 	import { api, thumbUrl, videoUrl } from '$lib/api';
 	import VideoHint from './VideoHint.svelte';
 	import { zoomable } from '$lib/zoom';
+	import { backLayer } from '$lib/back.svelte';
 	import { countryName, dateTime } from '$lib/format';
 	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
 	import { i18n, t } from '$lib/i18n/index.svelte';
@@ -77,6 +78,11 @@
 	let infos = $state<Record<string, PhotoInfo | null>>({});
 	const info = $derived(infos[id]);
 	let showInfo = $state(false);
+	// back gesture: the info panel first, then a photo opened from the overview goes back to it, then the viewer closes
+	backLayer(() => true, () => onclose());
+	backLayer(() => !overview && grid, () => (grid = false));
+	backLayer(() => !!overview && ids.length > 1 && !grid, () => (grid = true));
+	backLayer(() => showInfo, () => (showInfo = false));
 	let exifTags = $state<Record<string, Record<string, string> | null>>({});
 	let exifOpen = $state(false);
 

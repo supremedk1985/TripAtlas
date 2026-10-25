@@ -5,10 +5,12 @@
 	import { avatarUrl } from '$lib/avatar';
 	import { session } from '$lib/stores/session.svelte';
 	import Avatar from './Avatar.svelte';
+	import { backLayer } from '$lib/back.svelte';
 
 	let { variant = 'icon' }: { variant?: 'icon' | 'button' } = $props();
 
 	let open = $state(false);
+	backLayer(() => open, () => (open = false));
 	let others = $state<KnownAccount[]>([]);
 	let root: HTMLElement | undefined = $state();
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The children's home: a globe with every place they have been, and their trips as big picture cards.
 	// Read-only by design — the API refuses every change from a child account anyway.
+	import { backLayer } from '$lib/back.svelte';
 	import { api, pinPhotos, thumbUrl } from '$lib/api';
 	import AccountMenu from '$lib/components/AccountMenu.svelte';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
@@ -17,6 +18,7 @@
 	let visited = $state<Visited | null>(null);
 	let pin = $state<Pin | null>(null);
 	let flight = $state<Flight | null>(null);
+	backLayer(() => pin !== null || flight !== null, () => ((pin = null), (flight = null)));
 	let viewer = $state<{ ids: string[]; index: number; overview?: boolean } | null>(null);
 	async function openPinPhotos(p: Pin) {
 		const v = await pinPhotos(p, p.cover_asset);

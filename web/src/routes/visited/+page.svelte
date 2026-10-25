@@ -2,6 +2,7 @@
 	// "Where I've been": globe with pins. On wide screens the country list sits left and a selected place right;
 	// on phones both live at the bottom — the country list collapsed to one line, a selected place as a sheet that
 	// replaces it — so the globe stays visible.
+	import { backLayer } from '$lib/back.svelte';
 	import { goto } from '$app/navigation';
 	import { pinPhotos, thumbUrl } from '$lib/api';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
@@ -22,6 +23,7 @@
 	}
 	let listOpen = $state(false);
 	let flight = $state<Flight | null>(null);
+	backLayer(() => pin !== null || flight !== null, () => ((pin = null), (flight = null)));
 	const totalPlaces = $derived(visited?.pins.length ?? 0);
 </script>
 

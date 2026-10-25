@@ -4,6 +4,7 @@
 	import { vehicleMarker } from '$lib/map/vehicleMarker';
 	import maplibregl from 'maplibre-gl';
 	import { goto } from '$app/navigation';
+	import { backLayer, backTo } from '$lib/back.svelte';
 	import { page } from '$app/state';
 	import { api, errorText, thumbUrl } from '$lib/api';
 	import AppHeader from '$lib/components/AppHeader.svelte';
@@ -36,6 +37,7 @@
 	let notes = $state<MapNote[]>([]);
 	let notesLayer: NotesLayer | undefined;
 	let note = $state<MapNote | null>(null);   // the note whose card is open
+	backLayer(() => note !== null, () => (note = null));
 	let showTracks = $state(true);
 	let style = $state<MapStyleId>(preferredStyle());
 	let allMarkers = $state<[string, number, number][]>([]);
@@ -214,7 +216,11 @@
 	function selectTrip(id: number | null) {
 		const url = new URL(page.url);
 		if (id) url.searchParams.set('trip', String(id));
-		else url.searchParams.delete('trip');
+		else {
+			// closing a trip opened from the list goes back, so the back gesture afterwards does not reopen it
+			url.searchParams.delete('trip');
+			return backTo(url.pathname + url.search);
+		}
 		goto(url, { replaceState: false, keepFocus: true, noScroll: true });
 	}
 
@@ -281,6 +287,7 @@
 	// Full screen: only the map. In a browser also the real full-screen mode; in an app's WebView that may be
 	// refused, then the map still fills the app.
 	let full = $state(false);
+	backLayer(() => full, () => full && toggleFull());
 	async function toggleFull() {
 		full = !full;
 		if (full) await document.documentElement.requestFullscreen?.().catch(() => {});

@@ -3,11 +3,13 @@
 	// details say how an Immich administrator changes that. Asked from the server once per page load.
 	import { api } from '$lib/api';
 	import { t } from '$lib/i18n/index.svelte';
+	import { backLayer } from '$lib/back.svelte';
 
 	let { variant = 'viewer' }: { variant?: 'viewer' | 'settings' } = $props();
 
 	let ok = $state<boolean | null>(null);
 	let open = $state(false);
+	backLayer(() => open, () => (open = false));
 	check().then((v) => (ok = v));
 </script>
 

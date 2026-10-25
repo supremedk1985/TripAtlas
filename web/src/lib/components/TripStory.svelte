@@ -4,6 +4,7 @@
 	// notes of the trip and of each place, videos and every photo of a place.
 	import maplibregl from 'maplibre-gl';
 	import { api, thumbUrl } from '$lib/api';
+	import { backTo } from '$lib/back.svelte';
 	import { date, flag, km, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import MapView from '$lib/map/MapView.svelte';
@@ -65,7 +66,7 @@
 
 <div class="story" class:kids>
 	<div class="top">
-		<a class="back btn small" href={back.href}>← {back.label}</a>
+		<a class="back btn small" href={back.href} onclick={(e) => (e.preventDefault(), backTo(back.href))}>← {back.label}</a>
 		{#if !kids}<a class="btn small" href="/?trip={id}">🗺 {t('diary_on_map')}</a>{/if}
 	</div>
 	{#if trip}
