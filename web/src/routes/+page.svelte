@@ -9,6 +9,7 @@
 	import AppHeader from '$lib/components/AppHeader.svelte';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import TripPanel from '$lib/components/TripPanel.svelte';
+	import VehicleIcon from '$lib/components/VehicleIcon.svelte';
 	import { dateRange, dateTime, flag, km, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import type { MapControl } from '$lib/map/control';
@@ -308,7 +309,7 @@
 					<div class="row filters">
 						{#each trackers as tk (tk.id)}
 							<button class="chip" class:on={!hidden.has(tk.id)} onclick={() => toggleTracker(tk.id)}>
-								<span class="dot" style="background:{tk.color}"></span>{tk.name}
+								<VehicleIcon color={tk.color} kind={tk.kind} />{tk.name}
 							</button>
 						{/each}
 					</div>
@@ -355,7 +356,7 @@
 									{plural('nights', tr.nights)} · {km(tr.distance_km)}{#if tr.photo_count}{' · '}{plural('photos', tr.photo_count)}{/if}
 								</span>
 								<span class="flags">
-									{#if trackers.length > 1}<span class="dot" style="background:{tk?.color}" title={tk?.name}></span>{/if}
+									{#if trackers.length > 1}<VehicleIcon color={tk?.color} kind={tk?.kind} title={tk?.name} />{/if}
 									{tr.countries.map(flag).join(' ')}
 									{#if tr.ongoing}<span class="live">● {t('trip_ongoing')}</span>{/if}
 								</span>
@@ -484,12 +485,6 @@
 		padding: 0.25em 0.5em;
 		font-size: 0.86em;
 		border-radius: 999px;
-	}
-	.dot {
-		display: inline-block;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
 	}
 	.year {
 		margin: 18px 0 8px;

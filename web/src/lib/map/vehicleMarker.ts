@@ -16,6 +16,12 @@ const BIKE =
 const PERSON =
 	'<circle cx="12" cy="6.5" r="3.5" class="body"/><path d="M5 21v-3.5A5.5 5.5 0 0 1 10.5 12h3a5.5 5.5 0 0 1 5.5 5.5V21z" class="body"/>';
 
+/** The pictogram alone, for lists and filters (styled by `.vehicle-icon` with `--c` set to the tracker's colour). */
+export function vehicleSvg(kind?: Tracker['kind']) {
+	const shape = kind === 'person' ? PERSON : kind === 'bike' ? BIKE : kind === 'camper' ? CAMPER : CAR;
+	return `<svg viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`;
+}
+
 export function vehicleMarker(opts: { color: string; kind?: Tracker['kind']; avatarUrl?: string; title?: string; live?: boolean }) {
 	const el = document.createElement('div');
 	el.style.setProperty('--c', opts.color);
@@ -25,8 +31,7 @@ export function vehicleMarker(opts: { color: string; kind?: Tracker['kind']; ava
 		el.style.backgroundImage = `url(${opts.avatarUrl})`;
 	} else {
 		el.className = 'vehicle-icon' + (opts.live ? ' live' : '');
-		const shape = opts.kind === 'person' ? PERSON : opts.kind === 'bike' ? BIKE : opts.kind === 'camper' ? CAMPER : CAR;
-		el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${shape}</svg>`;
+		el.innerHTML = vehicleSvg(opts.kind);
 	}
 	return el;
 }

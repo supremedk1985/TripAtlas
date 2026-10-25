@@ -25,6 +25,7 @@
 	let container: HTMLDivElement;
 	let map: maplibregl.Map | undefined;
 	let currentStyle: MapStyleId | undefined;
+	let sizeWatch: ResizeObserver | undefined;
 
 	onMount(() => {
 		map = new maplibregl.Map({
@@ -45,6 +46,13 @@
 			onstyle?.(m);
 		});
 		m.once('load', () => onready?.(m));
+		// MapLibre ignores the first size change of its container. When the page grows while the map starts up
+		// (in the app: the keyboard closing after sign-in) the map stayed at its first, smaller size.
+		sizeWatch = new ResizeObserver(() => {
+			const c = m.getCanvas();
+			if (Math.abs(c.clientWidth - container.clientWidth) > 1 || Math.abs(c.clientHeight - container.clientHeight) > 1) m.resize();
+		});
+		sizeWatch.observe(container);
 	});
 
 	$effect(() => {
@@ -54,7 +62,10 @@
 		}
 	});
 
-	onDestroy(() => map?.remove());
+	onDestroy(() => {
+		sizeWatch?.disconnect();
+		map?.remove();
+	});
 
 	/** Country and place names in the reader's language where the map data has them (otherwise the local name). */
 	function localiseLabels(m: maplibregl.Map) {

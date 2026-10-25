@@ -5,6 +5,11 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+### Fixed
+- Trip list and vehicle filter show the vehicle's pictogram instead of a coloured dot (a red dot means "on the road")
+- The map could stay at half height when the page grew while the map was starting (in an app: the keyboard closing
+  after signing in)
+
 ## [0.2.0] – 2026-10-25
 
 ### Added
