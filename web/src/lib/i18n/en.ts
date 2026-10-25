@@ -6,6 +6,7 @@ export default {
 	saved: 'Saved.',
 	cancel: 'Cancel',
 	close: 'Close',
+	all_trips: 'All trips',
 	back: 'Back',
 	next: 'Next',
 	previous: 'Previous',

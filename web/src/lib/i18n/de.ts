@@ -7,6 +7,7 @@ const de: Dictionary = {
 	saved: 'Gespeichert.',
 	cancel: 'Abbrechen',
 	close: 'Schließen',
+	all_trips: 'Alle Reisen',
 	back: 'Zurück',
 	next: 'Weiter',
 	previous: 'Vorheriges',

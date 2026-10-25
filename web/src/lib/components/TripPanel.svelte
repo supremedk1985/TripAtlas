@@ -14,6 +14,7 @@
 	import NoteView from './NoteView.svelte';
 	import PlaceCard from './PlaceCard.svelte';
 	import RangeSlider from './RangeSlider.svelte';
+	import VehicleIcon from './VehicleIcon.svelte';
 
 	let {
 		tripId,
@@ -190,8 +191,10 @@
 
 <div class="panel">
 	<div class="top row">
-		<button class="icon-btn" onclick={onclose} aria-label={t('back')}>←</button>
-		<span class="muted">{tracker?.name ?? ''}</span>
+		<button class="back" onclick={onclose}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>{t('all_trips')}
+		</button>
+		{#if tracker}<span class="vehicle muted"><VehicleIcon color={tracker.color} kind={tracker.kind} />{tracker.name}</span>{/if}
 	</div>
 
 	{#if error}
@@ -355,6 +358,37 @@
 </div>
 
 <style>
+	.back {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 0.4em 0.9em 0.4em 0.55em;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.back:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.back svg {
+		width: 18px;
+		height: 18px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.4;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.vehicle {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
 	.panel {
 		padding: 12px 16px 24px;
 	}

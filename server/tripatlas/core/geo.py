@@ -51,6 +51,29 @@ def path_length_km(points: Sequence[Point]) -> float:
     return total
 
 
+def drop_spikes(points: Sequence[Point]) -> list[Point]:
+    """Leaves out single points that jump far away and straight back — a corrupt GPS fix (e.g. a dashcam that wrote
+    8.0 instead of 0812.3 as longitude put one point of a drive near London). A point goes when it is implausibly far
+    from both neighbours (see MAX_SEGMENT_KM, MAX_GROUND_KMH) while the neighbours are close to each other."""
+    if len(points) < 3:
+        return list(points)
+
+    def jump(a: Point, b: Point) -> float:
+        d = point_distance_km(a, b)
+        hours = abs(b.t - a.t) / 3600
+        return d if d > MAX_SEGMENT_KM and (hours == 0 or d / hours > MAX_GROUND_KMH) else 0.0
+
+    out = [points[0]]
+    for i in range(1, len(points) - 1):
+        prev, p, nxt = out[-1], points[i], points[i + 1]
+        there, back = jump(prev, p), jump(p, nxt)
+        if there and back and point_distance_km(prev, nxt) < min(there, back) / 2:
+            continue
+        out.append(p)
+    out.append(points[-1])
+    return out
+
+
 def thin_out(points: Sequence[Point], min_meters: float = 15, max_seconds: float = 900) -> list[Point]:
     """Drop points that add nothing: keep a point only if it is more than `min_meters` away from the last kept one
     or more than `max_seconds` later. A parked tracker reporting every few minutes would otherwise dominate the

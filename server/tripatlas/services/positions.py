@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
-from ..core.geo import Point
+from ..core.geo import Point, drop_spikes
 from ..db.models import Position, Tracker
 
 
@@ -21,7 +21,8 @@ def load_points(db: Session, tracker_id: int, start: float | None = None, end: f
         q = q.where(Position.t >= start)
     if end is not None:
         q = q.where(Position.t <= end)
-    return [Point(*row) for row in db.execute(q.order_by(Position.t))]
+    # single corrupt fixes stay in the database (they came from Traccar) but never reach routes, trips or bounds
+    return drop_spikes([Point(*row) for row in db.execute(q.order_by(Position.t))])
 
 
 IMPORT_MIN_GAP_S = 10

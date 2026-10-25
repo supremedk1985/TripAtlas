@@ -253,3 +253,17 @@ def test_path_length_counts_sparse_points_but_not_jumps():
     # a GPS jump of 300 km within one minute is not distance travelled
     jump = [Point(0, 50.0, 8.0), Point(60, 52.7, 8.0), Point(120, 50.0, 8.001)]
     assert path_length_km(jump) < 1
+
+
+def test_drop_spikes_removes_a_single_corrupt_fix_but_keeps_real_movement():
+    from tripatlas.core.geo import drop_spikes
+
+    # a drive in the Netherlands with one corrupt fix (longitude 0.13, near London) half a minute in
+    drive = [Point(0, 52.091, 5.121), Point(30, 52.093, 0.133), Point(61, 52.096, 5.118), Point(90, 52.100, 5.115)]
+    assert [p.lon for p in drop_spikes(drive)] == [5.121, 5.118, 5.115]
+    # a long gap with a plausible ride stays, also a plain end of the recording elsewhere
+    gap = [Point(0, 52.0, 8.0), Point(3600, 52.5, 9.0), Point(3660, 52.5, 9.01)]
+    assert drop_spikes(gap) == gap
+    # a real move away that does not come back stays
+    away = [Point(0, 52.0, 8.0), Point(30, 52.0, 8.001), Point(60, 53.0, 8.0), Point(90, 53.0, 8.001)]
+    assert drop_spikes(away) == away

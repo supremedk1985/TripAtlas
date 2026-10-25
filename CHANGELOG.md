@@ -19,6 +19,9 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- A single corrupt GPS fix far away (e.g. one dashcam point near London on a drive in Germany) pulled the map view of
+  a trip off centre and zoomed it far out; such spikes are now left out of routes, trips and map bounds
+- Back from a trip is a clear "‹ All trips" button, with the vehicle's pictogram and name next to it
 - Many photos at once (an overview opened for the first time) failed after 30 s or restarted the server: every
   request kept a database connection while it waited, and each worker thread kept its own memory arena. Requests now
   hand the connection back before waiting for Immich, scale at most three photos at a time (JPEG decoded at reduced
