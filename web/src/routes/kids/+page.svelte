@@ -92,6 +92,8 @@
 	.globe {
 		position: relative;
 		height: clamp(340px, 110vw, 560px); /* not vh: 0 in an Android WebView */
+		/* turned phone: leave room for the greeting (dvh is ignored where unknown) */
+		max-height: max(280px, calc(100dvh - 90px));
 		overflow: hidden;
 		border-radius: 24px;
 	}

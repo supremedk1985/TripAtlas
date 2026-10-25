@@ -147,6 +147,8 @@
 	.cover {
 		width: 100%;
 		aspect-ratio: 16/9;
+		/* turned phone: no taller than most of the screen (dvh is ignored where unknown) */
+		max-height: 70dvh;
 		object-fit: cover;
 		border-radius: 24px;
 		margin-top: 12px;

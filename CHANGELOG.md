@@ -26,6 +26,9 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- A phone turned sideways: list and map side by side instead of a thin strip under the map; a photo fits the screen
+  after turning (it stayed at its old size and was cut off); the overview keeps its tile size (more columns instead
+  of a few huge tiles); cover photos and the children's globe no longer taller than the screen
 - Account menu opened off the left edge of the screen when its button sat on the left (children's view on a
   phone); the countries note on the children's globe was covered by the map's sources
 - Sign-in page: every letter typed into the user name jumped to the password field

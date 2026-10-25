@@ -298,9 +298,14 @@
 		place-items: center;
 	}
 	.photo {
-		/* % of the fixed viewer, not vh — viewport units can be 0 in an Android WebView */
-		max-width: 100%;
-		max-height: calc(100% - 60px);
+		/* The whole viewer except the caption strip; object-fit fits the picture in. Sizes relative to the fixed
+		   viewer, not vh (0 in an Android WebView) — and not max-height in %: inside the grid that was not
+		   recomputed when the phone was turned, the photo stayed at its old size and was cut off. */
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: calc(100% - 60px);
 		object-fit: contain;
 		background: center / contain no-repeat;
 	}
@@ -393,7 +398,9 @@
 	}
 	.tiles {
 		display: grid;
-		grid-template-columns: repeat(var(--cols), 1fr);
+		/* the chosen number of columns is for a phone held upright (about 430 px); wider (turned, computer) gets
+		   proportionally more columns of the same tile size instead of a few huge ones */
+		grid-template-columns: repeat(auto-fill, minmax(calc((min(100%, 430px) - (var(--cols) - 1) * 6px) / var(--cols)), 1fr));
 		gap: 4px;
 		max-width: 1100px;
 		margin: 0 auto;

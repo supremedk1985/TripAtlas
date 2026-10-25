@@ -583,7 +583,13 @@
 		padding: 16px;
 		box-shadow: none;
 	}
-	@media (max-width: 860px) {
+	/* a phone turned sideways: list and map next to each other, the list a bit narrower */
+	@media (max-width: 1000px) and (orientation: landscape) and (max-height: 560px) {
+		.layout {
+			grid-template-columns: minmax(290px, 42%) 1fr;
+		}
+	}
+	@media (max-width: 860px) and (orientation: portrait) {
 		.layout {
 			grid-template-columns: 1fr;
 			grid-template-rows: minmax(240px, 46%) 1fr;
