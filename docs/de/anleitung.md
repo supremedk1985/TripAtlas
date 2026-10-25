@@ -148,6 +148,19 @@ was schon da ist, wird übersprungen.
 TripAtlas im Browser des Handys öffnen und *Zum Startbildschirm hinzufügen* wählen – dann startet es wie eine App
 (braucht HTTPS). Die Seite passt sich an: oben die Karte, darunter die Liste; der Bildbetrachter geht mit Wischen.
 
+### Speicher auf diesem Gerät
+
+Kartenteile und die Fotos, die du angesehen hast, bleiben auf dem Handy oder Rechner – Karte und Fotoübersicht
+öffnen dadurch schneller und gehen auch ohne Netz. Die Größe stellst du unter **Einstellungen → Profil → Speicher
+auf diesem Gerät** ein (aus, 0,5, 1, 2 oder 5 GB; ohne Änderung 1 GB). Ist er voll, fliegt zuerst raus, was am
+längsten nicht angesehen wurde. Jedes Konto auf dem Gerät behält seine eigenen Fotos und Reisen – beim Konto-Wechsel
+bleiben sie erhalten, und niemand sieht darüber die Fotos eines anderen Kontos. Wer ein Konto im Kontomenü
+entfernt (×), entfernt auch seine gespeicherten Fotos.
+
+Bevor es irgendwohin ohne Netz geht: die Reise öffnen und ganz unten **Offline speichern** tippen. Dann liegen
+Kartenausschnitt, Fotos und Angaben der Reise auf dem Gerät (eine lange Reise mit ein paar tausend Fotos braucht
+einige hundert MB). Das geht nur über HTTPS (oder `localhost`) – über einfaches `http://` lassen Browser es nicht zu.
+
 ## Eigene Einstellungen
 
 **Einstellungen → Profil**: dein Bild (wählen, im runden Rahmen zuschneiden oder entfernen), Name, Sprache,

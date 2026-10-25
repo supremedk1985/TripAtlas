@@ -8,6 +8,7 @@ import { goto } from '$app/navigation';
 import { api, ApiError } from '$lib/api';
 import { setUser } from '$lib/stores/session.svelte';
 import { avatarUrl, tinyDataUrl } from '$lib/avatar';
+import { clearAccountStorage } from '$lib/deviceCache/client';
 import type { User } from '$lib/types';
 
 export interface KnownAccount {
@@ -29,7 +30,7 @@ interface Bridge {
 	forget(username: string): void;
 }
 
-type Entry = { username: string; display_name: string; avatar?: string; avatar_version?: number | null };
+type Entry = { username: string; display_name: string; avatar?: string; avatar_version?: number | null; id?: number };
 
 const KEY = 'tripatlas.accounts';
 const MAX_RECENT = 6;
@@ -80,7 +81,7 @@ export function knownAccounts(): KnownAccount[] {
 export function remember(user: User) {
 	const others = readRecent().filter((e) => !same(e.username, user.username));
 	const old = readRecent().find((e) => same(e.username, user.username));
-	const entry: Entry = { username: user.username, display_name: user.display_name, avatar_version: user.avatar_version };
+	const entry: Entry = { id: user.id, username: user.username, display_name: user.display_name, avatar_version: user.avatar_version };
 	if (old?.avatar_version === user.avatar_version) entry.avatar = old.avatar;
 	writeRecent([entry, ...others]);
 	const url = avatarUrl(user);
@@ -91,6 +92,8 @@ export function remember(user: User) {
 }
 
 export function forget(username: string) {
+	const id = readRecent().find((e) => same(e.username, username))?.id;
+	if (id) clearAccountStorage(id);
 	writeRecent(readRecent().filter((e) => !same(e.username, username)));
 	bridge()?.forget(username);
 }

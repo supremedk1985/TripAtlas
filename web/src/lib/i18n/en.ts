@@ -213,6 +213,20 @@ export default {
 		'Optional. With your own Immich API key you see your photos and those shared with you. Without one, the household key is used.',
 	stored_keep: '•••••• (stored — leave empty to keep)',
 	api_key: 'API key',
+	device_storage: 'Storage on this device',
+	device_storage_hint:
+		'Map and photos you have seen stay on this phone or computer, so they open faster and also without network. Each account on this device keeps its own photos; the limit is for all of them together. When it is full, what was looked at longest ago goes first.',
+	device_storage_off: 'Off',
+	device_storage_used: '{used} of {limit} used — {mine} your photos and trips, {tiles} map',
+	device_storage_clear: 'Empty',
+	device_storage_cleared: 'Emptied.',
+	device_storage_unsupported: 'This browser cannot keep files for TripAtlas.',
+	save_offline: 'Save for offline',
+	save_offline_hint: 'Keeps map, photos and details of this trip on this device — e.g. before driving somewhere without network.',
+	save_offline_running: 'Saving … {done} of {total}',
+	save_offline_done: 'Saved on this device.',
+	save_offline_partly: 'Saved; {n} files could not be fetched.',
+	save_offline_off: 'Turn on Storage on this device in the settings first (Profile).',
 
 	// household
 	household_name: 'Name of this TripAtlas',

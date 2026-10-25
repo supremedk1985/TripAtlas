@@ -4,6 +4,8 @@
 	import { session, setUser } from '$lib/stores/session.svelte';
 	import AvatarPicker from '$lib/components/AvatarPicker.svelte';
 	import type { User } from '$lib/types';
+	import { clearStorage, getLimitMb, LIMITS_MB, setLimitMb, storageUsage } from '$lib/deviceCache/client';
+	import { onMount } from 'svelte';
 
 	let displayName = $state(session.user?.display_name ?? '');
 	let locale = $state(session.user?.locale ?? 'en');
@@ -11,6 +13,32 @@
 	let next = $state('');
 	let immichKey = $state('');
 	let msg = $state<{ ok: boolean; text: string } | null>(null);
+
+	// storage on this device
+	const canStore = typeof caches !== 'undefined' && 'serviceWorker' in navigator;
+	let limitMb = $state(0);
+	let used = $state<{ total: number; mine: number; tiles: number } | null>(null);
+	let storeMsg = $state('');
+	const mb = (bytes: number) => (bytes >= 1024 ** 3 ? `${(bytes / 1024 ** 3).toFixed(1)} GB` : `${Math.round(bytes / 1024 ** 2)} MB`);
+	const limitLabel = (m: number) => (m ? mb(m * 1024 ** 2) : t('device_storage_off'));
+
+	async function refreshStorage() {
+		limitMb = await getLimitMb();
+		used = await storageUsage();
+	}
+	onMount(() => {
+		if (canStore) refreshStorage();
+	});
+	async function changeLimit() {
+		storeMsg = '';
+		await setLimitMb(limitMb);
+		await refreshStorage();
+	}
+	async function emptyStorage() {
+		await clearStorage();
+		await refreshStorage();
+		storeMsg = t('device_storage_cleared');
+	}
 
 	async function send(body: Record<string, unknown>) {
 		msg = null;
@@ -54,6 +82,23 @@
 	{#if session.user?.has_immich_key}<button type="button" class="btn danger" onclick={() => send({ immich_api_key: '' })}>{t('remove')}</button>{/if}
 </form>
 {#if msg}<p class={msg.ok ? 'success' : 'error'}>{msg.text}</p>{/if}
+
+<h4>{t('device_storage')}</h4>
+{#if canStore}
+	<p class="muted">{t('device_storage_hint')}</p>
+	<div class="row">
+		<select bind:value={limitMb} onchange={changeLimit} aria-label={t('device_storage')}>
+			{#each LIMITS_MB as m (m)}<option value={m}>{limitLabel(m)}</option>{/each}
+		</select>
+		<button type="button" class="btn" onclick={emptyStorage} disabled={!used?.total}>{t('device_storage_clear')}</button>
+	</div>
+	{#if used && limitMb}
+		<p class="muted small">{t('device_storage_used', { used: mb(used.total), limit: limitLabel(limitMb), mine: mb(used.mine), tiles: mb(used.tiles) })}</p>
+	{/if}
+	{#if storeMsg}<p class="success">{storeMsg}</p>{/if}
+{:else}
+	<p class="muted">{t('device_storage_unsupported')}</p>
+{/if}
 
 <style>
 	form {

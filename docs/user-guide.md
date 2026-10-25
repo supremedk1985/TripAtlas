@@ -147,6 +147,18 @@ Settings → All rides as GPX*). Import it again later with newer rides: the one
 Open TripAtlas in the phone's browser and choose *Add to home screen* — it then starts like an app (needs HTTPS).
 The layout adapts: the map on top, the list below; the photo viewer works with swipes.
 
+### Storage on this device
+
+Map tiles and the photos you have looked at stay on the phone or computer, so the map and the photo overview open
+faster and also work without network. Set the size under **Settings → Profile → Storage on this device** (off,
+0.5, 1, 2 or 5 GB; 1 GB unless changed); when it is full, what was looked at longest ago goes first. Each account on
+the device keeps its own photos and trips — switching accounts keeps them, and nobody sees another account's photos
+from it. Removing an account from the account menu (×) also removes its stored photos.
+
+Before driving somewhere without network, open the trip and tap **Save for offline** at the end of the trip: its
+map area, photos and details are then stored (a long trip with a couple of thousand photos takes a few hundred MB).
+This needs HTTPS (or `localhost`): over plain `http://` browsers do not allow it.
+
 ## Your settings
 
 **Settings → Profile**: your picture (choose one, crop it in the round frame, or remove it), name, language,

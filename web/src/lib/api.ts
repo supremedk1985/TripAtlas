@@ -1,4 +1,6 @@
 // Thin wrapper around fetch for the TripAtlas API. Authentication is the session cookie set by /api/auth/login.
+import { currentAccount } from '$lib/deviceCache/client';
+import { ACCOUNT_HEADER } from '$lib/deviceCache/shared';
 
 export class ApiError extends Error {
 	constructor(
@@ -31,6 +33,8 @@ export function onUnauthorized(handler: () => void) {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
 	const init: RequestInit = { method, credentials: 'same-origin', headers: {} };
+	const who = currentAccount();
+	if (who) (init.headers as Record<string, string>)[ACCOUNT_HEADER] = String(who);
 	if (body instanceof FormData) init.body = body;
 	else if (body instanceof Blob) {
 		(init.headers as Record<string, string>)['Content-Type'] = body.type;
@@ -57,7 +61,9 @@ export const api = {
 };
 
 export function thumbUrl(assetId: string, size: 'thumbnail' | 'medium' | 'preview' = 'thumbnail'): string {
-	return `/api/photos/${assetId}/thumbnail?size=${size}`;
+	// `u` only picks this account's storage on the device (lib/deviceCache); the server checks access as always
+	const who = currentAccount();
+	return `/api/photos/${assetId}/thumbnail?size=${size}${who ? `&u=${who}` : ''}`;
 }
 
 export function videoUrl(assetId: string): string {

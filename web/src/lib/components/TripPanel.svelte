@@ -2,7 +2,9 @@
 	// Details of one trip: header with cover, stats, time slider to replay the route, the timeline of drives and
 	// stays (with photos and "about this place"), and the editable title/note.
 	import { untrack } from 'svelte';
-	import { api, errorText, thumbUrl } from '$lib/api';
+	import { api, errorText, query, thumbUrl } from '$lib/api';
+	import { getLimitMb, saveOffline } from '$lib/deviceCache/client';
+	import { preferredStyle, styleUrl } from '$lib/map/styles';
 	import { countryName, date, dateRange, dateTime, flag, km, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import type { MapControl } from '$lib/map/control';
@@ -94,6 +96,39 @@
 	const photoTimes = $derived(Object.fromEntries(photos.map((p) => [p.id, p.t])));
 	const videoIds = $derived(new Set(photos.filter((p) => p.is_video).map((p) => p.id)));
 	const inRange = $derived(photos.filter((p) => p.t >= from && p.t <= to));
+
+	// keep the whole trip on this device (lib/deviceCache): data, small and medium photos, map tiles of the area
+	let offline = $state<{ done: number; total: number } | null>(null);
+	let offlineMsg = $state('');
+	async function saveTrip() {
+		if (!trip || offline) return;
+		offlineMsg = '';
+		if (!(await getLimitMb())) {
+			offlineMsg = t('save_offline_off');
+			return;
+		}
+		const lons = points.map((p) => p[2]);
+		const lats = points.map((p) => p[1]);
+		const pad = 0.05;
+		const id = trip.id;
+		offline = { done: 0, total: 1 };
+		const r = await saveOffline(
+			{
+				styleUrl: styleUrl(preferredStyle()),
+				bounds: [Math.min(...lons) - pad, Math.min(...lats) - pad, Math.max(...lons) + pad, Math.max(...lats) + pad],
+				apiUrls: [
+					'/api/auth/me', '/api/setup/status', '/api/trackers', '/api/trips', '/api/notes', '/api/photos/markers',
+					`/api/trips/${id}`, `/api/trips/${id}/track`, `/api/trips/${id}/photos`, `/api/trips/${id}/timeline`,
+					...(timeline ?? []).filter((e) => e.kind === 'stay' && e.lat !== null && e.lon !== null)
+						.map((e) => `/api/places?${query({ lat: e.lat, lon: e.lon })}`)
+				],
+				photoUrls: photos.flatMap((p) => [thumbUrl(p.id), thumbUrl(p.id, 'medium')])
+			},
+			(done, total) => (offline = { done, total })
+		).catch(() => ({ failed: -1 }));
+		offline = null;
+		offlineMsg = r.failed ? t('save_offline_partly', { n: Math.max(r.failed, 0) }) : t('save_offline_done');
+	}
 
 	function photosOf(e: TimelineEntry) {
 		return photos.filter((p) => p.t >= e.start && p.t <= e.end);
@@ -308,6 +343,13 @@
 					{/each}
 				</ol>
 			{/if}
+		</section>
+
+		<section class="offline">
+			<button class="btn small" onclick={saveTrip} disabled={!!offline || !timeline}>
+				{offline ? t('save_offline_running', { done: offline.done, total: offline.total }) : `⤓ ${t('save_offline')}`}
+			</button>
+			<p class="muted small">{offlineMsg || t('save_offline_hint')}</p>
 		</section>
 	{/if}
 </div>

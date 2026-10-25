@@ -75,6 +75,16 @@ passwords behind the fingerprint. The page looks for an optional object `window.
 An app should expose the bridge only while its own TripAtlas address is loaded. Without the bridge the account menu
 still lists the accounts recently used in this browser; the browser's password manager fills in passwords.
 
+## Storage on the device
+
+`web/src/service-worker.ts` keeps map tiles (cache-first, they sit under versioned paths), photo thumbnails
+(cache-first: an asset id is the same picture forever) and GET API answers (network-first, stored copy only when the
+network fails) in Cache Storage, up to a limit chosen per device. Tiles share one bucket; everything else goes into
+a bucket per account. The page names the account with `u=<id>` on image URLs and the `X-TripAtlas-Account` header
+on API calls — the server ignores both and checks access as always; they only choose the bucket, so switching
+accounts on a shared device keeps each account's storage apart. An index in IndexedDB holds size and last use of
+each entry; beyond the limit the least recently used go first (`web/src/lib/deviceCache/`).
+
 ## Data model
 
 `users` ←→ `user_trackers` ←→ `trackers` → `positions` (tracker_id, t) · `trips` → `stays` (cache) ·

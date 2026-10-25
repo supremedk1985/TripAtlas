@@ -5,6 +5,12 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+### Added
+- Storage on this device: map tiles, photos and trip data that were looked at stay on the device up to a chosen size
+  (Settings → Profile; 1 GB unless changed), least recently used first out; a bucket per account, so switching
+  accounts keeps everything and never mixes them up. *Save for offline* on a trip stores its map area, photos and
+  details ahead of a journey; TripAtlas also starts without network (needs HTTPS)
+
 ### Changed
 - The photo overview with one or two columns uses a medium size (about 50 KB instead of 500 KB per photo), made
   once from Immich's preview and kept in `<data>/cache/medium` (limit `TRIPATLAS_MEDIUM_CACHE_MB`, default 2048)
