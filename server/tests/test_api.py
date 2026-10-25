@@ -407,3 +407,84 @@ def test_failed_import_leaves_nothing(client):
     with db_session() as db:
         from tripatlas.db.models import Position
         assert db.scalar(select(func.count()).select_from(Position).where(Position.tracker_id == tid)) == 0
+
+
+def _jpeg(w, h):
+    import io
+
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.new("RGB", (w, h), (200, 120, 40)).save(out, "JPEG")
+    return out.getvalue()
+
+
+def test_medium_photo_is_scaled_cached_and_kept_apart_per_immich_key(client, monkeypatch):
+    import io
+
+    from PIL import Image
+
+    from tripatlas.api import photos as photos_api
+
+    aid = "d" * 8 + "-0000-0000-0000-" + "0" * 12
+    calls = []
+    key = {"id": "key-a"}
+
+    class Fake:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def thumbnail(self, asset_id, size):
+            calls.append(size)
+            return _jpeg(1440, 1080), "image/jpeg"
+
+    monkeypatch.setattr(photos_api.photo_service, "client_for", lambda db, user: Fake())
+    monkeypatch.setattr(photos_api.photo_service, "key_id", lambda db, user: key["id"])
+    setup_household(client)
+    r = client.get(f"/api/photos/{aid}/thumbnail", params={"size": "medium"})
+    assert r.status_code == 200 and r.headers["content-type"] == "image/webp"
+    assert max(Image.open(io.BytesIO(r.content)).size) == 640
+    assert calls == ["preview"]
+    # the second time it comes from disk
+    assert client.get(f"/api/photos/{aid}/thumbnail", params={"size": "medium"}).content == r.content
+    assert calls == ["preview"]
+    # an account with another Immich key never gets the cached copy: it asks Immich with its own key
+    key["id"] = "key-b"
+    client.get(f"/api/photos/{aid}/thumbnail", params={"size": "medium"})
+    assert calls == ["preview", "preview"]
+
+
+def test_medium_cache_drops_the_least_recently_used_files(client):
+    import os
+    import time
+
+    from tripatlas.services import medium
+
+    ids = [f"{i:08x}-0000-0000-0000-000000000000" for i in range(4)]
+    for n, aid in enumerate(ids):
+        medium.put("k", aid, b"x" * 400_000)
+        p = medium.cache_dir() / "k" / aid[:2] / f"{aid}.webp"
+        t = time.time() - 1000 + n * 10
+        os.utime(p, (t, t))
+    medium.get("k", ids[0])  # used just now: stays although it was written first
+    medium.prune(limit_mb=1)
+    left = sorted(p.stem for p in medium.cache_dir().rglob("*.webp"))
+    assert left == sorted([ids[0], ids[3]])
+
+
+def test_photo_markers_answer_304_when_unchanged(client, monkeypatch):
+    from tripatlas.api import photos as photos_api
+
+    marks = [{"id": "e" * 8 + "-0000-0000-0000-" + "0" * 12, "lat": 52.1, "lon": 8.5}]
+    monkeypatch.setattr(photos_api.photo_service, "markers", lambda db, user: marks)
+    setup_household(client)
+    r = client.get("/api/photos/markers")
+    assert r.status_code == 200 and len(r.json()["markers"]) == 1
+    tag = r.headers["etag"]
+    assert client.get("/api/photos/markers", headers={"If-None-Match": tag}).status_code == 304
+    marks.append({"id": "f" * 8 + "-0000-0000-0000-" + "0" * 12, "lat": 52.2, "lon": 8.6})
+    r2 = client.get("/api/photos/markers", headers={"If-None-Match": tag})
+    assert r2.status_code == 200 and len(r2.json()["markers"]) == 2 and r2.headers["etag"] != tag

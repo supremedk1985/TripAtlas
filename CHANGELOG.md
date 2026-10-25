@@ -5,7 +5,13 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+### Changed
+- The photo overview with one or two columns uses a medium size (about 50 KB instead of 500 KB per photo), made
+  once from Immich's preview and kept in `<data>/cache/medium` (limit `TRIPATLAS_MEDIUM_CACHE_MB`, default 2048)
+- The photo positions for the map are sent again only when they changed (ETag)
+
 ### Fixed
+- Photo strips in the trip timeline showed the thumbnails on top of each other instead of side by side
 - Trip list and vehicle filter show the vehicle's pictogram instead of a coloured dot (a red dot means "on the road")
 - The map could stay at half height when the page grew while the map was starting (in an app: the keyboard closing
   after signing in)

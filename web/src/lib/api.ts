@@ -56,7 +56,7 @@ export const api = {
 	del: <T>(path: string) => request<T>('DELETE', path)
 };
 
-export function thumbUrl(assetId: string, size: 'thumbnail' | 'preview' = 'thumbnail'): string {
+export function thumbUrl(assetId: string, size: 'thumbnail' | 'medium' | 'preview' = 'thumbnail'): string {
 	return `/api/photos/${assetId}/thumbnail?size=${size}`;
 }
 

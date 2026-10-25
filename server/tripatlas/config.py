@@ -26,6 +26,8 @@ class Config(BaseSettings):
     log_level: str = "INFO"
     # Daily consistent SQLite snapshots in <data_dir>/backups (services/backup.py); 0 = off.
     backup_keep: int = 7
+    # Medium-sized photos for the overview grid, kept on disk (services/medium.py); oldest are dropped beyond this.
+    medium_cache_mb: int = 2048
     # Contact for the User-Agent sent to Wikipedia/Nominatim (their policies require one).
     contact: str = "https://github.com/supremedk1985/tripatlas"
 

@@ -419,19 +419,6 @@
 		display: block;
 	}
 	.strip.small img,
-	/* videos: a play sign on the thumbnail */
-	.play {
-		position: absolute;
-		inset: 0;
-		display: grid;
-		place-items: center;
-		color: #fff;
-		font-size: 18px;
-		text-shadow: 0 1px 4px rgb(0 0 0 / 70%);
-		background: rgb(0 0 0 / 18%);
-		border-radius: 8px;
-		pointer-events: none;
-	}
 	.strip .more {
 		width: 52px;
 		height: 52px;

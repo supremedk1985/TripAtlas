@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from concurrent.futures import ThreadPoolExecutor
 
@@ -21,43 +23,62 @@ from ..db.session import get_db
 from ..integrations.immich import ImmichError
 from ..integrations.places import PlaceLookup
 from ..services import flights as flight_service
+from ..services import medium, settings
 from ..services import photos as photo_service
-from ..services import settings
 from ..services.places import cached as cached_place
 from ..services.places import get_place, place_dict
 
 router = APIRouter(tags=["photos"])
 
 _ASSET_ID = re.compile(r"^[0-9a-f-]{36}$")
+# Same id = same image, forever; private because it is the user's photo.
+_IMMUTABLE = {"Cache-Control": "private, max-age=2592000, immutable"}
 
 
 @router.get("/api/photos/markers")
-def markers(db: Session = Depends(get_db), user: User = Depends(current_user)):
+def markers(request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
     """Every geotagged photo the user can see in Immich: [[id, lat, lon], …] — compact, the map clusters them.
-    Photos taken on board an aircraft are left out: their positions are places nobody visited."""
+    Photos taken on board an aircraft are left out: their positions are places nobody visited.
+
+    Answers with an ETag: a phone that already has the same list gets 304 instead of a megabyte again."""
     in_flight = flight_service.airborne_ids(db)
     try:
         marks = photo_service.markers(db, user)
-        return {
-            "markers": [[m["id"], round(m["lat"], 5), round(m["lon"], 5)] for m in marks if m["id"] not in in_flight]
-        }
     except ImmichError as e:
         return {"markers": [], "error": str(e)}
+    body = json.dumps(
+        {"markers": [[m["id"], round(m["lat"], 5), round(m["lon"], 5)] for m in marks if m["id"] not in in_flight]},
+        separators=(",", ":"),
+    ).encode()
+    # the account is part of the tag: two accounts on one phone never share a cached list
+    etag = '"' + hashlib.sha256(user.id.to_bytes(8, "big") + body).hexdigest()[:32] + '"'
+    headers = {"ETag": etag, "Cache-Control": "private, no-cache"}
+    if etag in request.headers.get("if-none-match", ""):
+        return Response(status_code=304, headers=headers)
+    return Response(body, media_type="application/json", headers=headers)
 
 
 @router.get("/api/photos/{asset_id}/thumbnail")
 def thumbnail(
     asset_id: str, size: str = "thumbnail", db: Session = Depends(get_db), user: User = Depends(current_user)
 ):
-    if not _ASSET_ID.match(asset_id) or size not in ("thumbnail", "preview"):
+    if not _ASSET_ID.match(asset_id) or size not in ("thumbnail", "medium", "preview"):
         raise HTTPException(400, "Invalid request")
+    key = photo_service.key_id(db, user) if size == "medium" else ""
+    if size == "medium" and (data := medium.get(key, asset_id)) is not None:
+        return Response(data, media_type="image/webp", headers=_IMMUTABLE)
     try:
         with photo_service.client_for(db, user) as c:
-            data, kind = c.thumbnail(asset_id, size)
+            data, kind = c.thumbnail(asset_id, "preview" if size == "medium" else size)
     except ImmichError as e:
         raise HTTPException(404 if "404" in str(e) or "400" in str(e) else 502, str(e)) from e
-    # Same id = same image, forever; private because it is the user's photo.
-    return Response(data, media_type=kind, headers={"Cache-Control": "private, max-age=2592000, immutable"})
+    if size == "medium":
+        try:
+            data, kind = medium.scale(data), "image/webp"
+        except Exception:  # an image Pillow cannot read is still shown as Immich's preview
+            return Response(data, media_type=kind, headers=_IMMUTABLE)
+        medium.put(key, asset_id, data)
+    return Response(data, media_type=kind, headers=_IMMUTABLE)
 
 
 @router.get("/api/photos/{asset_id}/info")

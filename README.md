@@ -77,6 +77,7 @@ Almost everything is configured in the web UI (*Settings*). Environment variable
 | `TRIPATLAS_SYNC_INTERVAL_MINUTES` | `5` | how often Traccar is polled |
 | `TRIPATLAS_SESSION_DAYS` | `30` | web sign-in lifetime |
 | `TRIPATLAS_BACKUP_KEEP` | `7` | daily database snapshots kept in `data/backups/` (0 = off) |
+| `TRIPATLAS_MEDIUM_CACHE_MB` | `2048` | medium-sized photos for the overview, kept in `data/cache/` (oldest dropped beyond this; safe to delete, not needed in a backup) |
 
 **Backup:** the data directory. TripAtlas writes a consistent copy of its SQLite database to `data/backups/` once a
 day (keeps 7, `TRIPATLAS_BACKUP_KEEP`), so a file-level backup of the folder is safe even while it runs. Restore =

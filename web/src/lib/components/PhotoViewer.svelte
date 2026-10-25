@@ -195,7 +195,7 @@
 			<div class="tiles" class:wide={cols < 3} style="--cols:{cols}">
 				{#each ids as gid, i (gid + i)}
 					<button class="tile" class:current={i === index} onclick={() => pick(i)}>
-						<img src={thumbUrl(gid, cols < 3 || wide ? 'preview' : 'thumbnail')} alt="" loading="lazy" />
+						<img src={thumbUrl(gid, cols < 3 || wide ? 'medium' : 'thumbnail')} alt="" loading="lazy" />
 						{#if markedVideo(gid)}<span class="play" aria-label={t('video')}>▶</span>{/if}
 					</button>
 				{/each}
