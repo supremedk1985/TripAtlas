@@ -3,6 +3,7 @@ positions; nobody sees trackers they were not given."""
 
 import time
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
@@ -488,3 +489,50 @@ def test_photo_markers_answer_304_when_unchanged(client, monkeypatch):
     marks.append({"id": "f" * 8 + "-0000-0000-0000-" + "0" * 12, "lat": 52.2, "lon": 8.6})
     r2 = client.get("/api/photos/markers", headers={"If-None-Match": tag})
     assert r2.status_code == 200 and len(r2.json()["markers"]) == 2 and r2.headers["etag"] != tag
+
+
+def test_photo_requests_hold_no_database_connection_while_waiting_for_immich(client, monkeypatch):
+    from tripatlas.api import photos as photos_api
+    from tripatlas.db.session import get_engine
+
+    aid = "a1" * 4 + "-0000-0000-0000-" + "0" * 12
+    held = []
+
+    class Fake:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def close(self):
+            pass
+
+        def thumbnail(self, asset_id, size):
+            held.append(get_engine().pool.checkedout())
+            return _jpeg(1440, 1080), "image/jpeg"
+
+    monkeypatch.setattr(photos_api.photo_service, "client_for", lambda db, user: Fake())
+    monkeypatch.setattr(photos_api.photo_service, "key_id", lambda db, user: "k")
+    setup_household(client)
+    for size in ("thumbnail", "medium"):
+        assert client.get(f"/api/photos/{aid}/thumbnail", params={"size": size}).status_code == 200
+    assert held == [0, 0]
+
+
+def test_sign_in_check_hands_back_its_database_connection(client, monkeypatch):
+    from tripatlas.api import photos as photos_api
+    from tripatlas.db.session import get_engine
+
+    seen = []
+
+    def key_id(db, user):
+        seen.append(get_engine().pool.checkedout())
+        raise RuntimeError("stop here")
+
+    monkeypatch.setattr(photos_api.photo_service, "key_id", key_id)
+    setup_household(client)
+    aid = "b2" * 4 + "-0000-0000-0000-" + "0" * 12
+    with pytest.raises(RuntimeError):
+        client.get(f"/api/photos/{aid}/thumbnail", params={"size": "medium"})
+    assert seen == [0]

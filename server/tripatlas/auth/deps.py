@@ -44,6 +44,11 @@ def optional_user(request: Request, db: Session = Depends(get_db)) -> User | Non
     if not token:
         return None
     user = user_for_token(db, token)
+    if user is not None:
+        user.role  # noqa: B018 - loaded now, so the next line can hand back the connection
+    # End the read: the connection goes back to the pool until the endpoint itself needs one. Otherwise every request
+    # kept it while waiting for a worker thread — dozens of photo requests at once emptied the pool (25.10.2026).
+    db.commit()
     if user and from_cookie and request.method not in SAFE_METHODS:
         _check_origin(request)
     return user

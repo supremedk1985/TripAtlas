@@ -9,8 +9,11 @@ COPY web/ ./
 RUN npm run build
 
 FROM python:3.12-slim
+# MALLOC_ARENA_MAX: every worker thread would get its own glibc memory arena that keeps freed memory; with dozens of
+# photo requests at once that alone took the container past its limit.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    MALLOC_ARENA_MAX=2 \
     TRIPATLAS_DATA_DIR=/data \
     TRIPATLAS_WEB_DIR=/app/web
 WORKDIR /app

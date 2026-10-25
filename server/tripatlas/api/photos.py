@@ -67,8 +67,12 @@ def thumbnail(
     key = photo_service.key_id(db, user) if size == "medium" else ""
     if size == "medium" and (data := medium.get(key, asset_id)) is not None:
         return Response(data, media_type="image/webp", headers=_IMMUTABLE)
+    client = photo_service.client_for(db, user)
+    # Hand the database connection back before waiting for Immich (and scaling): an overview asks for dozens of
+    # photos at once, and each holding a connection meanwhile emptied the pool — the rest failed after 30 s.
+    db.close()
     try:
-        with photo_service.client_for(db, user) as c:
+        with client as c:
             data, kind = c.thumbnail(asset_id, "preview" if size == "medium" else size)
     except ImmichError as e:
         raise HTTPException(404 if "404" in str(e) or "400" in str(e) else 502, str(e)) from e
@@ -162,6 +166,7 @@ def video(asset_id: str, request: Request, db: Session = Depends(get_db), user: 
     if not _ASSET_ID.match(asset_id):
         raise HTTPException(400, "Invalid request")
     client = photo_service.client_for(db, user)
+    db.close()  # a video streams for minutes: it must not keep a database connection meanwhile
     try:
         upstream = client.open_video(asset_id, request.headers.get("range"))
     except ImmichError as e:

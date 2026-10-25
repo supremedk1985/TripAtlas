@@ -48,8 +48,15 @@ def get(key: str, asset_id: str) -> bytes | None:
     return data
 
 
+# An overview asks for dozens of photos at once. Each scaling decodes a full preview into memory: 60 at a time took
+# the container past its memory limit (25.10.2026, killed by the kernel). A few at a time is as fast on a small CPU.
+_scaling = threading.BoundedSemaphore(3)
+
+
 def scale(preview: bytes) -> bytes:
-    with Image.open(io.BytesIO(preview)) as im:
+    with _scaling, Image.open(io.BytesIO(preview)) as im:
+        # JPEG decodes straight at a reduced size (1/2, 1/4 …) — less memory and much less work
+        im.draft("RGB", (EDGE, EDGE))
         im = ImageOps.exif_transpose(im)
         im.thumbnail((EDGE, EDGE), Image.Resampling.LANCZOS)
         if im.mode not in ("RGB", "RGBA"):

@@ -17,6 +17,10 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- Many photos at once (an overview opened for the first time) failed after 30 s or restarted the server: every
+  request kept a database connection while it waited, and each worker thread kept its own memory arena. Requests now
+  hand the connection back before waiting for Immich, scale at most three photos at a time (JPEG decoded at reduced
+  size) and the image sets `MALLOC_ARENA_MAX=2`; 120 new photos at once now take 4 s and 234 MB
 - Photo strips in the trip timeline showed the thumbnails on top of each other instead of side by side
 - Trip list and vehicle filter show the vehicle's pictogram instead of a coloured dot (a red dot means "on the road")
 - The map could stay at half height when the page grew while the map was starting (in an app: the keyboard closing
