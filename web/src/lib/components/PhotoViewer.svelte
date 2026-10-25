@@ -4,6 +4,7 @@
 	// markers do not carry the type) unless the caller already knows it.
 	import { tick } from 'svelte';
 	import { api, thumbUrl, videoUrl } from '$lib/api';
+	import VideoHint from './VideoHint.svelte';
 	import { countryName, dateTime } from '$lib/format';
 	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
 	import { i18n, t } from '$lib/i18n/index.svelte';
@@ -211,6 +212,7 @@
 			<img class="photo" src={thumbUrl(id, 'preview')} alt="" style="background-image:url({thumbUrl(id)})" />
 		{/if}
 	{/key}
+	{#if isVideo}<VideoHint />{/if}
 	{#if ids.length > 1}
 		<button class="nav prev icon-btn" onclick={() => go(-1)} aria-label={t('previous')}>‹</button>
 		<button class="nav next icon-btn" onclick={() => go(1)} aria-label={t('next')}>›</button>

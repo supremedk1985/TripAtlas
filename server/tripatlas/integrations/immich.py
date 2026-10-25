@@ -62,6 +62,16 @@ class ImmichClient:
     def me(self) -> dict:
         return self._call("GET", "/api/users/me").json()
 
+    def video_transcoding(self) -> dict | None:
+        """Immich's video settings (`ffmpeg` of the system config), or None when the key may not read them
+        (only Immich administrators may)."""
+        try:
+            return self._call("GET", "/api/system-config").json().get("ffmpeg") or {}
+        except ImmichError as e:
+            if "403" in str(e):
+                return None
+            raise
+
     def map_markers(self, taken_before: str | None = None) -> list[dict]:
         """All geotagged assets the key can see, including partner-shared ones; optionally only older ones."""
         params = {"withPartners": "true", "isArchived": "false"}

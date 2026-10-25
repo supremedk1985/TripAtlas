@@ -160,6 +160,12 @@ def photo_kinds(body: KindsIn, db: Session = Depends(get_db), user: User = Depen
     return {"videos": [i for i in ids if _IS_VIDEO.get(i)]}
 
 
+@router.get("/api/photos/video-check")
+def video_check(db: Session = Depends(get_db), _: User = Depends(current_user)):
+    """Whether videos may stutter on a weak connection because Immich streams them at full size."""
+    return photo_service.video_check(db)
+
+
 @router.get("/api/photos/{asset_id}/video")
 def video(asset_id: str, request: Request, db: Session = Depends(get_db), user: User = Depends(current_user)):
     """Stream a video from Immich, passing Range through so the player can seek."""

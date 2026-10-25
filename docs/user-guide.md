@@ -172,6 +172,12 @@ location, the home radius, the minimum number of nights.
 
 **A place has no name yet.** Names and encyclopedia texts are looked up in the background, a few per minute.
 
+**Videos stutter on the phone.** Immich streams videos as recorded (often 15–25 Mbit/s) unless it keeps smaller
+copies for playback. In Immich, as administrator: *Administration → Settings → Video Transcoding Settings*, transcode
+policy *Optimal*, target resolution 720p; then *Administration → Jobs → Transcode Videos → All*. The video viewer and
+*Settings → Status* show a note as long as Immich is not set up this way (TripAtlas can only tell when its Immich key
+belongs to an Immich administrator).
+
 **Where are my photos stored?** In Immich, as before. TripAtlas shows them but never copies or changes them.
 
 **Who can see where we are?** Only accounts that may see live positions, and only for the vehicles they were

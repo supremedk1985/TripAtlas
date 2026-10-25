@@ -536,3 +536,32 @@ def test_sign_in_check_hands_back_its_database_connection(client, monkeypatch):
     with pytest.raises(RuntimeError):
         client.get(f"/api/photos/{aid}/thumbnail", params={"size": "medium"})
     assert seen == [0]
+
+
+def test_video_check_reports_immich_transcoding(client, monkeypatch):
+    from tripatlas.api import photos as photos_api
+    from tripatlas.services import photos as photo_service
+
+    ff = {"value": {"transcode": "required", "targetResolution": "720"}}
+
+    class Fake:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def video_transcoding(self):
+            return ff["value"]
+
+    monkeypatch.setattr(photos_api.photo_service, "client_for", lambda db, user: Fake())
+    setup_household(client)
+    for value, ok in [
+        ({"transcode": "required", "targetResolution": "720"}, False),
+        ({"transcode": "optimal", "targetResolution": "720"}, True),
+        ({"transcode": "optimal", "targetResolution": "original"}, False),
+        (None, None),  # key without Immich admin rights: cannot be told
+    ]:
+        ff["value"] = value
+        photo_service._video_check["at"] = 0
+        assert client.get("/api/photos/video-check").json()["ok"] is ok

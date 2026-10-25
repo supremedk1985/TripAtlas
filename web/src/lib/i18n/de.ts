@@ -204,6 +204,16 @@ const de: Dictionary = {
 		'Freiwillig. Mit einem eigenen Immich-API-Schlüssel siehst du deine Fotos und die mit dir geteilten. Ohne wird der Schlüssel des Haushalts benutzt.',
 	stored_keep: '•••••• (gespeichert – leer lassen zum Behalten)',
 	api_key: 'API-Schlüssel',
+	video_hint: 'Videos können bei schwacher Verbindung ruckeln',
+	video_hint_details: 'Details',
+	video_help_title: 'Warum Videos ruckeln – und wie es besser wird',
+	video_help_text:
+		'Immich schickt Videos so, wie sie aufgenommen wurden – oft mit 15 bis 25 Mbit/s. Das schafft eine Handyverbindung unterwegs selten. Immich kann von jedem Video eine kleinere Fassung (720p) für die Wiedergabe anlegen; die Originale bleiben unverändert.',
+	video_help_step1: 'In Immich als Administrator anmelden: Administration → Einstellungen → Video-Transkodierung.',
+	video_help_step2: 'Die Transkodierungsrichtlinie auf „Optimal“ stellen, als Zielauflösung 720p lassen oder wählen, speichern.',
+	video_help_step3:
+		'Administration → Aufträge → „Videos transkodieren“ → „Alle“. Je nach Zahl der Videos rechnet der Server einige Stunden; die kleinen Fassungen brauchen zusätzlich etwa ein Fünftel des Platzes der Videos.',
+	video_help_note: 'TripAtlas prüft die Einstellung stündlich; danach verschwindet dieser Hinweis.',
 	device_storage: 'Speicher auf diesem Gerät',
 	device_storage_hint:
 		'Karte und Fotos, die du angesehen hast, bleiben auf diesem Handy oder Rechner – sie öffnen schneller und auch ohne Netz. Jedes Konto auf diesem Gerät behält seine eigenen Fotos; die Grenze gilt für alle zusammen. Ist sie erreicht, fliegt zuerst raus, was am längsten nicht angesehen wurde.',

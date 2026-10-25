@@ -3,6 +3,7 @@
 	import { api } from '$lib/api';
 	import { dateTime } from '$lib/format';
 	import { i18n, t } from '$lib/i18n/index.svelte';
+	import VideoHint from '../VideoHint.svelte';
 
 	type Status = {
 		running: boolean;
@@ -44,6 +45,7 @@
 </script>
 
 <p class="muted">{t('status_hint')}</p>
+<VideoHint variant="settings" />
 {#if s}
 	<div class="state row">
 		{#if s.running}<span class="dot busy"></span><strong>{t('status_running')}</strong>

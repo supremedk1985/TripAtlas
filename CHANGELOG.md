@@ -6,6 +6,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- A note in the video viewer and on the status page when Immich streams videos at full size (they stutter on
+  a weak connection), with the steps to make Immich keep 720p copies for playback
 - Storage on this device: map tiles, photos and trip data that were looked at stay on the device up to a chosen size
   (Settings → Profile; 1 GB unless changed), least recently used first out; a bucket per account, so switching
   accounts keeps everything and never mixes them up. *Save for offline* on a trip stores its map area, photos and

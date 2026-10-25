@@ -126,3 +126,27 @@ def choose_cover(client: ImmichClient, placed: list[Photo], start: float, end: f
     if hits:
         return (next((p for p in hits if p.landscape), hits[0])).id
     return pick_cover(placed)
+
+
+# Policies under which Immich makes a smaller copy of large videos for playback. With "required" (Immich's default)
+# or "disabled", a phone video is streamed as recorded — often 15–25 Mbit/s, more than a weak mobile connection carries.
+SMALL_VIDEO_POLICIES = {"optimal", "bitrate", "all"}
+_video_check: dict = {"at": 0.0, "result": None}
+
+
+def video_check(db: Session) -> dict:
+    """Whether Immich keeps small copies of videos for playback. `ok` is None when it cannot be told (no Immich, or a
+    key without administrator rights). Asked at most once an hour."""
+    if time.time() - _video_check["at"] < 3600 and _video_check["result"] is not None:
+        return _video_check["result"]
+    result: dict = {"ok": None, "policy": None, "target": None}
+    try:
+        with client_for(db, None) as c:
+            ff = c.video_transcoding()
+        if ff is not None:
+            policy, target = ff.get("transcode"), str(ff.get("targetResolution") or "")
+            result = {"ok": policy in SMALL_VIDEO_POLICIES and target != "original", "policy": policy, "target": target}
+    except ImmichError:
+        pass
+    _video_check.update(at=time.time(), result=result)
+    return result

@@ -174,6 +174,12 @@ Haushalt* das Zuhause, den Radius und die Mindestzahl an Nächten.
 
 **Ein Ort hat noch keinen Namen.** Namen und Lexikontexte werden im Hintergrund nachgeschlagen, ein paar pro Minute.
 
+**Videos ruckeln auf dem Handy.** Immich schickt Videos so, wie sie aufgenommen wurden (oft 15–25 Mbit/s), solange
+es keine kleineren Fassungen für die Wiedergabe anlegt. In Immich als Administrator: *Administration →
+Einstellungen → Video-Transkodierung*, Richtlinie *Optimal*, Zielauflösung 720p; danach *Administration → Aufträge →
+Videos transkodieren → Alle*. Solange Immich nicht so eingestellt ist, zeigen der Videobetrachter und *Einstellungen →
+Status* einen Hinweis (TripAtlas kann das nur erkennen, wenn sein Immich-Schlüssel einem Immich-Administrator gehört).
+
 **Wo liegen meine Fotos?** Weiter in Immich. TripAtlas zeigt sie an, kopiert oder ändert sie aber nie.
 
 **Wer kann sehen, wo wir sind?** Nur Konten, die Live-Positionen sehen dürfen, und nur für die Fahrzeuge, die ihnen

@@ -213,6 +213,16 @@ export default {
 		'Optional. With your own Immich API key you see your photos and those shared with you. Without one, the household key is used.',
 	stored_keep: '•••••• (stored — leave empty to keep)',
 	api_key: 'API key',
+	video_hint: 'Videos may stutter on a weak connection',
+	video_hint_details: 'Details',
+	video_help_title: 'Why videos stutter — and how to fix it',
+	video_help_text:
+		'Immich sends videos as they were recorded, often 15 to 25 Mbit/s — more than a mobile connection usually carries. Immich can keep a smaller copy of every video (720p) for playback; the originals stay untouched.',
+	video_help_step1: 'Sign in to Immich as administrator: Administration → Settings → Video Transcoding Settings.',
+	video_help_step2: 'Set the transcode policy to "Optimal", keep (or choose) 720p as target resolution, and save.',
+	video_help_step3:
+		'Administration → Jobs → Transcode Videos → "All". Depending on how many videos there are, the server works for a few hours; the small copies take roughly a fifth of the space of the videos.',
+	video_help_note: 'TripAtlas checks this setting every hour; afterwards this note disappears.',
 	device_storage: 'Storage on this device',
 	device_storage_hint:
 		'Map and photos you have seen stay on this phone or computer, so they open faster and also without network. Each account on this device keeps its own photos; the limit is for all of them together. When it is full, what was looked at longest ago goes first.',
