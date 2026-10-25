@@ -108,6 +108,8 @@ export default {
 	avatar_crop_hint: 'Drag to move, zoom with the slider or two fingers.',
 	avatar_zoom: 'Zoom',
 	avatar_apply: 'Use picture',
+	map_photos_hide: 'Hide photos on the map',
+	map_photos_show: 'Show photos on the map',
 	map_fullscreen: 'Full screen',
 	map_fullscreen_exit: 'Leave full screen',
 	photos_columns: 'Columns',

@@ -106,6 +106,8 @@ const de: Dictionary = {
 	avatar_crop_hint: 'Zum Verschieben ziehen, vergrößern mit dem Regler oder zwei Fingern.',
 	avatar_zoom: 'Vergrößern',
 	avatar_apply: 'Übernehmen',
+	map_photos_hide: 'Fotos auf der Karte ausblenden',
+	map_photos_show: 'Fotos auf der Karte zeigen',
 	map_fullscreen: 'Vollbild',
 	map_fullscreen_exit: 'Vollbild beenden',
 	photos_columns: 'Spalten',

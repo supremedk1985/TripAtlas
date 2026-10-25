@@ -26,7 +26,8 @@ what is worth knowing about the places. Every section has a short video.
   number says how many photos are in a stack. Tap a stack to look through them.
 - **Routes** and **Photos** switch the layers on and off. With several vehicles, the coloured buttons show or hide
   each one. The map style (streets, light, dark) is chosen in the drop-down next to the layers; the **⛶** button at the top left
-of the map shows only the map, full screen.
+of the map shows only the map, full screen. The button below it hides the photo stacks (and shows them again), also
+with a trip open.
 - The photo layer shows **all** photos with a location — also from trips without a tracker, like a city trip by
   train.
 

@@ -26,7 +26,8 @@ Fotos dabei entstanden sind und was es über die Orte zu wissen gibt. Zu jedem A
   Stapel; die Zahl sagt, wie viele Fotos darin stecken. Antippen öffnet sie.
 - **Strecken** und **Fotos** schalten die Ebenen ein und aus. Bei mehreren Fahrzeugen blenden die farbigen Knöpfe
   jedes einzeln ein oder aus. Den Kartenstil (Straßen, Hell, Dunkel) wählt die Auswahlliste neben den Ebenen; der Knopf **⛶** oben links auf der
-  Karte zeigt nur die Karte, im Vollbild.
+  Karte zeigt nur die Karte, im Vollbild. Der Knopf darunter blendet die Fotostapel aus (und wieder ein), auch
+bei geöffneter Reise.
 - Die Fotoebene zeigt **alle** Fotos mit Ort – auch von Reisen ohne Tracker, etwa einer Städtereise mit dem Zug.
 
 ### Was zählt als Reise?

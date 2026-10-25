@@ -6,6 +6,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- A button on the map (under full screen) hides or shows the photo stacks — also with a trip open and in full
+  screen, so the route stays visible
 - A note in the video viewer and on the status page when Immich streams videos at full size (they stutter on
   a weak connection), with the steps to make Immich keep 720p copies for playback
 - Storage on this device: map tiles, photos and trip data that were looked at stay on the device up to a chosen size
