@@ -7,6 +7,7 @@ import hashlib
 import threading
 import time
 from collections.abc import Callable
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,7 +15,7 @@ from sqlalchemy.orm import Session
 from ..core.detection import DetectionSettings
 from ..core.geo import Point, ts_to_iso
 from ..core.photos import Photo, pick_cover, place_photos
-from ..db.models import Tracker, User
+from ..db.models import Tracker, TripPhotoChoice, User
 from ..integrations.immich import ImmichClient, ImmichError
 from . import settings
 from .positions import load_points
@@ -26,6 +27,7 @@ _lock = threading.Lock()
 
 # How far back accounts without live access see (positions, ongoing trips, photos)
 LIVE_DELAY_S = 6 * 3600
+
 
 def cached[T](key: tuple, seconds: float, fetch: Callable[[], T]) -> T:
     with _lock:
@@ -119,9 +121,24 @@ def tracker_photos(
     end: float,
     s: DetectionSettings,
 ) -> tuple[list[Photo], int]:
-    """Photos taken on this tracker's journey between start and end, each with a location."""
+    """Photos taken on this tracker's journey between start and end, each with a location — minus what the family
+    took out of the trip by hand (see TripPhotoChoice)."""
+    choice = photo_choice(db, tracker.id, start, s)
+    if choice and choice.no_photos:
+        return [], 0
     photos = photos_between(db, user, start, end)
+    if choice and choice.excluded:
+        out = set(choice.excluded)
+        photos = [p for p in photos if p.id not in out]
     return place_photos(points, photos, s, higher_priority_tracks(db, tracker, start, end))
+
+
+def photo_choice(db: Session, tracker_id: int, start: float, s: DetectionSettings) -> TripPhotoChoice | None:
+    """The hand-made photo choice of the trip that starts at `start` (keyed by its local start day)."""
+    key = datetime.fromtimestamp(start, s.tz).strftime("%Y-%m-%d")
+    return db.scalar(
+        select(TripPhotoChoice).where(TripPhotoChoice.tracker_id == tracker_id, TripPhotoChoice.day_key == key)
+    )
 
 
 COVER_QUERY = "beautiful landscape scenery vacation"

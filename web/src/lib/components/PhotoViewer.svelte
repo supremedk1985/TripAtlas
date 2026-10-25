@@ -18,6 +18,7 @@
 		videos,
 		overview = false,
 		onnote,
+		onexclude,
 		onclose
 	}: {
 		ids: string[];
@@ -29,6 +30,8 @@
 		overview?: boolean;
 		/** offered in the overview when set: pin a note to the place of these photos */
 		onnote?: (photoId: string) => void;
+		/** offered in the info panel when set: the photo does not belong to the trip it was opened from */
+		onexclude?: (photoId: string) => void;
 		onclose: () => void;
 	} = $props();
 
@@ -256,6 +259,9 @@
 	{#if showInfo}
 		<aside class="info-panel" aria-label={t('photo_info')}>
 			<button class="close-info" onclick={() => (showInfo = false)} aria-label={t('close')}>✕</button>
+			{#if onexclude}
+				<button class="btn small exclude" onclick={() => ((showInfo = false), onexclude(id))}>🚫 {t('photo_not_in_trip')}</button>
+			{/if}
 			{#if !info}
 				<p class="muted">{t('loading')}</p>
 			{:else}
@@ -539,6 +545,9 @@
 		color: var(--text-2);
 		font-size: 1.1em;
 		cursor: pointer;
+	}
+	.info-panel .exclude {
+		margin: 0 36px 10px 0;
 	}
 	.info-panel dl {
 		display: grid;

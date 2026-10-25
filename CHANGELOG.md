@@ -6,6 +6,9 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- Take photos out of a trip: *We were not there – no photos* (a car lent to someone) or *Does not belong to this
+  trip* in the photo viewer; kept per trip in `trip_photo_choices` (migration 0007), surviving recomputation;
+  `PUT /api/trips/{id}/photo-choice`, `POST /api/trips/{id}/photos/{asset}/exclude`
 - *Where I've been* by year: a row of years (all years, 2026, 2025, …) limits pins, countries, flights and a
   place's photos to that year (household time zone); `GET /api/visited?year=` and `years` in the answer
 - Diary: a third view next to *Map* and *Where I've been* — every trip as a picture card by year, opened as a story
@@ -28,6 +31,11 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- Phone layout chosen from the measured window instead of CSS orientation: an Android WebView reports 0 px height
+  to media queries, so an upright phone got the side-by-side layout; full screen filled only half the map
+- Service worker: a damaged Cache Storage (app killed while writing) made every request fail with "server cannot
+  be reached"; storage faults now fall back to the network and clear that store; a new worker takes over at once
+- No drawing on a map that was already removed (TypeError reading `getSource` after leaving a page)
 - Back (Android's gesture, the browser's button) closes what is open first — photo viewer (a photo opened from the
   overview goes back to the overview), info panel, account menu, map full screen, place cards, notes — instead of
   leaving the page behind them; "All trips" really goes back, so back afterwards does not reopen the trip

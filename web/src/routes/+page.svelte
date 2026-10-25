@@ -51,7 +51,18 @@
 		overview?: boolean;
 		/** where the photos are: a note made in the viewer is pinned here */
 		at?: { lat: number; lon: number };
+		/** the photos come from an open trip: one can be taken out of it */
+		exclude?: (id: string) => void;
 	} | null>(null);
+
+	/** "Does not belong to this trip": the trip forgets the photo, the viewer moves on to the next one. */
+	function excludeShown(id: string) {
+		if (!viewer) return;
+		viewer.exclude?.(id);
+		const ids = viewer.ids.filter((x) => x !== id);
+		if (!ids.length) viewer = null;
+		else viewer = { ...viewer, ids, index: Math.min(viewer.index, ids.length - 1) };
+	}
 	let selectedPoints: TrackPoint[] = [];
 	let selectedStays: { lat: number; lon: number }[] = [];
 
@@ -280,8 +291,8 @@
 		showTripPhotos(photos) {
 			tripPhotos = photos;
 		},
-		openPhotos(ids, index, times = {}, videos) {
-			viewer = { ids, index, times, videos };
+		openPhotos(ids, index, times = {}, videos, exclude) {
+			viewer = { ids, index, times, videos, exclude };
 		}
 	};
 
@@ -425,7 +436,8 @@
 
 {#if viewer}
 	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} times={viewer.times} videos={viewer.videos} overview={viewer.overview}
-		onnote={canEdit() ? pinNote : undefined} onclose={() => (viewer = null)} />
+		onnote={canEdit() ? pinNote : undefined} onexclude={viewer.exclude ? excludeShown : undefined}
+		onclose={() => (viewer = null)} />
 {/if}
 
 <style>

@@ -83,7 +83,7 @@ class Setting(Base):
 
 class TrackerKind(enum.StrEnum):
     vehicle = "vehicle"
-    camper = "camper"   # like a vehicle, shown as a camper van
+    camper = "camper"  # like a vehicle, shown as a camper van
     person = "person"
     # A bicycle: every ride is an entry of its own, also without a night away (see services/trips.py)
     bike = "bike"
@@ -196,6 +196,22 @@ class Annotation(Base):
     day_key: Mapped[str] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(200), default="")
     note_html: Mapped[str] = mapped_column(Text, default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+
+class TripPhotoChoice(Base):
+    """Which photos belong to a trip, where the automatic choice (time + distance to the vehicle) is wrong: none at
+    all ("we were not there" — a car lent to someone) or single photos taken out. Keyed like Annotation, so it
+    survives the recomputation of trips."""
+
+    __tablename__ = "trip_photo_choices"
+    __table_args__ = (UniqueConstraint("tracker_id", "day_key"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tracker_id: Mapped[int] = mapped_column(ForeignKey("trackers.id", ondelete="CASCADE"))
+    day_key: Mapped[str] = mapped_column(String(10))
+    no_photos: Mapped[bool] = mapped_column(Boolean, default=False)
+    excluded: Mapped[list] = mapped_column(JSON, default=list)  # Immich asset ids
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     updated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 

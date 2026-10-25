@@ -81,6 +81,11 @@ class TrackerUpdate(BaseModel):
     photo_priority: int | None = None
 
 
+class PhotoChoiceIn(BaseModel):
+    no_photos: bool = False
+    restore: bool = False  # bring back the photos taken out one by one
+
+
 class AnnotationIn(BaseModel):
     tracker_id: int
     kind: str = Field(pattern=r"^(trip|stay)$")

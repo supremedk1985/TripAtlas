@@ -14,5 +14,12 @@ export interface MapControl {
 	fit(points: { lat: number; lon: number }[]): void;
 	focus(lat: number, lon: number, zoom?: number): void;
 	showTripPhotos(photos: Photo[]): void;
-	openPhotos(ids: string[], index: number, times?: Record<string, number>, videos?: Set<string>): void;
+	/** `exclude`: offered in the viewer as "does not belong to this trip" */
+	openPhotos(
+		ids: string[],
+		index: number,
+		times?: Record<string, number>,
+		videos?: Set<string>,
+		exclude?: (id: string) => void
+	): void;
 }

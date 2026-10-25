@@ -51,6 +51,10 @@ Tap a trip in the list or its line on the map:
 - **Timeline**: drives and overnight stays in order, with their photos. Tap an entry to show it on the map.
 - **About this place** on every stay: the Wikipedia summary and sights nearby.
 - **Notes**: a text for the trip and for every stay — bold, italic, lists, links. Everybody with access sees them.
+- **Which photos belong**: photos join a trip on their own when they were taken near the vehicle at that time
+  (within 50 km, so a day trip from the campsite counts). When that is wrong, take them out: **We were not there –
+  no photos** at the bottom of the trip (a car lent to someone), or **Does not belong to this trip** under *i* in a
+  single photo. *Show photos again* brings them back. The choice stays when the trip is recalculated.
 
 ![The timeline with a Wikipedia summary](images/en/timeline.png)
 

@@ -14,14 +14,15 @@ from ..auth.deps import current_user, require_editor, tracker_for, visible_track
 from ..core.detection import detect_stays
 from ..core.geo import thin_out
 from ..core.timeline import build_timeline
-from ..db.models import Annotation, Trip, User
+from ..db.models import Annotation, Tracker, Trip, TripPhotoChoice, User
 from ..db.session import get_db
 from ..integrations.immich import ImmichError
 from ..services import photos as photo_service
 from ..services import settings
+from ..services.jobs import jobs
 from ..services.positions import load_points
 from ..services.trips import day_key
-from .schemas import AnnotationIn
+from .schemas import AnnotationIn, PhotoChoiceIn
 
 router = APIRouter(tags=["trips"])
 
@@ -82,6 +83,11 @@ def trip_detail(trip_id: int, db: Session = Depends(get_db), user: User = Depend
     stay_ann = _annotations(db, [t.tracker_id], "stay")
     out = trip_summary(t, ann)
     out["note_html"] = ann.note_html if ann else ""
+    choice = _choice(db, t)
+    out["photo_choice"] = {
+        "no_photos": bool(choice and choice.no_photos),
+        "excluded": len(choice.excluded) if choice and choice.excluded else 0,
+    }
     out["stays"] = []
     for st in t.stays:
         a = stay_ann.get((t.tracker_id, st.day_key))
@@ -197,3 +203,54 @@ def put_annotation(body: AnnotationIn, db: Session = Depends(get_db), user: User
     row.title, row.note_html, row.updated_by = title, html, user.id
     db.commit()
     return {"title": title, "note_html": html, "updated": time.time()}
+
+
+# --- which photos belong to the trip (when time and distance to the vehicle are not enough) ---------------------
+
+
+def _choice(db: Session, t: Trip) -> TripPhotoChoice | None:
+    return db.scalar(
+        select(TripPhotoChoice).where(TripPhotoChoice.tracker_id == t.tracker_id, TripPhotoChoice.day_key == t.day_key)
+    )
+
+
+def _save_choice(db: Session, t: Trip, user: User, no_photos: bool, excluded: list[str]) -> dict:
+    row = _choice(db, t)
+    if not no_photos and not excluded:
+        if row:
+            db.delete(row)
+    else:
+        if row is None:
+            row = TripPhotoChoice(tracker_id=t.tracker_id, day_key=t.day_key)
+            db.add(row)
+        row.no_photos, row.excluded, row.updated_by = no_photos, excluded, user.id
+    # photo count, cover and the names of places come from the photos: let the next round recompute the trips
+    db.get(Tracker, t.tracker_id).dirty = True
+    db.commit()
+    jobs.trigger()
+    return {"no_photos": no_photos, "excluded": len(excluded)}
+
+
+@router.put("/api/trips/{trip_id}/photo-choice")
+def put_photo_choice(
+    trip_id: int, body: PhotoChoiceIn, db: Session = Depends(get_db), user: User = Depends(require_editor)
+):
+    """ "We were not there": the trip shows no photos at all (a car lent to someone). `restore` brings back the
+    photos taken out one by one."""
+    t = _visible_trip(db, user, trip_id)
+    row = _choice(db, t)
+    excluded = [] if body.restore or row is None else list(row.excluded or [])
+    return _save_choice(db, t, user, body.no_photos, excluded)
+
+
+@router.post("/api/trips/{trip_id}/photos/{asset_id}/exclude")
+def exclude_photo(trip_id: int, asset_id: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    """One photo does not belong to this trip (taken near the vehicle, but elsewhere)."""
+    if not re.fullmatch(r"[0-9a-f-]{36}", asset_id):
+        raise HTTPException(422, "Not a photo id")
+    t = _visible_trip(db, user, trip_id)
+    row = _choice(db, t)
+    excluded = list(row.excluded or []) if row else []
+    if asset_id not in excluded:
+        excluded.append(asset_id)
+    return _save_choice(db, t, user, bool(row and row.no_photos), excluded)

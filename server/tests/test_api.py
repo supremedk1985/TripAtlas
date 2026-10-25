@@ -596,3 +596,53 @@ def test_visited_can_be_limited_to_one_year(client):
     assert lats(client.get("/api/visited", params={"year": 2025}).json()) == [46]
     assert lats(client.get("/api/visited", params={"year": 2026}).json()) == [43]
     assert client.get("/api/visited", params={"year": 2019}).json()["pins"] == []
+
+
+def test_photos_can_be_taken_out_of_a_trip_one_by_one_or_all(client, monkeypatch):
+    """A car lent to the grandparents: photos taken 40 km away are within the matching radius, but do not belong to
+    the trip. 'We were not there' removes all of them, single photos can be taken out — and both survive the
+    recomputation of trips."""
+    from datetime import UTC, datetime
+
+    from tripatlas.core.photos import Photo
+    from tripatlas.services import photos as photo_service
+    from tripatlas.services.trips import recompute
+
+    setup_household(client)  # home in Paris
+    tid = client.post("/api/trackers", json={"name": "Car"}).json()["id"]
+    t0 = datetime(2026, 6, 1, tzinfo=UTC).timestamp()
+    pts = [Point(t0 + h * 3600, 48.85, 2.35) for h in range(10)]
+    pts += [Point(t0 + h * 3600, 45.76, 4.83) for h in range(12, 72)]
+    pts += [Point(t0 + h * 3600, 48.85, 2.35) for h in range(74, 100)]
+    a, b = "a" * 8 + "-0000-0000-0000-" + "0" * 12, "b" * 8 + "-0000-0000-0000-" + "0" * 12
+    shots = [Photo(id=a, t=t0 + 20 * 3600, lat=45.76, lon=4.83), Photo(id=b, t=t0 + 30 * 3600, lat=45.50, lon=4.90)]
+    monkeypatch.setattr(photo_service, "photos_between", lambda db, user, start, end: shots)
+
+    def no_immich(db, user):
+        raise photo_service.ImmichError("no")
+
+    monkeypatch.setattr(photo_service, "client_for", no_immich)
+    with db_session() as db:
+        add_points(db, db.get(Tracker, tid), pts, "test")
+        recompute(db, db.get(Tracker, tid), now=t0 + 200 * 3600)
+    trip = client.get("/api/trips").json()[0]["id"]
+
+    def ids():
+        return [p["id"] for p in client.get(f"/api/trips/{trip}/photos").json()["photos"]]
+
+    assert ids() == [a, b]
+    assert client.post(f"/api/trips/{trip}/photos/{b}/exclude").json() == {"no_photos": False, "excluded": 1}
+    assert ids() == [a]
+    with db_session() as db:  # new positions arrive: the trip is detected again, the choice stays
+        recompute(db, db.get(Tracker, tid), now=t0 + 200 * 3600)
+    assert ids() == [a]
+    assert client.get(f"/api/trips/{trip}").json()["photo_choice"] == {"no_photos": False, "excluded": 1}
+
+    client.put(f"/api/trips/{trip}/photo-choice", json={"no_photos": True})
+    assert ids() == []
+    client.put(f"/api/trips/{trip}/photo-choice", json={"no_photos": False})
+    assert ids() == [a], "switching 'we were not there' off keeps the single photos taken out"
+    client.put(f"/api/trips/{trip}/photo-choice", json={"no_photos": False, "restore": True})
+    assert ids() == [a, b]
+    assert client.get(f"/api/trips/{trip}").json()["photo_choice"] == {"no_photos": False, "excluded": 0}
+    assert client.post(f"/api/trips/{trip}/photos/not-a-photo/exclude").status_code == 422

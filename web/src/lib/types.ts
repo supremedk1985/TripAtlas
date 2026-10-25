@@ -74,6 +74,8 @@ export interface Stay {
 
 export interface TripDetail extends TripSummary {
 	note_html: string;
+	/** photos taken out by hand: all of them ("we were not there") or single ones */
+	photo_choice?: { no_photos: boolean; excluded: number };
 	stays: Stay[];
 }
 

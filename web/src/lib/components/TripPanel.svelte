@@ -58,14 +58,47 @@
 			control.showTrip(points, detail.stays, tracker?.color ?? '#e4572e', avatar, tracker?.kind);
 			control.fit(points.map((p) => ({ lat: p[1], lon: p[2] })));
 			// Slower parts afterwards: photos and the timeline need Immich.
-			api.get<{ photos: Photo[] }>(`/api/trips/${id}/photos`).then((r) => {
-				photos = r.photos;
-				control.showTripPhotos(photos);
-			});
-			api.get<{ entries: TimelineEntry[] }>(`/api/trips/${id}/timeline`).then((r) => (timeline = r.entries));
+			loadPhotos(id);
 		} catch (e) {
 			error = errorText(e);
 		}
+	}
+
+	function loadPhotos(id: number) {
+		api.get<{ photos: Photo[] }>(`/api/trips/${id}/photos`).then((r) => {
+			photos = r.photos;
+			control.showTripPhotos(photos);
+		});
+		api.get<{ entries: TimelineEntry[] }>(`/api/trips/${id}/timeline`).then((r) => (timeline = r.entries));
+	}
+
+	// Photos are chosen by time and distance to the vehicle. Where that is wrong (a car lent to the grandparents, a
+	// photo taken nearby but elsewhere) the family takes them out by hand; the server keeps that choice.
+	async function excludePhoto(photoId: string) {
+		if (!trip) return;
+		const id = trip.id;
+		photos = photos.filter((p) => p.id !== photoId);
+		control.showTripPhotos(photos);
+		trip.photo_count = Math.max(0, trip.photo_count - 1);
+		try {
+			trip.photo_choice = await api.post(`/api/trips/${id}/photos/${photoId}/exclude`);
+		} catch (e) {
+			error = errorText(e);
+		}
+		if (trip?.id === id) api.get<{ entries: TimelineEntry[] }>(`/api/trips/${id}/timeline`).then((r) => (timeline = r.entries));
+	}
+
+	async function setPhotoChoice(noPhotos: boolean, restore = false) {
+		if (!trip) return;
+		const id = trip.id;
+		try {
+			trip.photo_choice = await api.put(`/api/trips/${id}/photo-choice`, { no_photos: noPhotos, restore });
+		} catch (e) {
+			error = errorText(e);
+			return;
+		}
+		if (trip?.id !== id) return;
+		loadPhotos(id);
 	}
 
 	$effect(() => {
@@ -140,7 +173,8 @@
 			list.map((p) => p.id),
 			i,
 			photoTimes,
-			videoIds
+			videoIds,
+			canEdit() ? excludePhoto : undefined
 		);
 	}
 
@@ -350,6 +384,23 @@
 			{/if}
 		</section>
 
+		{#if canEdit()}
+			<section class="photo-choice">
+				{#if trip.photo_choice?.no_photos}
+					<p class="muted small">🚫 {t('photos_not_there_on')}</p>
+					<button class="btn small" onclick={() => setPhotoChoice(false)}>{t('photos_show_again')}</button>
+				{:else}
+					<button class="btn small" onclick={() => setPhotoChoice(true)}>🚫 {t('photos_not_there')}</button>
+					{#if trip.photo_choice?.excluded}
+						<button class="btn small" onclick={() => setPhotoChoice(false, true)}>
+							{t('photos_restore', { n: trip.photo_choice.excluded })}
+						</button>
+					{/if}
+					<p class="muted small">{t('photos_choice_hint')}</p>
+				{/if}
+			</section>
+		{/if}
+
 		<section class="offline">
 			<button class="btn small" onclick={saveTrip} disabled={!!offline || !timeline}>
 				{offline ? t('save_offline_running', { done: offline.done, total: offline.total }) : `⤓ ${t('save_offline')}`}
@@ -360,6 +411,17 @@
 </div>
 
 <style>
+	.photo-choice {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		margin-top: 18px;
+	}
+	.photo-choice p {
+		flex-basis: 100%;
+		margin: 0;
+	}
 	.back {
 		display: inline-flex;
 		align-items: center;

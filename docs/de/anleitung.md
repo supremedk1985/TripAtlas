@@ -51,6 +51,11 @@ Eine Reise in der Liste oder ihre Linie auf der Karte antippen:
   Karte.
 - **Über diesen Ort** bei jeder Übernachtung: der Wikipedia-Text und Sehenswertes in der Nähe.
 - **Notizen**: ein Text zur Reise und zu jeder Übernachtung – fett, kursiv, Listen, Links. Alle mit Zugriff sehen sie.
+- **Welche Fotos dazugehören**: Fotos kommen von selbst zur Reise, wenn sie zur selben Zeit in der Nähe des
+  Fahrzeugs entstanden sind (bis 50 km, damit ein Ausflug vom Campingplatz mitzählt). Passt das nicht, nehmt sie
+  heraus: **Wir waren nicht dabei – keine Fotos** unten in der Reise (etwa ein verliehenes Auto) oder **Gehört nicht
+  zu dieser Reise** unter *i* in einem einzelnen Foto. *Fotos wieder zeigen* holt sie zurück. Die Wahl bleibt, auch
+  wenn die Reise neu berechnet wird.
 
 ![Die Zeitleiste mit Wikipedia-Text](../images/de/timeline.png)
 
