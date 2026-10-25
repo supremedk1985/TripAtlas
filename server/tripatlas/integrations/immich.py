@@ -181,7 +181,9 @@ class ImmichClient:
         return r
 
     def thumbnail(self, asset_id: str, size: str = "thumbnail") -> tuple[bytes, str]:
-        r = self._call("GET", f"/api/assets/{asset_id}/thumbnail", params={"size": size}, headers={"Accept": "*/*"})
+        # "fullsize" answers with a redirect to the original when that is already a web image (e.g. JPEG)
+        r = self._call("GET", f"/api/assets/{asset_id}/thumbnail", params={"size": size}, headers={"Accept": "*/*"},
+                       follow_redirects=True)
         return r.content, r.headers.get("content-type", "image/jpeg")
 
 

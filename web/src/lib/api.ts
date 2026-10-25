@@ -60,7 +60,7 @@ export const api = {
 	del: <T>(path: string) => request<T>('DELETE', path)
 };
 
-export function thumbUrl(assetId: string, size: 'thumbnail' | 'medium' | 'preview' = 'thumbnail'): string {
+export function thumbUrl(assetId: string, size: 'thumbnail' | 'medium' | 'preview' | 'fullsize' = 'thumbnail'): string {
 	// `u` only picks this account's storage on the device (lib/deviceCache); the server checks access as always
 	const who = currentAccount();
 	return `/api/photos/${assetId}/thumbnail?size=${size}${who ? `&u=${who}` : ''}`;

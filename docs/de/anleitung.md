@@ -56,6 +56,10 @@ Eine Reise in der Liste oder ihre Linie auf der Karte antippen:
 
 ### Fotos und Videos
 
+Ins Foto zoomen: mit zwei Fingern aufziehen oder doppelt tippen (am Rechner das Mausrad), dann mit einem Finger
+verschieben; beim Hineinzoomen lädt die volle Auflösung nach. Doppelt tippen geht zurück; erst dann wischt man
+wieder zum nächsten Foto.
+
 Jedes Foto lässt sich groß ansehen. Wischen oder die Pfeiltasten blättern weiter; Videos laufen im selben
 Betrachter, Esc schließt ihn. Der Raster-Knopf oben links zeigt **alle Fotos und Videos auf einmal** – 3, 2 oder 1
 nebeneinander, Videos mit ▶; antippen öffnet ein Bild groß. Fotostapel auf der Karte öffnen gleich in dieser

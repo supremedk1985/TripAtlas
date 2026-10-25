@@ -62,7 +62,7 @@ def markers(request: Request, db: Session = Depends(get_db), user: User = Depend
 def thumbnail(
     asset_id: str, size: str = "thumbnail", db: Session = Depends(get_db), user: User = Depends(current_user)
 ):
-    if not _ASSET_ID.match(asset_id) or size not in ("thumbnail", "medium", "preview"):
+    if not _ASSET_ID.match(asset_id) or size not in ("thumbnail", "medium", "preview", "fullsize"):
         raise HTTPException(400, "Invalid request")
     key = photo_service.key_id(db, user) if size == "medium" else ""
     if size == "medium" and (data := medium.get(key, asset_id)) is not None:

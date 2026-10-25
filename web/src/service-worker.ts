@@ -52,6 +52,8 @@ sw.addEventListener('fetch', (event) => {
 		const account = thumb ? url.searchParams.get('u') : req.headers.get(ACCOUNT_HEADER);
 		if (!account || !/^\d+$/.test(account) || skipApi(url.pathname)) return;
 		const bucket = bucketOf(account);
+		// full resolution (zooming in) is several MB per photo: not kept on the device
+		if (thumb && url.searchParams.get('size') === 'fullsize') return;
 		if (thumb) event.respondWith(photo(req, url, bucket));
 		else event.respondWith(stored(req, bucket, req.url, 'network-first'));
 		return;

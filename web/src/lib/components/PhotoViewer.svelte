@@ -5,6 +5,7 @@
 	import { tick } from 'svelte';
 	import { api, thumbUrl, videoUrl } from '$lib/api';
 	import VideoHint from './VideoHint.svelte';
+	import { zoomable } from '$lib/zoom';
 	import { countryName, dateTime } from '$lib/format';
 	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
 	import { i18n, t } from '$lib/i18n/index.svelte';
@@ -31,6 +32,10 @@
 	} = $props();
 
 	let touchX = 0;
+	// zoomed into the photo: swiping moves the photo instead of paging (lib/zoom.ts)
+	let zoom = $state(1);
+	let hiRes = $state(false);
+	let multiTouch = false;
 	// svelte-ignore state_referenced_locally
 	let grid = $state(overview && ids.length > 1);
 	let gridEl: HTMLElement | undefined = $state();
@@ -59,6 +64,12 @@
 		keep?.scrollIntoView({ block: 'center' });
 	}
 	const id = $derived(ids[index]);
+	// every photo starts unzoomed, with the preview
+	$effect(() => {
+		void id;
+		zoom = 1;
+		hiRes = false;
+	});
 	let known = $state<Record<string, boolean>>({});
 	const isVideo = $derived(videos ? videos.has(id) : known[id]);
 
@@ -157,9 +168,14 @@
 	role="dialog"
 	aria-modal="true"
 	tabindex="-1"
-	ontouchstart={(e) => (touchX = e.touches[0].clientX)}
+	ontouchstart={(e) => {
+		if (e.touches.length === 1) {
+			touchX = e.touches[0].clientX;
+			multiTouch = false;
+		} else multiTouch = true;
+	}}
 	ontouchend={(e) => {
-		if (grid) return;
+		if (grid || zoom > 1 || multiTouch || e.touches.length) return;
 		if (e.target instanceof HTMLVideoElement) return; // swiping on the player's controls is seeking, not paging
 		const dx = e.changedTouches[0].clientX - touchX;
 		if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
@@ -209,7 +225,11 @@
 			<video class="photo" src={videoUrl(id)} poster={thumbUrl(id, 'preview')} controls autoplay playsinline></video>
 		{:else}
 			<!-- Small thumbnail first (usually cached), the large preview replaces it when loaded -->
-			<img class="photo" src={thumbUrl(id, 'preview')} alt="" style="background-image:url({thumbUrl(id)})" />
+			<!-- Zoomed in past 1.6× the full resolution replaces the preview (which stays behind it as a placeholder) -->
+			<img class="photo zoomable" src={thumbUrl(id, hiRes ? 'fullsize' : 'preview')} alt=""
+				style:background-image="url({thumbUrl(id, hiRes ? 'preview' : 'thumbnail')})"
+				use:zoomable={{ onchange: (z) => ((zoom = z), z > 1.6 && (hiRes = true)) }}
+				onerror={() => hiRes && (hiRes = false)} />
 		{/if}
 	{/key}
 	{#if isVideo}<VideoHint />{/if}

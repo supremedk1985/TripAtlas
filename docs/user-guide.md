@@ -56,6 +56,9 @@ Tap a trip in the list or its line on the map:
 
 ### Photos and videos
 
+Zoom into a photo with two fingers or a double tap (mouse wheel on a computer) and drag to look around; the full
+resolution loads as you zoom in. A double tap goes back; swiping to the next photo works again once it is unzoomed.
+
 Tap any photo to see it large. Swipe or use the arrow keys to move on; videos play in the same viewer, Esc closes it.
 The grid button at the top left shows **all photos and videos at once** — 3, 2 or 1 per row, videos marked with ▶;
 tap one to see it large. Photo stacks on the map open in this overview straight away. Under each photo a quiet line
