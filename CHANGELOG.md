@@ -5,6 +5,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+## [0.2.0] – 2026-10-25
+
 ### Added
 - Tracker kind *Bicycle*: every ride counts, also without a night away ("day ride"); bike pictogram on the map
 - Tracker kind can be chosen in *Settings → Trackers*
