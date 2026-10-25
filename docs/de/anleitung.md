@@ -73,6 +73,14 @@ antippen öffnet *Fotos von hier*, Ändern und Entfernen. Ändern kann ihn nur, 
 
 Fotos ohne GPS (etwa von einer Kamera) setzt TripAtlas an die Stelle, an der das Fahrzeug zu der Zeit war.
 
+## Das Tagebuch
+
+**Tagebuch** (oben neben *Karte*) zeigt jede Reise als große Bildkarte, die neueste zuerst, nach Jahren. Eine Reise
+öffnet sich als Geschichte: Titelbild, die Strecke auf einer Karte, dann ein Kapitel je Übernachtungsort mit euren
+Notizen, einer Handvoll Fotos (*Alle n Fotos* für den Rest) und einem Text über den Ort. *Auf der Karte* öffnet
+dieselbe Reise auf der Karte; dort führt *Als Tagebuch* bei geöffneter Reise zurück. Kinder sehen dieselbe
+Darstellung in ihrer Ansicht, mit Texten für Kinder.
+
 ## Wo war ich schon
 
 ![Der Globus mit allen Orten und den besuchten Ländern](../images/de/visited.png)

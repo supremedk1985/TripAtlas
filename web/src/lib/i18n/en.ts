@@ -38,6 +38,12 @@ export default {
 
 	// navigation
 	nav_map: 'Map',
+	nav_diary: 'Diary',
+	diary_all: 'All trips',
+	diary_on_map: 'On the map',
+	diary_open: 'As diary',
+	diary_all_photos: 'All {n} photos',
+	diary_the_end: 'And then home again.',
 	nav_visited: "Where I've been",
 	nav_settings: 'Settings',
 	logout: 'Sign out',

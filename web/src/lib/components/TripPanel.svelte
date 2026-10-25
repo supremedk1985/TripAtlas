@@ -195,6 +195,8 @@
 			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>{t('all_trips')}
 		</button>
 		{#if tracker}<span class="vehicle muted"><VehicleIcon color={tracker.color} kind={tracker.kind} />{tracker.name}</span>{/if}
+		<span class="spacer"></span>
+		<a class="btn small" href="/diary/trip/{tripId}" title={t('diary_open')}>📖 {t('diary_open')}</a>
 	</div>
 
 	{#if error}

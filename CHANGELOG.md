@@ -6,6 +6,9 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- Diary: a third view next to *Map* and *Where I've been* — every trip as a picture card by year, opened as a story
+  with the route, one chapter per place (notes, photos, videos, *All n photos*, text about the place); the same
+  presentation as the children's view, which now shares it. *As diary* on a trip and *On the map* switch between them
 - Zoom into a photo in the viewer: pinch, double tap (or double click) and mouse wheel, drag to move; past 1.6×
   the full resolution is loaded (Immich "fullsize"); swiping pages only while not zoomed
 - A button on the map (under full screen) hides or shows the photo stacks — also with a trip open and in full

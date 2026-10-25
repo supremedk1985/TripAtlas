@@ -5,9 +5,10 @@
 	import AccountMenu from '$lib/components/AccountMenu.svelte';
 	import PhotoViewer from '$lib/components/PhotoViewer.svelte';
 	import PlaceCard from '$lib/components/PlaceCard.svelte';
+	import TripCards from '$lib/components/TripCards.svelte';
 	import VisitedMap from '$lib/components/VisitedMap.svelte';
-	import { countryName, date, flag, tripTitle } from '$lib/format';
-	import { plural, t } from '$lib/i18n/index.svelte';
+	import { countryName, flag } from '$lib/format';
+	import { t } from '$lib/i18n/index.svelte';
 	import { session } from '$lib/stores/session.svelte';
 	import FlightSheet from '$lib/components/FlightSheet.svelte';
 	import type { Flight, Pin, TripSummary, Visited } from '$lib/types';
@@ -66,20 +67,11 @@
 	</section>
 
 	<h2 class="section">{t('kids_our_trips')}</h2>
-	<div class="trips">
-		{#each trips as tr (tr.id)}
-			<a class="trip card" href="/kids/trip/{tr.id}">
-				{#if tr.cover_asset}<img src={thumbUrl(tr.cover_asset, 'preview')} alt="" loading="lazy" />{:else}<div class="noimg">🚐</div>{/if}
-				<div class="text">
-					<strong>{tripTitle(tr, t('trip_untitled'))}</strong>
-					<span>{date(tr.start, { month: 'long', year: 'numeric' })} · {plural('nights', tr.nights)}</span>
-					<span class="flags">{tr.countries.map(flag).join(' ')}</span>
-				</div>
-			</a>
-		{:else}
-			<p class="empty-kids">{t('kids_no_trips')}</p>
-		{/each}
-	</div>
+	{#if trips.length}
+		<TripCards {trips} href={(tr) => `/kids/trip/${tr.id}`} />
+	{:else}
+		<p class="empty-kids">{t('kids_no_trips')}</p>
+	{/if}
 </div>
 
 {#if viewer}
@@ -165,45 +157,6 @@
 	}
 	.section {
 		margin: 28px 0 12px;
-	}
-	.trips {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-		gap: 16px;
-	}
-	.trip {
-		overflow: hidden;
-		border-radius: 22px;
-		text-decoration: none;
-		color: var(--text);
-		transition: transform 0.15s;
-	}
-	.trip:hover {
-		transform: translateY(-3px) rotate(-0.5deg);
-	}
-	.trip img,
-	.noimg {
-		width: 100%;
-		aspect-ratio: 4/3;
-		object-fit: cover;
-		display: block;
-	}
-	.noimg {
-		display: grid;
-		place-items: center;
-		font-size: 4em;
-		background: var(--surface-2);
-	}
-	.text {
-		display: grid;
-		gap: 2px;
-		padding: 12px 14px 14px;
-	}
-	.text strong {
-		font-size: 1.2em;
-	}
-	.text .flags {
-		font-size: 1.3em;
 	}
 	.empty-kids {
 		font-size: 1.1em;

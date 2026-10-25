@@ -37,6 +37,12 @@ const de: Dictionary = {
 	trips_other: '{n} Reisen',
 
 	nav_map: 'Karte',
+	nav_diary: 'Tagebuch',
+	diary_all: 'Alle Reisen',
+	diary_on_map: 'Auf der Karte',
+	diary_open: 'Als Tagebuch',
+	diary_all_photos: 'Alle {n} Fotos',
+	diary_the_end: 'Und dann ging es wieder nach Hause.',
 	nav_visited: 'Wo war ich schon',
 	nav_settings: 'Einstellungen',
 	logout: 'Abmelden',

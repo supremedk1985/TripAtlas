@@ -9,6 +9,7 @@
 
 	const views = [
 		{ href: '/', label: 'nav_map' },
+		{ href: '/diary', label: 'nav_diary' },
 		{ href: '/visited', label: 'nav_visited' }
 	] as const;
 </script>
@@ -28,7 +29,7 @@
 	</div>
 	<div class="segments">
 		{#each views as v (v.href)}
-			<a href={v.href} class:active={page.url.pathname === v.href}>{t(v.label)}</a>
+			<a href={v.href} class:active={v.href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(v.href)}>{t(v.label)}</a>
 		{/each}
 	</div>
 </nav>

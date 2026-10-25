@@ -71,6 +71,14 @@ change or to remove it. Only its author or an administrator can change a note. N
 children's view. Photos without GPS (from a
 camera, for example) are placed where the vehicle was at that time.
 
+## The diary
+
+**Diary** (next to *Map* at the top) shows every trip as a big picture card, newest first and by year. A trip opens
+as a story: cover photo, route on a map, then one chapter per place you slept with your notes, a handful of photos
+(*All n photos* for the rest) and a text about the place. *On the map* opens the same trip on the map; on the map,
+*As diary* on an open trip goes the other way. Children see the same presentation in their view, with texts written
+for children.
+
 ## Where I've been
 
 ![The globe with every place and the visited countries](images/en/visited.png)
