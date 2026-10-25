@@ -34,6 +34,10 @@ class DetectionSettings:
     # Drives: a stop is a pause of at least this long between moving points; shorter drives are manoeuvring.
     drive_pause_s: float = 600
     drive_min_km: float = 0.5
+    # Lengths leave out stretches without points longer than this (None: count them if the speed is plausible).
+    # A vehicle's tracker sleeps while it drives, so a gap still is a drive; a bike app records every ride without
+    # gaps, and a gap means the bike travelled on the camper's rack.
+    max_gap_s: float | None = None
 
     @property
     def tz(self) -> ZoneInfo:
@@ -115,7 +119,7 @@ def detect_trips(points: Sequence[Point], s: DetectionSettings, margin_s: float 
             Trip(
                 start=start,
                 end=end,
-                distance_km=round(path_length_km(slice_by_time(points, start, end)), 1),
+                distance_km=round(path_length_km(slice_by_time(points, start, end), s.max_gap_s), 1),
                 farthest_km=round(m["farthest"], 1),
                 nights=nights,
                 destination=(round(m["dest"][0], 5), round(m["dest"][1], 5)),
@@ -222,7 +226,7 @@ def detect_drives(points: Sequence[Point], s: DetectionSettings) -> list[Drive]:
     for g in groups:
         a, b = max(g[0] - 1, 0), g[-1]  # start at the standing point before the first movement
         part = points[a : b + 1]
-        length = path_length_km(part)
+        length = path_length_km(part, s.max_gap_s)
         if length < s.drive_min_km:
             continue
         o, d = points[a], points[b]

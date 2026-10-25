@@ -21,7 +21,7 @@ from ..services import photos as photo_service
 from ..services import settings
 from ..services.jobs import jobs
 from ..services.positions import load_points
-from ..services.trips import day_key
+from ..services.trips import day_key, tracker_settings
 from .schemas import AnnotationIn, PhotoChoiceIn
 
 router = APIRouter(tags=["trips"])
@@ -122,8 +122,8 @@ def trip_track(trip_id: int, db: Session = Depends(get_db), user: User = Depends
 def trip_photos(trip_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     """The trip's photos as seen with the user's own Immich access, each with a location."""
     t = _visible_trip(db, user, trip_id)
-    s = settings.household(db).detection()
     tracker = tracker_for(db, user, t.tracker_id)
+    s = tracker_settings(tracker, settings.household(db).detection())
     pts = load_points(db, t.tracker_id, t.start, t.end)
     try:
         placed, unplaced = photo_service.tracker_photos(db, user, tracker, pts, t.start, t.end, s)
@@ -135,8 +135,8 @@ def trip_photos(trip_id: int, db: Session = Depends(get_db), user: User = Depend
 @router.get("/api/trips/{trip_id}/timeline")
 def trip_timeline(trip_id: int, db: Session = Depends(get_db), user: User = Depends(current_user)):
     t = _visible_trip(db, user, trip_id)
-    s = settings.household(db).detection()
     tracker = tracker_for(db, user, t.tracker_id)
+    s = tracker_settings(tracker, settings.household(db).detection())
     pts = load_points(db, t.tracker_id, t.start, t.end)
     try:
         placed, _ = photo_service.tracker_photos(db, user, tracker, pts, t.start, t.end, s)

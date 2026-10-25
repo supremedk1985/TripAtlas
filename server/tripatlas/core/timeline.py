@@ -36,7 +36,7 @@ def build_timeline(
         return [p for p in photos if a <= p.t <= b]
 
     def km(a: float, b: float) -> float:
-        return round(path_length_km(slice_by_time(points, a, b)), 1)
+        return round(path_length_km(slice_by_time(points, a, b), s.max_gap_s), 1)
 
     out: list[TimelineEntry] = []
     t = points[0].t

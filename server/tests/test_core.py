@@ -192,6 +192,8 @@ def test_priority_tracker_claims_photos():
     assert claimed_by(van_away, Photo("p", t0), S), "no GPS, van travelling: the van's"
     assert not claimed_by(van_home, Photo("p", t0), S), "no GPS, van at home: not the van's"
     assert not claimed_by([], Photo("p", t0, *away), S)
+    # a bike ride round the village while the van stands at home: the photo is the bike's, not the parked van's
+    assert not claimed_by(van_home, Photo("p", t0, HOME[0] + 0.05, HOME[1]), S), "van at home claims nothing"
 
 
 def test_place_photos_estimates_location_and_respects_priority():
@@ -267,3 +269,18 @@ def test_drop_spikes_removes_a_single_corrupt_fix_but_keeps_real_movement():
     # a real move away that does not come back stays
     away = [Point(0, 52.0, 8.0), Point(30, 52.0, 8.001), Point(60, 53.0, 8.0), Point(90, 53.0, 8.001)]
     assert drop_spikes(away) == away
+
+
+def test_a_bike_on_the_campers_rack_is_not_cycling():
+    """A bike app records rides without gaps. Between the last ride at home and the first at the campsite the bike
+    travelled 250 km on the rack — slow enough on average to look plausible, but not cycled."""
+    from tripatlas.core.geo import path_length_km
+
+    t0 = ts(5, 10)
+    home_ride = [Point(t0 + i * 60, HOME[0] + i * 0.001, HOME[1]) for i in range(20)]
+    camp = (51.73, 3.86)
+    camp_ride = [Point(t0 + 3 * 86400 + i * 60, camp[0] + i * 0.001, camp[1]) for i in range(20)]
+    track = home_ride + camp_ride
+    cycled = path_length_km(home_ride) + path_length_km(camp_ride)
+    assert path_length_km(track) > 200, "a vehicle's tracker sleeps while driving: the gap counts"
+    assert abs(path_length_km(track, max_gap_s=600) - cycled) < 0.01

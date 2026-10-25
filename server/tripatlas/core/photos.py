@@ -46,17 +46,18 @@ def matches_tracker(points: Sequence[Point], photo: Photo, radius_km: float = MA
 
 
 def claimed_by(points: Sequence[Point], photo: Photo, s: DetectionSettings, radius_km: float = MATCH_RADIUS_KM) -> bool:
-    """Does a (higher-priority) tracker claim this photo? With GPS: if its known location was near. Without GPS
-    (many system cameras have none): if it was away from home at that time. Unknown location: no.
+    """Does a (higher-priority) tracker claim this photo? Only while it is away from home — a camper van parked at
+    home must not take the photos of a bike ride round the village. Away: with GPS if its location was near, without
+    GPS (many system cameras have none) always. Unknown location: no.
 
     Use case: a family travels in the camper van while the car stays at home or follows — the photos belong to the
     van, not to both."""
     loc = location_at(points, photo.t)
-    if loc is None:
+    if loc is None or s.is_home(loc[0], loc[1]):
         return False
     if photo.has_gps:
         return distance_km(loc[0], loc[1], photo.lat, photo.lon) <= radius_km
-    return not s.is_home(loc[0], loc[1])
+    return True
 
 
 def place_photos(

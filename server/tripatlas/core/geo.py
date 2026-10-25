@@ -40,10 +40,13 @@ MAX_SEGMENT_KM = 5.0
 MAX_GROUND_KMH = 200.0
 
 
-def path_length_km(points: Sequence[Point]) -> float:
-    """Length of a track, skipping implausible jumps (see MAX_SEGMENT_KM, MAX_GROUND_KMH)."""
+def path_length_km(points: Sequence[Point], max_gap_s: float | None = None) -> float:
+    """Length of a track, skipping implausible jumps (see MAX_SEGMENT_KM, MAX_GROUND_KMH) and, if given, stretches
+    without points longer than `max_gap_s`."""
     total = 0.0
     for a, b in itertools.pairwise(points):
+        if max_gap_s is not None and b.t - a.t > max_gap_s:
+            continue
         d = point_distance_km(a, b)
         hours = (b.t - a.t) / 3600
         if d < MAX_SEGMENT_KM or (hours > 0 and d / hours <= MAX_GROUND_KMH):

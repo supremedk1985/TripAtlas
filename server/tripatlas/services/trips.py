@@ -32,6 +32,24 @@ def day_key(ts: float, s: DetectionSettings) -> str:
 # Bikes: the home area is smaller (a ride starts at the front door) and a short ride is a ride.
 BIKE_HOME_RADIUS_KM = 1.0
 BIKE_MIN_DISTANCE_KM = 3.0
+# A bike app records a ride without gaps; a longer gap is the bike on a rack or in a car, not cycled.
+BIKE_MAX_GAP_S = 600
+
+
+def tracker_settings(tracker: Tracker, s: DetectionSettings | None) -> DetectionSettings | None:
+    """The household's detection settings, adjusted to the kind of tracker."""
+    if s is None or tracker.kind != TrackerKind.bike:
+        return s
+    # A bike ride rarely includes a night away, and a ride round the village is already worth keeping: every ride
+    # leaving the home area counts (a holiday with daily rides from the campsite stays ONE trip, because the bike
+    # never comes home at night in between).
+    return dataclasses.replace(
+        s,
+        min_nights=0,
+        home_radius_km=min(s.home_radius_km, BIKE_HOME_RADIUS_KM),
+        min_distance_km=BIKE_MIN_DISTANCE_KM,
+        max_gap_s=BIKE_MAX_GAP_S,
+    )
 
 
 def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
@@ -41,12 +59,7 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
     s = hh.detection()
     if s is None:
         return 0
-    if tracker.kind == TrackerKind.bike:
-        # A bike ride rarely includes a night away, and a ride round the village is already worth keeping: every
-        # ride leaving the home area counts (a holiday with daily rides from the campsite stays ONE trip, because
-        # the bike never comes home at night in between).
-        s = dataclasses.replace(s, min_nights=0, home_radius_km=min(s.home_radius_km, BIKE_HOME_RADIUS_KM),
-                                min_distance_km=BIKE_MIN_DISTANCE_KM)
+    s = tracker_settings(tracker, s)
     now = now or time.time()
     start = iso_to_ts(hh.history_start) if hh.history_start else None
     points = load_points(db, tracker.id, start=start)

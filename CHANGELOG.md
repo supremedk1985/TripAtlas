@@ -31,6 +31,10 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- A vehicle with higher photo priority claimed photos near it also while parked at home — a bike ride round the
+  village got none of its photos; it now claims only while away
+- Bike lengths no longer count gaps between recordings (the bike on the camper's rack): a holiday with rides from
+  the campsite showed 1,173 instead of 483 km. Bike settings now also apply to the timeline and drives
 - Phone layout chosen from the measured window instead of CSS orientation: an Android WebView reports 0 px height
   to media queries, so an upright phone got the side-by-side layout; full screen filled only half the map
 - Service worker: a damaged Cache Storage (app killed while writing) made every request fail with "server cannot

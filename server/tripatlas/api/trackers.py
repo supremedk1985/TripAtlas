@@ -17,6 +17,7 @@ from ..db.session import get_db
 from ..services import settings
 from ..services.jobs import jobs
 from ..services.positions import bounds, latest, load_points
+from ..services.trips import tracker_settings
 from .schemas import TrackerCreate, TrackerOut, TrackerUpdate
 
 router = APIRouter(prefix="/api/trackers", tags=["trackers"])
@@ -141,5 +142,6 @@ def drives(
     s = settings.household(db).detection()
     if s is None:
         raise HTTPException(409, "Home location not set")
+    s = tracker_settings(t, s)
     start, end = _range(user, start, end)
     return [d.__dict__ for d in detect_drives(load_points(db, t.id, start, end), s)]
