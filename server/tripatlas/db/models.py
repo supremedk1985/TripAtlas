@@ -104,6 +104,10 @@ class Tracker(Base):
     # Positions or settings changed since the last trip detection run.
     dirty: Mapped[bool] = mapped_column(Boolean, default=True)
     avatar: Mapped[bytes | None] = mapped_column(nullable=True)
+    # Day trips (no night away) only appear when photos were taken — a bike's daily ride to work is not a trip.
+    hide_empty_day_trips: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Apps send recordings to /api/imports/push with this key (only its SHA-256 is kept; see api/imports.py).
+    import_key_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     users: Mapped[list[User]] = relationship(secondary="user_trackers", back_populates="trackers")
 

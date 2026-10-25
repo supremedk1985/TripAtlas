@@ -78,11 +78,17 @@ def recompute(db: Session, tracker: Tracker, now: float | None = None) -> int:
         part = slice_by_time(points, tr.start, end)
         stays = detect_stays(part, s)
         placed = []
+        photos_known = False
         if immich is not None:
             try:
                 placed, _ = photo_service.tracker_photos(db, None, tracker, part, tr.start, end, s)
+                photos_known = True
             except ImmichError as e:
                 log.warning("Photos for %s unavailable: %s", tracker.name, e)
+        # A day trip without photos (the daily ride to work) is left out where the tracker says so — but only when the
+        # photos are known: with Immich unreachable every ride would vanish.
+        if tracker.hide_empty_day_trips and tr.nights == 0 and photos_known and not placed:
+            continue
         trip = Trip(
             tracker_id=tracker.id,
             day_key=day_key(tr.start, s),

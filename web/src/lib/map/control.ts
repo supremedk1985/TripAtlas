@@ -13,7 +13,8 @@ export interface MapControl {
 	clearTrip(): void;
 	fit(points: { lat: number; lon: number }[]): void;
 	focus(lat: number, lon: number, zoom?: number): void;
-	showTripPhotos(photos: Photo[]): void;
+	/** `exclude`: the stacks then offer "does not belong to this trip" */
+	showTripPhotos(photos: Photo[], exclude?: (id: string) => void): void;
 	/** `exclude`: offered in the viewer as "does not belong to this trip" */
 	openPhotos(
 		ids: string[],

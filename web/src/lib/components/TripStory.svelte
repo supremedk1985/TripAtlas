@@ -5,6 +5,8 @@
 	import maplibregl from 'maplibre-gl';
 	import { api, thumbUrl } from '$lib/api';
 	import { backTo } from '$lib/back.svelte';
+	import { onPhotoDeleted } from '$lib/photoDeleted.svelte';
+	import { canEdit } from '$lib/stores/session.svelte';
 	import { date, flag, km, tripTitle } from '$lib/format';
 	import { plural, t } from '$lib/i18n/index.svelte';
 	import MapView from '$lib/map/MapView.svelte';
@@ -56,6 +58,21 @@
 	function spread(list: Photo[], n = 6) {
 		if (list.length <= n) return list;
 		return Array.from({ length: n }, (_, i) => list[Math.floor((i * list.length) / n)]);
+	}
+
+	function drop(photoId: string) {
+		photos = photos.filter((p) => p.id !== photoId);
+		if (viewer) {
+			const ids = viewer.ids.filter((x) => x !== photoId);
+			viewer = ids.length ? { ...viewer, ids, index: Math.min(viewer.index, ids.length - 1) } : null;
+		}
+	}
+	onPhotoDeleted(drop);
+
+	/** "Does not belong to this trip" from the viewer: the trip forgets the photo, the viewer moves on. */
+	async function exclude(photoId: string) {
+		drop(photoId);
+		await api.post(`/api/trips/${id}/photos/${photoId}/exclude`);
 	}
 
 	function open(list: Photo[], p: Photo | null) {
@@ -130,7 +147,8 @@
 </div>
 
 {#if viewer}
-	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} overview={viewer.overview} onclose={() => (viewer = null)} />
+	<PhotoViewer ids={viewer.ids} bind:index={viewer.index} overview={viewer.overview}
+		onexclude={!kids && canEdit() ? exclude : undefined} onclose={() => (viewer = null)} />
 {/if}
 
 <style>

@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import __version__
-from ..auth.deps import current_user, visible_trackers
+from ..auth.deps import current_user, require_editor, visible_trackers
 from ..config import get_config
 from ..core.countries import country_code
 from ..core.geo import distance_km
@@ -85,6 +85,28 @@ def thumbnail(
             return Response(data, media_type=kind, headers=_IMMUTABLE)
         medium.put(key, asset_id, data)
     return Response(data, media_type=kind, headers=_IMMUTABLE)
+
+
+@router.delete("/api/photos/{asset_id}", status_code=204)
+def delete_photo(asset_id: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    """Delete a photo or video — in Immich itself, with the user's Immich access. It goes to Immich's trash and can be
+    restored there (30 days by default). The web app asks twice before it calls this."""
+    if not _ASSET_ID.match(asset_id):
+        raise HTTPException(400, "Invalid request")
+    client = photo_service.client_for(db, user)
+    db.close()  # no database connection while waiting for Immich
+    try:
+        with client as c:
+            c.trash([asset_id])
+    except ImmichError as e:
+        refused = any(code in str(e) for code in ("400", "403"))
+        raise HTTPException(
+            403 if refused else 502,
+            "Immich refused: only the owner can delete this photo, and the Immich key needs the right to delete"
+            if refused
+            else str(e),
+        ) from e
+    photo_service.forget_cached()
 
 
 @router.get("/api/photos/{asset_id}/info")

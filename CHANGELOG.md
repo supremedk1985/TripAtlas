@@ -6,6 +6,13 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- Automatic import: a tracker gets an import key (*Settings → Trackers → Automatic import*, shown once, only its
+  hash is kept); an app sends each recording to `POST /api/imports/push` with `Authorization: Bearer <key>` — no
+  sign-in, only to that tracker, wrong keys are slowed down (migration 0008)
+- *Hide day trips without photos* per tracker: a bike's daily ride to work is not a trip
+- Delete a photo or video from the viewer (*i* → *Delete (also in Immich)*), after two clear questions; it goes to
+  Immich's trash with the user's Immich access; children cannot
+- *Does not belong to this trip* also for the cover photo, the map stacks of an open trip and the diary
 - Take photos out of a trip: *We were not there – no photos* (a car lent to someone) or *Does not belong to this
   trip* in the photo viewer; kept per trip in `trip_photo_choices` (migration 0007), surviving recomputation;
   `PUT /api/trips/{id}/photo-choice`, `POST /api/trips/{id}/photos/{asset}/exclude`
@@ -31,6 +38,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - The photo positions for the map are sent again only when they changed (ETag)
 
 ### Fixed
+- The same ride imported twice was added twice when one export wrote milliseconds and the other did not (or cut
+  the seconds off): import times are rounded to whole seconds and a point within 4 s of an existing one is the same
 - A vehicle with higher photo priority claimed photos near it also while parked at home — a bike ride round the
   village got none of its photos; it now claims only while away
 - Bike lengths no longer count gaps between recordings (the bike on the camper's rack): a holiday with rides from

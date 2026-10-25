@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import time
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -10,6 +11,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from ..auth.deps import current_user, require_admin, tracker_for, visible_trackers
+from ..auth.security import import_key_hash
 from ..core.detection import detect_drives
 from ..core.geo import thin_out
 from ..db.models import Position, Tracker, User
@@ -38,6 +40,8 @@ def tracker_out(db: Session, t: Tracker, user: User, with_stats: bool = True) ->
         traccar_device_id=t.traccar_device_id,
         photo_priority=t.photo_priority,
         has_avatar=t.avatar is not None,
+        hide_empty_day_trips=t.hide_empty_day_trips,
+        has_import_key=t.import_key_hash is not None,
     )
     if with_stats:
         out.first, out.last, out.position_count = bounds(db, t.id)
@@ -74,8 +78,8 @@ def update_tracker(
     data = body.model_dump(exclude_unset=True)
     if "traccar_device_id" in data and data["traccar_device_id"] != t.traccar_device_id:
         t.synced_until = None  # a different device: fetch its whole history
-    if "kind" in data and data["kind"] != t.kind:
-        t.dirty = True  # a bike counts every ride: its trips have to be recognised again
+    if ("kind" in data and data["kind"] != t.kind) or "hide_empty_day_trips" in data:
+        t.dirty = True  # a bike counts every ride, day trips may be hidden: its trips have to be recognised again
     if "photo_priority" in data:
         for other in db.scalars(select(Tracker)):
             other.dirty = True  # priorities decide which tracker gets a photo
@@ -84,6 +88,24 @@ def update_tracker(
     db.commit()
     jobs.trigger()
     return tracker_out(db, t, admin)
+
+
+@router.post("/{tracker_id}/import-key")
+def new_import_key(tracker_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """A key with which apps send recordings of this tracker to /api/imports/push. Shown once; only its hash is
+    kept. A new key replaces the old one."""
+    t = tracker_for(db, admin, tracker_id)
+    key = "tai_" + secrets.token_urlsafe(32)
+    t.import_key_hash = import_key_hash(key)
+    db.commit()
+    return {"key": key}
+
+
+@router.delete("/{tracker_id}/import-key", status_code=204)
+def revoke_import_key(tracker_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    t = tracker_for(db, admin, tracker_id)
+    t.import_key_hash = None
+    db.commit()
 
 
 @router.delete("/{tracker_id}", status_code=204)

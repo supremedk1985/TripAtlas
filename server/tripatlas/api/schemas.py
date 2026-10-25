@@ -59,6 +59,8 @@ class TrackerOut(BaseModel):
     traccar_device_id: int | None
     photo_priority: int
     has_avatar: bool
+    hide_empty_day_trips: bool = False
+    has_import_key: bool = False
     position_count: int | None = None
     first: float | None = None
     last: float | None = None
@@ -71,6 +73,7 @@ class TrackerCreate(BaseModel):
     color: str = Field("#3b82f6", pattern=r"^#[0-9a-fA-F]{6}$")
     traccar_device_id: int | None = None
     photo_priority: int = 0
+    hide_empty_day_trips: bool = False
 
 
 class TrackerUpdate(BaseModel):
@@ -79,6 +82,7 @@ class TrackerUpdate(BaseModel):
     color: str | None = Field(None, pattern=r"^#[0-9a-fA-F]{6}$")
     traccar_device_id: int | None = None
     photo_priority: int | None = None
+    hide_empty_day_trips: bool | None = None
 
 
 class PhotoChoiceIn(BaseModel):

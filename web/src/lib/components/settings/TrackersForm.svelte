@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Trackers: link Traccar devices, create empty trackers for imports, colour, photo priority, avatar.
+	import ImportKey from './ImportKey.svelte';
 	import { api, errorText } from '$lib/api';
 	import { dateTime } from '$lib/format';
 	import { i18n, t } from '$lib/i18n/index.svelte';
@@ -98,6 +99,13 @@
 							{#if tk.last}· {t('last_seen', { when: dateTime(tk.last) })}{/if}
 						</span>
 					</div>
+					{#if tk.kind === 'bike'}
+						<label class="row small check">
+							<input type="checkbox" checked={tk.hide_empty_day_trips} onchange={(e) => update(tk, { hide_empty_day_trips: e.currentTarget.checked })} />
+							{t('hide_empty_day_trips')}
+						</label>
+					{/if}
+					<ImportKey tracker={tk} />
 				</div>
 				<button class="btn small danger" onclick={() => remove(tk)}>{t('delete')}</button>
 			</li>

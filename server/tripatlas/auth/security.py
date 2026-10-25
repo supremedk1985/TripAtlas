@@ -122,7 +122,15 @@ class LoginThrottle:
                 self._fails.pop(k, None)
 
 
-login_throttle = LoginThrottle()                     # per account and address
-address_throttle = LoginThrottle(limit=30)           # per address, across all names
+login_throttle = LoginThrottle()  # per account and address
+address_throttle = LoginThrottle(limit=30)  # per address, across all names
 # verified against when the name does not exist, so that takes as long as a wrong password
 DUMMY_HASH = hash_password("no such user — timing equaliser")
+
+
+def import_key_hash(key: str) -> str:
+    """How a tracker's import key is stored. A plain hash suffices: the key is 256 random bits, not a password."""
+    return hashlib.sha256(key.encode()).hexdigest()
+
+
+push_throttle = LoginThrottle(limit=20)  # wrong import keys, per address

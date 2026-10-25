@@ -646,3 +646,141 @@ def test_photos_can_be_taken_out_of_a_trip_one_by_one_or_all(client, monkeypatch
     assert ids() == [a, b]
     assert client.get(f"/api/trips/{trip}").json()["photo_choice"] == {"no_photos": False, "excluded": 0}
     assert client.post(f"/api/trips/{trip}/photos/not-a-photo/exclude").status_code == 422
+
+
+def _gpx(points: list[tuple[float, float, float]]) -> bytes:
+    from datetime import UTC, datetime
+
+    pts = "".join(
+        f'<trkpt lat="{lat}" lon="{lon}"><time>{datetime.fromtimestamp(t, UTC):%Y-%m-%dT%H:%M:%SZ}</time></trkpt>'
+        for t, lat, lon in points
+    )
+    return f'<?xml version="1.0"?><gpx version="1.1"><trk><trkseg>{pts}</trkseg></trk></gpx>'.encode()
+
+
+def test_an_app_sends_rides_with_the_trackers_import_key(client):
+    """Automatic import: the tracker gets a key, an app sends each recording with it — no sign-in, only to this
+    tracker, the same ride twice does no harm, a revoked key is refused."""
+    setup_household(client)
+    bike = client.post("/api/trackers", json={"name": "Bike", "kind": "bike"}).json()
+    assert bike["has_import_key"] is False
+    key = client.post(f"/api/trackers/{bike['id']}/import-key").json()["key"]
+    assert client.get("/api/trackers").json()[0]["has_import_key"] is True
+    t0 = 1_780_000_000
+    ride = _gpx([(t0 + i * 60, 48.85 + i * 0.002, 2.35) for i in range(30)])
+    anon = TestClient(client.app)  # no session cookie: the key alone
+
+    r = anon.post("/api/imports/push", content=ride, headers={"Authorization": f"Bearer {key}"})
+    assert r.status_code == 200 and r.json()["added"] == 30
+    again = anon.post("/api/imports/push?name=ride.gpx", content=ride, headers={"Authorization": f"Bearer {key}"})
+    assert again.json()["added"] == 0 and again.json()["skipped"] == 30
+    wrong = anon.post("/api/imports/push", content=ride, headers={"Authorization": "Bearer tai_wrong"})
+    assert wrong.status_code == 401
+    assert anon.post("/api/imports/push", content=ride).status_code == 401
+    assert client.get("/api/imports").json()[0]["tracker_id"] == bike["id"]
+
+    client.delete(f"/api/trackers/{bike['id']}/import-key")
+    assert anon.post("/api/imports/push", content=ride, headers={"Authorization": f"Bearer {key}"}).status_code == 401
+
+
+def test_day_trips_without_photos_can_be_hidden(client, monkeypatch):
+    """A bike's daily ride to work is not a trip: with the tracker's switch on, day rides only appear when photos were
+    taken on them. Rides with photos and trips with a night away stay."""
+    from datetime import UTC, datetime
+
+    from tripatlas.core.photos import Photo
+    from tripatlas.services import photos as photo_service
+    from tripatlas.services.trips import recompute
+
+    setup_household(client)  # home in Paris
+    bike = client.post("/api/trackers", json={"name": "Bike", "kind": "bike"}).json()["id"]
+    day = datetime(2026, 6, 2, 8, tzinfo=UTC).timestamp()
+
+    def ride(t0):  # out of the village and back within an hour
+        return [Point(t0 + i * 60, 48.85 + 0.003 * min(i, 60 - i), 2.35) for i in range(61)]
+
+    with db_session() as db:
+        add_points(db, db.get(Tracker, bike), ride(day) + ride(day + 86400), "test")
+    snap = Photo(id="c" * 8 + "-0000-0000-0000-" + "0" * 12, t=day + 86400 + 1800, lat=48.9, lon=2.35)
+    monkeypatch.setattr(photo_service, "photos_between", lambda db, u, a, b: [p for p in [snap] if a <= p.t <= b])
+
+    class NoClient:
+        def close(self):
+            pass
+
+    monkeypatch.setattr(photo_service, "client_for", lambda db, user: NoClient())
+    monkeypatch.setattr(photo_service, "choose_cover", lambda *a: None)
+
+    def recount():
+        with db_session() as db:
+            recompute(db, db.get(Tracker, bike), now=day + 5 * 86400)
+        return sorted(t["photo_count"] for t in client.get("/api/trips").json())
+
+    assert recount() == [0, 1]
+    client.patch(f"/api/trackers/{bike}", json={"hide_empty_day_trips": True})
+    assert recount() == [1], "the ride without photos is gone, the one with a photo stays"
+
+
+def test_deleting_a_photo_puts_it_into_immichs_trash(client, monkeypatch):
+    """Delete from TripAtlas = Immich's trash (restorable there), with the user's own Immich access; Immich refusing
+    (someone else's photo, a key without the right to delete) is reported as such; children may not delete."""
+    from tripatlas.integrations.immich import ImmichError
+    from tripatlas.services import photos as photo_service
+
+    setup_household(client)
+    trashed = []
+    others = "d" * 8 + "-0000-0000-0000-" + "0" * 12
+    mine = "e" * 8 + "-0000-0000-0000-" + "0" * 12
+
+    class Fake:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            pass
+
+        def trash(self, ids):
+            if others in ids:
+                raise ImmichError("Immich answered 400")
+            trashed.extend(ids)
+
+    monkeypatch.setattr(photo_service, "client_for", lambda db, user: Fake())
+    photo_service._cache[("probe",)] = (time.time(), "stale")
+
+    assert client.delete(f"/api/photos/{mine}").status_code == 204
+    assert trashed == [mine]
+    assert ("probe",) not in photo_service._cache, "lists and markers are fetched again"
+    r = client.delete(f"/api/photos/{others}")
+    assert r.status_code == 403 and "owner" in r.json()["detail"]
+    assert client.delete("/api/photos/not-an-id").status_code == 400
+
+    kid = {"username": "kid", "display_name": "Kid", "password": "kid-password", "role": "child"}
+    assert client.post("/api/users", json=kid).status_code in (200, 201)
+    login(client, "kid", "kid-password")
+    assert client.delete(f"/api/photos/{mine}").status_code == 403
+    assert trashed == [mine]
+
+
+def test_the_same_ride_with_and_without_milliseconds_is_one_ride(client):
+    """One app writes 08:00:00.123, another 08:00:00 — still the same ride: sent again, nothing is added twice."""
+    setup_household(client)
+    bike = client.post("/api/trackers", json={"name": "Bike", "kind": "bike"}).json()["id"]
+
+    def gpx(ms: bool, shift: int = 0) -> bytes:
+        pts = "".join(
+            f'<trkpt lat="{48.85 + i * 0.002}" lon="2.35"><time>2026-05-28T20:{(i + shift) // 60:02d}:'
+            f'{(i + shift) % 60:02d}{".437" if ms else ""}Z</time></trkpt>'
+            for i in range(0, 600, 3)
+        )
+        return f'<?xml version="1.0"?><gpx version="1.1"><trk><trkseg>{pts}</trkseg></trk></gpx>'.encode()
+
+    def up(data):
+        files = {"file": ("r.gpx", data, "application/gpx+xml")}
+        return client.post("/api/imports", data={"tracker_id": str(bike)}, files=files).json()
+
+    first = up(gpx(True))
+    assert first["added"] > 0
+    again = up(gpx(False))
+    assert again["added"] == 0 and again["skipped"] == first["added"]
+    # an app that cuts the seconds off instead of rounding: 20:00:02.6 becomes 20:00:02, not :03
+    assert up(gpx(False, shift=1))["added"] == 0, "a second off is still the same point"

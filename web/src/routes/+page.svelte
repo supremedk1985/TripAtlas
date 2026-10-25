@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The explorer: trips of all visible trackers on one map, a photo layer independent of trackers, and the detail
 	// panel of a selected trip. The selected trip is in the URL (?trip=…) so it can be bookmarked and shared.
+	import { onPhotoDeleted } from '$lib/photoDeleted.svelte';
 	import { vehicleMarker } from '$lib/map/vehicleMarker';
 	import maplibregl from 'maplibre-gl';
 	import { goto } from '$app/navigation';
@@ -55,13 +56,25 @@
 		exclude?: (id: string) => void;
 	} | null>(null);
 
+	// deleted in Immich (from the viewer): off the map and out of the viewer
+	onPhotoDeleted((id) => {
+		allMarkers = allMarkers.filter((m) => m[0] !== id);
+		if (tripPhotos) tripPhotos = tripPhotos.filter((p) => p.id !== id);
+		dropFromViewer(id);
+	});
+
+	function dropFromViewer(id: string) {
+		if (!viewer) return;
+		const ids = viewer.ids.filter((x) => x !== id);
+		if (!ids.length) viewer = null;
+		else viewer = { ...viewer, ids, index: Math.min(viewer.index, ids.length - 1) };
+	}
+
 	/** "Does not belong to this trip": the trip forgets the photo, the viewer moves on to the next one. */
 	function excludeShown(id: string) {
 		if (!viewer) return;
 		viewer.exclude?.(id);
-		const ids = viewer.ids.filter((x) => x !== id);
-		if (!ids.length) viewer = null;
-		else viewer = { ...viewer, ids, index: Math.min(viewer.index, ids.length - 1) };
+		dropFromViewer(id);
 	}
 	let selectedPoints: TrackPoint[] = [];
 	let selectedStays: { lat: number; lon: number }[] = [];
@@ -208,7 +221,11 @@
 
 	function onReady(m: maplibregl.Map) {
 		map = m;
-		photoLayer = new PhotoLayer(m, (ids, index, at) => (viewer = { ids, index, times: {}, overview: true, at }));
+		// with a trip open the stacks are its photos: one can be taken out of the trip from here as well
+		photoLayer = new PhotoLayer(
+			m,
+			(ids, index, at) => (viewer = { ids, index, times: {}, overview: true, at, exclude: tripPhotos ? tripExclude : undefined })
+		);
 		notesLayer = new NotesLayer(m, (n) => (note = n));
 		loadNotes();
 		trackLayer = new TrackLayer(m, (id) => selectTrip(id));
@@ -245,6 +262,7 @@
 
 	// The photo layer shows all photos — or only the selected trip's photos.
 	let tripPhotos = $state<Photo[] | null>(null);
+	let tripExclude: ((id: string) => void) | undefined;
 	$effect(() => {
 		if (!photoLayer) return;
 		const pts = tripPhotos ?? allMarkers.map(([id, lat, lon]) => ({ id, lat, lon }));
@@ -288,8 +306,9 @@
 		focus(lat, lon, zoom = 12) {
 			map?.flyTo({ center: [lon, lat], zoom });
 		},
-		showTripPhotos(photos) {
+		showTripPhotos(photos, exclude) {
 			tripPhotos = photos;
+			tripExclude = exclude;
 		},
 		openPhotos(ids, index, times = {}, videos, exclude) {
 			viewer = { ids, index, times, videos, exclude };

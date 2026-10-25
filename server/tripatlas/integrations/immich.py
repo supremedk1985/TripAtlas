@@ -55,6 +55,11 @@ class ImmichClient:
             raise ImmichError(f"Immich answered {r.status_code}")
         return r
 
+    def trash(self, asset_ids: list[str]) -> None:
+        """Move assets to Immich's trash — restorable there for the trash period (30 days by default). Immich refuses
+        (400) assets the key's owner may not delete, e.g. a partner's."""
+        self._call("DELETE", "/api/assets", json={"ids": asset_ids, "force": False})
+
     def version(self) -> str:
         v = self._call("GET", "/api/server/version").json()
         return f"{v['major']}.{v['minor']}.{v['patch']}"

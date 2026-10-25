@@ -50,6 +50,9 @@ Eine Reise in der Liste oder ihre Linie auf der Karte antippen:
 - **Zeitleiste**: Fahrten und Übernachtungen der Reihe nach, mit ihren Fotos. Antippen zeigt den Abschnitt auf der
   Karte.
 - **Über diesen Ort** bei jeder Übernachtung: der Wikipedia-Text und Sehenswertes in der Nähe.
+- **Löschen**: Unter *i* im Foto steht **Löschen (auch in Immich)**. Nach zwei deutlichen Rückfragen wird das Foto oder
+  Video in Immich gelöscht – es liegt dort noch 30 Tage im Papierkorb. Löschen kann nur, wem es in Immich gehört;
+  Kinder sehen den Knopf nicht. Soll es nur aus der Reise verschwinden: *Gehört nicht zu dieser Reise*.
 - **Notizen**: ein Text zur Reise und zu jeder Übernachtung – fett, kursiv, Listen, Links. Alle mit Zugriff sehen sie.
 - **Welche Fotos dazugehören**: Fotos kommen von selbst zur Reise, wenn sie zur selben Zeit in der Nähe des
   Fahrzeugs entstanden sind (bis 50 km, damit ein Ausflug vom Campingplatz mitzählt). Passt das nicht, nehmt sie
@@ -163,7 +166,26 @@ Fahrrad zählt jede Tour, auch ohne Übernachtung (angezeigt als *Tagestour*), s
 über das Zuhause hinausgeht. Mehrere Touren vom Campingplatz aus während eines Urlaubs ergeben eine Reise. Dann die
 Fahrten als GPX in diesen Tracker importieren – auch der Export aller Fahrten einer Fahrrad-App in einer Datei
 (etwa *CurruBike → Einstellungen → Alle Fahrten als GPX*). Später mit neueren Fahrten einfach wieder importieren:
-was schon da ist, wird übersprungen.
+was schon da ist, wird übersprungen. – auch dann, wenn eine andere App die Zeiten eine Sekunde anders schreibt.
+
+Der tägliche Weg zur Arbeit ist keine Reise: am Tracker **Tagesfahrten ohne Fotos ausblenden** ankreuzen
+(*Einstellungen → Tracker*). Tagesfahrten erscheinen dann nur noch, wenn unterwegs fotografiert wurde.
+
+### Automatischer Import
+
+Eine App kann jede Aufzeichnung von selbst schicken – CurruBike nach jeder Fahrt, oder alles, was eine Datei übers
+Internet senden kann (HTTP Shortcuts, Tasker, ein Skript). Am Tracker (*Einstellungen → Tracker → Automatischer
+Import*) **Schlüssel erstellen**; TripAtlas zeigt Adresse und Schlüssel **ein einziges Mal** – beides in die App
+übernehmen. Die App schickt die Datei (GPX, GeoJSON) per `POST` an die Adresse, mit der Kopfzeile
+`Authorization: Bearer <Schlüssel>`:
+
+    curl -H "Authorization: Bearer <Schlüssel>" -H "Content-Type: application/gpx+xml" \
+         --data-binary @fahrt.gpx https://<euer TripAtlas>/api/imports/push
+
+Der Schlüssel passt nur zu diesem einen Tracker und erlaubt nichts außer dem Abliefern von Aufzeichnungen.
+*Schlüssel widerrufen* sperrt ihn, *Neuen Schlüssel erstellen* ersetzt ihn. Steht vor TripAtlas ein Reverse Proxy,
+der den Zugang schützt (etwa mit einem Cookie), muss er `POST /api/imports/push` durchlassen – den Schlüssel prüft
+TripAtlas selbst.
 
 ## Auf dem Handy
 

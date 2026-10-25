@@ -30,6 +30,10 @@ export interface Tracker {
 	traccar_device_id: number | null;
 	photo_priority: number;
 	has_avatar: boolean;
+	/** day trips (no night away) only appear with photos */
+	hide_empty_day_trips?: boolean;
+	/** an app may send recordings with this tracker's import key */
+	has_import_key?: boolean;
 	position_count: number | null;
 	first: number | null;
 	last: number | null;

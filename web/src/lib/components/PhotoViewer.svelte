@@ -10,6 +10,9 @@
 	import { countryName, dateTime } from '$lib/format';
 	import { camera, duration, exposure, fileSize, place, takenAt, type PhotoInfo } from '$lib/photoInfo';
 	import { i18n, t } from '$lib/i18n/index.svelte';
+	import { announceDeleted } from '$lib/photoDeleted.svelte';
+	import { canEdit } from '$lib/stores/session.svelte';
+	import { confirmDialog } from '$lib/stores/dialog.svelte';
 
 	let {
 		ids,
@@ -76,6 +79,26 @@
 	});
 	let known = $state<Record<string, boolean>>({});
 	const isVideo = $derived(videos ? videos.has(id) : known[id]);
+
+	// Delete — in Immich itself, so asked twice and plainly. Immich keeps it in its trash (30 days by default).
+	let deleteError = $state('');
+	async function deleteShown() {
+		const gone = id;
+		const what = isVideo ? t('delete_what_video') : t('delete_what_photo');
+		deleteError = '';
+		if (!(await confirmDialog(t('delete_photo_title', { what }), { text: t('delete_photo_text', { what }), confirmLabel: t('delete_photo_next'), danger: true })))
+			return;
+		if (!(await confirmDialog(t('delete_photo_sure', { what }), { text: t('delete_photo_sure_text'), confirmLabel: t('delete_photo_confirm'), danger: true })))
+			return;
+		try {
+			await api.del(`/api/photos/${gone}`);
+		} catch (e) {
+			deleteError = e instanceof Error ? e.message : String(e);
+			return;
+		}
+		showInfo = false;
+		announceDeleted(gone);
+	}
 
 	// what is known about each photo (date, place, camera …): the quiet line underneath and the i panel
 	let infos = $state<Record<string, PhotoInfo | null>>({});
@@ -261,6 +284,10 @@
 			<button class="close-info" onclick={() => (showInfo = false)} aria-label={t('close')}>✕</button>
 			{#if onexclude}
 				<button class="btn small exclude" onclick={() => ((showInfo = false), onexclude(id))}>🚫 {t('photo_not_in_trip')}</button>
+			{/if}
+			{#if canEdit()}
+				<button class="btn small danger exclude" onclick={deleteShown}>🗑 {t('delete_photo_button')}</button>
+				{#if deleteError}<p class="error small">{deleteError}</p>{/if}
 			{/if}
 			{#if !info}
 				<p class="muted">{t('loading')}</p>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Details of one trip: header with cover, stats, time slider to replay the route, the timeline of drives and
 	// stays (with photos and "about this place"), and the editable title/note.
+	import { onPhotoDeleted } from '$lib/photoDeleted.svelte';
 	import { untrack } from 'svelte';
 	import { api, errorText, query, thumbUrl } from '$lib/api';
 	import { getLimitMb, saveOffline } from '$lib/deviceCache/client';
@@ -67,7 +68,7 @@
 	function loadPhotos(id: number) {
 		api.get<{ photos: Photo[] }>(`/api/trips/${id}/photos`).then((r) => {
 			photos = r.photos;
-			control.showTripPhotos(photos);
+			control.showTripPhotos(photos, canEdit() ? excludePhoto : undefined);
 		});
 		api.get<{ entries: TimelineEntry[] }>(`/api/trips/${id}/timeline`).then((r) => (timeline = r.entries));
 	}
@@ -78,8 +79,10 @@
 		if (!trip) return;
 		const id = trip.id;
 		photos = photos.filter((p) => p.id !== photoId);
-		control.showTripPhotos(photos);
+		control.showTripPhotos(photos, canEdit() ? excludePhoto : undefined);
 		trip.photo_count = Math.max(0, trip.photo_count - 1);
+		// the cover itself was taken out: the next recalculation picks a new one, until then none
+		if (trip.cover_asset === photoId) trip.cover_asset = photos.find((p) => !p.is_video)?.id ?? null;
 		try {
 			trip.photo_choice = await api.post(`/api/trips/${id}/photos/${photoId}/exclude`);
 		} catch (e) {
@@ -87,6 +90,16 @@
 		}
 		if (trip?.id === id) api.get<{ entries: TimelineEntry[] }>(`/api/trips/${id}/timeline`).then((r) => (timeline = r.entries));
 	}
+
+	onPhotoDeleted((photoId) => {
+		if (!photos.some((p) => p.id === photoId)) return;
+		photos = photos.filter((p) => p.id !== photoId);
+		control.showTripPhotos(photos, canEdit() ? excludePhoto : undefined);
+		if (trip) {
+			trip.photo_count = Math.max(0, trip.photo_count - 1);
+			if (trip.cover_asset === photoId) trip.cover_asset = photos.find((p) => !p.is_video)?.id ?? null;
+		}
+	});
 
 	async function setPhotoChoice(noPhotos: boolean, restore = false) {
 		if (!trip) return;
@@ -239,7 +252,10 @@
 		<p class="muted">{t('loading')}</p>
 	{:else}
 		{#if trip.cover_asset}
-			<button class="cover" onclick={() => control.openPhotos([trip!.cover_asset!], 0)}>
+			<button
+				class="cover"
+				onclick={() => control.openPhotos([trip!.cover_asset!], 0, photoTimes, videoIds, canEdit() ? excludePhoto : undefined)}
+			>
 				<img src={thumbUrl(trip.cover_asset, 'preview')} alt="" />
 			</button>
 		{/if}

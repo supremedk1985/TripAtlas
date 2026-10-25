@@ -29,6 +29,12 @@ _lock = threading.Lock()
 LIVE_DELAY_S = 6 * 3600
 
 
+def forget_cached() -> None:
+    """After a change in Immich (a photo deleted): lists and markers are fetched again."""
+    with _lock:
+        _cache.clear()
+
+
 def cached[T](key: tuple, seconds: float, fetch: Callable[[], T]) -> T:
     with _lock:
         hit = _cache.get(key)

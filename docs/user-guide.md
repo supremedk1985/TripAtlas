@@ -50,6 +50,9 @@ Tap a trip in the list or its line on the map:
   the selected time.
 - **Timeline**: drives and overnight stays in order, with their photos. Tap an entry to show it on the map.
 - **About this place** on every stay: the Wikipedia summary and sights nearby.
+- **Delete**: under *i* in a photo, **Delete (also in Immich)**. After two clear questions the photo or video is
+  deleted in Immich — it stays in Immich's trash for 30 days. Only its owner in Immich can delete it; children do
+  not see the button. To take it out of the trip only: *Does not belong to this trip*.
 - **Notes**: a text for the trip and for every stay — bold, italic, lists, links. Everybody with access sees them.
 - **Which photos belong**: photos join a trip on their own when they were taken near the vehicle at that time
   (within 50 km, so a day trip from the campsite counts). When that is wrong, take them out: **We were not there –
@@ -160,7 +163,25 @@ Create a tracker of the kind **Bicycle** (*Settings → Trackers*, name it e.g. 
 bicycle every ride counts, also a day ride without a night away (shown as *day ride*), as soon as it leaves the
 home area by more than a kilometre. Several rides from a campsite during a holiday become one trip. Then import the
 rides as GPX into that tracker — a bike app's export of all rides in one file works (for example *CurruBike →
-Settings → All rides as GPX*). Import it again later with newer rides: the ones already there are skipped.
+Settings → All rides as GPX*). Import it again later with newer rides: the ones already there are skipped — also when
+another app writes the times a second differently.
+
+A bike's daily ride to work is not a trip: tick **Hide day trips without photos** at the tracker (*Settings →
+Trackers*). Day rides then only appear when photos were taken on them.
+
+### Automatic import
+
+An app can send every recording on its own — CurruBike after each ride, or anything that can send a file over the
+internet (HTTP Shortcuts, Tasker, a script). At the tracker (*Settings → Trackers → Automatic import*) choose
+**Create key**; TripAtlas shows the address and a key **once** — copy both into the app. The app sends the file
+(GPX, GeoJSON) with `POST` to the address and the header `Authorization: Bearer <key>`:
+
+    curl -H "Authorization: Bearer <key>" -H "Content-Type: application/gpx+xml" \
+         --data-binary @ride.gpx https://<your TripAtlas>/api/imports/push
+
+The key fits only this one tracker and allows nothing but sending recordings to it. *Revoke key* stops it; *Create
+new key* replaces it. Behind a reverse proxy that guards TripAtlas (e.g. with a cookie), let `POST
+/api/imports/push` through — TripAtlas checks the key itself.
 
 ## On the phone
 
