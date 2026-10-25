@@ -25,13 +25,20 @@ const ASSETS = [...build, ...files.filter((f) => !f.endsWith('.geojson'))];
 const TILE_HOST = 'tiles.openfreemap.org';
 const SHELL = '/__shell';
 
+// A new version takes over at once instead of waiting until every open page is closed — an app's WebView is hardly
+// ever closed, so a fix in here would otherwise not arrive.
 sw.addEventListener('install', (event) => {
-	event.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+	event.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => sw.skipWaiting()));
 });
 
 sw.addEventListener('activate', (event) => {
 	const keep = (k: string) => k === CACHE || k === CONFIG_CACHE || k.startsWith('tripatlas-store-');
-	event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => !keep(k)).map((k) => caches.delete(k)))));
+	event.waitUntil(
+		caches
+			.keys()
+			.then((keys) => Promise.all(keys.filter((k) => !keep(k)).map((k) => caches.delete(k))))
+			.then(() => sw.clients.claim())
+	);
 });
 
 sw.addEventListener('fetch', (event) => {
@@ -59,7 +66,12 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 	if (ASSETS.includes(url.pathname)) {
-		event.respondWith(caches.match(url.pathname).then((r) => r ?? fetch(req)));
+		event.respondWith(
+			caches
+				.match(url.pathname)
+				.catch(() => undefined)
+				.then((r) => r ?? fetch(req))
+		);
 		return;
 	}
 	// Pages: network first; every page is the same app shell, so the last one fetched opens any page offline.
@@ -67,10 +79,10 @@ sw.addEventListener('fetch', (event) => {
 		event.respondWith(
 			fetch(req)
 				.then(async (res) => {
-					if (res.ok) await (await caches.open(CACHE)).put(SHELL, res.clone());
+					if (res.ok) await (await caches.open(CACHE)).put(SHELL, res.clone()).catch(() => {});
 					return res;
 				})
-				.catch(async () => (await caches.match(SHELL)) ?? Response.error())
+				.catch(async () => (await caches.match(SHELL).catch(() => undefined)) ?? Response.error())
 		);
 	}
 });
@@ -94,6 +106,28 @@ sw.addEventListener('message', (event) => {
 let config: DeviceCacheConfig | null = null;
 const limitBytes = async () => ((config ??= await readConfig()).limitMb || 0) * 1024 * 1024;
 
+// The storage on the device only helps; it must never cost an answer. When the browser reports it damaged (seen in an
+// Android WebView after the app was killed while writing: "Failed to execute 'match' on 'Cache': Unexpected internal
+// error", and every request of the account failed), the request goes to the network and that store is thrown away.
+
+/** A stored answer, or null — also when the store cannot be read. */
+async function lookup(bucket: string, key: string): Promise<Response | null> {
+	try {
+		const hit = await (await caches.open(cacheName(bucket))).match(key);
+		if (hit) touch(bucket, key).catch(() => {});
+		return hit ?? null;
+	} catch (err) {
+		await broken(bucket, err);
+		return null;
+	}
+}
+
+async function broken(bucket: string, err: unknown) {
+	if (err instanceof DOMException && err.name === 'QuotaExceededError') return; // full, not damaged: just not kept
+	console.warn('TripAtlas: storage on this device is damaged and was cleared:', bucket, err);
+	await clear(bucket).catch(() => {});
+}
+
 /** A photo: the same id is the same picture forever. Offline, a large preview falls back to a smaller size. */
 async function photo(req: Request, url: URL, bucket: string): Promise<Response> {
 	try {
@@ -102,7 +136,7 @@ async function photo(req: Request, url: URL, bucket: string): Promise<Response> 
 		for (const size of ['medium', 'thumbnail']) {
 			const alt = new URL(url);
 			alt.searchParams.set('size', size);
-			const hit = await (await caches.open(cacheName(bucket))).match(alt.href);
+			const hit = await lookup(bucket, alt.href);
 			if (hit) return hit;
 		}
 		throw err;
@@ -110,29 +144,29 @@ async function photo(req: Request, url: URL, bucket: string): Promise<Response> 
 }
 
 async function stored(req: Request, bucket: string, key: string, how: 'cache-first' | 'network-first'): Promise<Response> {
-	const limit = await limitBytes();
+	const limit = await limitBytes().catch(() => 0);
 	if (!limit) return fetch(req);
-	const cache = await caches.open(cacheName(bucket));
 	if (how === 'cache-first') {
-		const hit = await cache.match(key);
-		if (hit) {
-			touch(bucket, key);
-			return hit;
-		}
+		const hit = await lookup(bucket, key);
+		if (hit) return hit;
 	}
+	let res: Response;
 	try {
-		const res = await fetch(req);
-		if (res.status === 200 && res.type !== 'opaque') await keep(cache, bucket, key, res.clone(), limit);
-		return res;
+		res = await fetch(req);
 	} catch (err) {
 		// offline: whatever is stored, also for network-first entries
-		const hit = await cache.match(key);
-		if (hit) {
-			touch(bucket, key);
-			return hit;
-		}
+		const hit = await lookup(bucket, key);
+		if (hit) return hit;
 		throw err;
 	}
+	if (res.status === 200 && res.type !== 'opaque') {
+		try {
+			await keep(await caches.open(cacheName(bucket)), bucket, key, res.clone(), limit);
+		} catch (err) {
+			await broken(bucket, err);
+		}
+	}
+	return res;
 }
 
 // The index lives in IndexedDB; in memory it is a map, written back in batches.

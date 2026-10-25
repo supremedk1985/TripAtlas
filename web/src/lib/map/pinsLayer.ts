@@ -1,8 +1,10 @@
 // "Where I've been": visited countries filled, every place a pin (larger = more nights/photos).
 import maplibregl, { type GeoJSONSource } from 'maplibre-gl';
+import { alive } from './alive';
 import type { Flight, Pin } from '$lib/types';
 
 export function installPins(map: maplibregl.Map, pins: Pin[], countries: string[], colors: { pin: string; country: string }) {
+	if (!alive(map)) return;
 	if (!map.getSource('countries')) {
 		map.addSource('countries', { type: 'geojson', data: '/countries.geojson' });
 		// below the labels of the base map, if it has any
@@ -83,6 +85,7 @@ function greatCircle(a: [number, number], b: [number, number], steps = 48): [num
 /** Each flight as a dashed great-circle arc from departure to arrival, with a ✈ marker in the middle.
  *  Returns the markers so the caller can remove them. */
 export function installFlights(map: maplibregl.Map, flights: Flight[], color: string, onclick: (f: Flight) => void) {
+	if (!alive(map)) return [];
 	const lines = flights.map((f, i) => {
 		const a = f.origin ?? f.path[0];
 		const b = f.destination ?? f.path[f.path.length - 1];

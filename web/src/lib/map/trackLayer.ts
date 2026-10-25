@@ -1,6 +1,7 @@
 // Tracks on the map: an overview of all trips (one line per trip in its tracker's colour) and the selected trip
 // (coloured per day, limited to the range of the time slider, stays as numbered markers).
 import { vehicleMarker } from './vehicleMarker';
+import { alive } from './alive';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import { DAY_COLORS } from '$lib/format';
 import type { TrackPoint, Tracker } from '$lib/types';
@@ -37,7 +38,7 @@ export class TrackLayer {
 	/** (Re-)create sources and layers — call from the map's style callback. */
 	install() {
 		const map = this.map;
-		if (map.getSource('overview')) return;
+		if (!alive(map) || map.getSource('overview')) return;
 		map.addSource('overview', { type: 'geojson', data: this.overview });
 		map.addSource('selected', { type: 'geojson', data: this.selected });
 		map.addSource('stays', { type: 'geojson', data: this.stays });
@@ -100,7 +101,7 @@ export class TrackLayer {
 				}))
 			)
 		};
-		(this.map.getSource('overview') as GeoJSONSource | undefined)?.setData(this.overview);
+		if (alive(this.map)) (this.map.getSource('overview') as GeoJSONSource | undefined)?.setData(this.overview);
 	}
 
 	/** Draw the selected trip between `from` and `to` (Unix seconds), one colour per calendar day. */
@@ -135,6 +136,7 @@ export class TrackLayer {
 				properties: { n: String(i + 1) }
 			}))
 		};
+		if (!alive(this.map)) return;
 		(this.map.getSource('selected') as GeoJSONSource | undefined)?.setData(this.selected);
 		(this.map.getSource('stays') as GeoJSONSource | undefined)?.setData(this.stays);
 	}

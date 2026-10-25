@@ -2,6 +2,7 @@
 // the count; a click opens the photos of that stack. Works for tens of thousands of photos: only the stacks currently
 // on screen exist as DOM elements (at most MAX_MARKERS).
 import maplibregl, { type GeoJSONSource, type MapGeoJSONFeature } from 'maplibre-gl';
+import { alive } from './alive';
 import { thumbUrl } from '$lib/api';
 
 const SOURCE = 'photos';
@@ -29,7 +30,7 @@ export class PhotoLayer {
 	/** Call from the map's style callback: (re-)creates source and hit-test layers. */
 	install() {
 		const map = this.map;
-		if (map.getSource(SOURCE)) return;
+		if (!alive(map) || map.getSource(SOURCE)) return;
 		map.addSource(SOURCE, {
 			type: 'geojson',
 			data: this.geojson(),
@@ -58,7 +59,7 @@ export class PhotoLayer {
 
 	setPhotos(photos: PhotoPoint[]) {
 		this.photos = photos;
-		(this.map.getSource(SOURCE) as GeoJSONSource | undefined)?.setData(this.geojson());
+		if (alive(this.map)) (this.map.getSource(SOURCE) as GeoJSONSource | undefined)?.setData(this.geojson());
 		this.clear();
 	}
 
@@ -91,7 +92,7 @@ export class PhotoLayer {
 	}
 
 	private updateMarkers() {
-		if (!this.visible || !this.map.getSource(SOURCE)) return;
+		if (!this.visible || !alive(this.map) || !this.map.getSource(SOURCE)) return;
 		// querySourceFeatures returns the clusters of the current zoom level in all loaded tiles; keep those on screen.
 		// (queryRenderedFeatures does not report the invisible hit-test circles.)
 		const bounds = this.map.getBounds();
@@ -139,6 +140,7 @@ export class PhotoLayer {
 			this.onOpen([p.id], 0, { lat: p.lat, lon: p.lon });
 			return;
 		}
+		if (!alive(this.map)) return;
 		const src = this.map.getSource(SOURCE) as GeoJSONSource;
 		const leaves = await src.getClusterLeaves(clusterId, 2000, 0);
 		const pts = leaves.map((l) => this.photos[l.properties!.i as number]);

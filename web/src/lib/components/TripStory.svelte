@@ -78,7 +78,7 @@
 			{:else}
 				<p class="intro">
 					{date(trip.start, { day: 'numeric', month: 'long', year: 'numeric' })} · {plural('nights', trip.nights)} ·
-					{km(trip.distance_km)} · {plural('places', trip.stays.length)}{#if photos.length} · {plural('photos', photos.length)}{/if}
+					{km(trip.distance_km)} · {plural('places', trip.stays.length)}{#if photos.length}{' · '}{plural('photos', photos.length)}{/if}
 				</p>
 				{#if trip.note_html}<div class="note card"><NoteView html={trip.note_html} /></div>{/if}
 			{/if}

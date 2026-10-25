@@ -504,14 +504,6 @@
 		stroke-linejoin: round;
 	}
 	/* two classes beat the phone layout's .layout below */
-	.layout.full {
-		grid-template-columns: 1fr;
-		grid-template-rows: 1fr;
-		grid-template-areas: 'map';
-	}
-	.layout.full aside {
-		display: none;
-	}
 	.list {
 		padding: 12px 16px 24px;
 	}
@@ -621,5 +613,14 @@
 		grid-area: side;
 		border-right: 0;
 		border-top: 1px solid var(--border);
+	}
+	/* full screen last: it must win over the phone layouts above, which have the same weight */
+	.layout.full {
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr;
+		grid-template-areas: 'map';
+	}
+	.layout.full aside {
+		display: none;
 	}
 </style>
