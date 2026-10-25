@@ -67,6 +67,9 @@
 	.import-key {
 		margin-top: 8px;
 	}
+	.small {
+		font-size: 0.85em;
+	}
 	summary {
 		cursor: pointer;
 		font-size: 0.9em;

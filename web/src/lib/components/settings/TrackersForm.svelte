@@ -99,15 +99,18 @@
 							{#if tk.last}· {t('last_seen', { when: dateTime(tk.last) })}{/if}
 						</span>
 					</div>
+				</div>
+				<button class="btn small danger" onclick={() => remove(tk)}>{t('delete')}</button>
+				<!-- under the card over its whole width: on a phone the middle column is too narrow for sentences -->
+				<div class="extra">
 					{#if tk.kind === 'bike'}
-						<label class="row small check">
+						<label class="check small">
 							<input type="checkbox" checked={tk.hide_empty_day_trips} onchange={(e) => update(tk, { hide_empty_day_trips: e.currentTarget.checked })} />
-							{t('hide_empty_day_trips')}
+							<span>{t('hide_empty_day_trips')}</span>
 						</label>
 					{/if}
 					<ImportKey tracker={tk} />
 				</div>
-				<button class="btn small danger" onclick={() => remove(tk)}>{t('delete')}</button>
 			</li>
 		{/each}
 	</ul>
@@ -135,6 +138,20 @@
 {#if error}<p class="error">{error}</p>{/if}
 
 <style>
+	.extra {
+		flex-basis: 100%;
+		border-top: 1px solid var(--border);
+		padding-top: 8px;
+	}
+	.check {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+	}
+	.check input {
+		margin-top: 2px;
+		flex: none;
+	}
 	.trackers {
 		list-style: none;
 		padding: 0;
@@ -144,6 +161,7 @@
 	}
 	li {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 12px;
 		padding: 10px 12px;
