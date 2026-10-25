@@ -6,6 +6,8 @@ import hashlib
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
@@ -224,13 +226,27 @@ def place(lat: float, lon: float, db: Session = Depends(get_db), user: User = De
     return place_dict(get_place(db, lat, lon, user.locale), kids)
 
 
+def _year_span(db: Session, year: int | None) -> tuple[float, float] | None:
+    """Start and end of a calendar year in the household's time zone."""
+    if not year:
+        return None
+    tz = ZoneInfo(settings.household(db).timezone)
+    return datetime(year, 1, 1, tzinfo=tz).timestamp(), datetime(year + 1, 1, 1, tzinfo=tz).timestamp()
+
+
 @router.get("/api/visited/photos")
 def visited_photos(
-    lat: float, lon: float, city: str | None = None, db: Session = Depends(get_db), user: User = Depends(current_user)
+    lat: float,
+    lon: float,
+    city: str | None = None,
+    year: int | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
 ):
-    """The photos of one pin, for the viewer: same city as the pin, or within 2 km of it. Up to 500 ids."""
+    """The photos of one pin, for the viewer: same city as the pin, or within 2 km of it (with `year` only those
+    taken in that year). Up to 500 ids."""
     try:
-        marks = photo_service.markers(db, user)
+        marks = photo_service.markers(db, user, _year_span(db, year))
     except ImmichError:
         return {"ids": []}
     in_flight = flight_service.airborne_ids(db)
@@ -244,16 +260,24 @@ def visited_photos(
 
 
 @router.get("/api/visited")
-def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
+def visited(year: int | None = None, db: Session = Depends(get_db), user: User = Depends(current_user)):
     """Pins for every place the user has been: overnight stays of the visible trackers plus every city that appears
-    in the user's geotagged photos (that also covers journeys without a tracker, e.g. by plane)."""
+    in the user's geotagged photos (that also covers journeys without a tracker, e.g. by plane). With `year` only
+    what happened in that year (household time zone); `years` lists every year there is something to show."""
     pins: dict[str, dict] = {}
+    tz = ZoneInfo(settings.household(db).timezone)
+    span = _year_span(db, year)
+    years: set[int] = set()
 
     tracker_ids = [t.id for t in visible_trackers(db, user)]
     if tracker_ids:
         q = select(Stay, Trip).join(Trip, Stay.trip_id == Trip.id).where(Stay.tracker_id.in_(tracker_ids))
         if not user.can_see_live:
             q = q.where(Trip.ongoing.is_(False))
+        for (arrival,) in db.execute(q.with_only_columns(Stay.arrival)):
+            years.add(datetime.fromtimestamp(arrival, tz).year)
+        if span:
+            q = q.where(Stay.arrival < span[1], Stay.departure > span[0])
         titles = {
             (a.tracker_id, a.day_key): a.title
             for a in db.scalars(
@@ -284,7 +308,9 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
                 pin["trip_ids"].append(trip.id)
 
     try:
-        marks = photo_service.markers(db, user)
+        marks = photo_service.markers(db, user, span)
+        # years with a handful of photos at least (single scans of old pictures do not make a year of travelling)
+        years |= {y for y, n in photo_service.photo_years(db, user).items() if n >= 10}
     except ImmichError:
         marks = []   # Immich unreachable: the pins of the trackers still show
     visible = {m["id"] for m in marks}
@@ -336,6 +362,8 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
     flights = []
     for f in flight_data.get("flights", []):
         ids = [i for i in f["photo_ids"] if i in visible]  # only flights with photos this user may see
+        if span and not span[0] <= f["start"] < span[1]:
+            continue
         if ids:
             flights.append(
                 {
@@ -360,4 +388,5 @@ def visited(db: Session = Depends(get_db), user: User = Depends(current_user)):
         "pins": list(pins.values()),
         "countries": sorted(countries.values(), key=lambda c: -c["places"]),
         "flights": flights,
+        "years": sorted(years, reverse=True),
     }

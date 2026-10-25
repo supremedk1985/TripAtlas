@@ -565,3 +565,34 @@ def test_video_check_reports_immich_transcoding(client, monkeypatch):
         ff["value"] = value
         photo_service._video_check["at"] = 0
         assert client.get("/api/photos/video-check").json()["ok"] is ok
+
+
+def test_visited_can_be_limited_to_one_year(client):
+    """'Where were we in year X': stays (and photos) of that year only, plus the list of years there are."""
+    from datetime import UTC, datetime
+
+    from tripatlas.services.trips import recompute
+
+    setup_household(client)   # home in Paris
+    tid = client.post("/api/trackers", json={"name": "Van"}).json()["id"]
+
+    def stay(t0, lat, lon, start_h, hours):
+        return [Point(t0 + (start_h + h) * 3600, lat, lon) for h in range(hours)]
+
+    a = datetime(2025, 6, 1, tzinfo=UTC).timestamp()
+    b = datetime(2026, 6, 1, tzinfo=UTC).timestamp()
+    with db_session() as db:
+        t = db.get(Tracker, tid)
+        pts = stay(a, 48.85, 2.35, 0, 10) + stay(a, 45.76, 4.83, 12, 60) + stay(a, 48.85, 2.35, 74, 30)
+        pts += stay(b, 48.85, 2.35, 0, 10) + stay(b, 43.30, 5.37, 12, 60) + stay(b, 48.85, 2.35, 74, 30)
+        add_points(db, t, pts, "test")
+        recompute(db, t, now=b + 300 * 3600)
+
+    def lats(r):
+        return sorted(round(p["lat"]) for p in r["pins"])
+
+    every = client.get("/api/visited").json()
+    assert lats(every) == [43, 46] and every["years"] == [2026, 2025]
+    assert lats(client.get("/api/visited", params={"year": 2025}).json()) == [46]
+    assert lats(client.get("/api/visited", params={"year": 2026}).json()) == [43]
+    assert client.get("/api/visited", params={"year": 2019}).json()["pins"] == []

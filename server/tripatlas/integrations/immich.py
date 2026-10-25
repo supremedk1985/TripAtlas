@@ -72,12 +72,24 @@ class ImmichClient:
                 return None
             raise
 
-    def map_markers(self, taken_before: str | None = None) -> list[dict]:
-        """All geotagged assets the key can see, including partner-shared ones; optionally only older ones."""
+    def map_markers(self, taken_before: str | None = None, taken_after: str | None = None) -> list[dict]:
+        """All geotagged assets the key can see, including partner-shared ones; optionally only a time span."""
         params = {"withPartners": "true", "isArchived": "false"}
         if taken_before:
             params["fileCreatedBefore"] = taken_before
+        if taken_after:
+            params["fileCreatedAfter"] = taken_after
         return self._call("GET", "/api/map/markers", params=params).json()
+
+    def photo_years(self) -> dict[int, int]:
+        """Number of photos and videos per year (Immich's timeline buckets)."""
+        buckets = self._call("GET", "/api/timeline/buckets", params={"withPartners": "true", "visibility": "timeline"})
+        out: dict[int, int] = {}
+        for b in buckets.json():
+            y = int(str(b.get("timeBucket", ""))[:4] or 0)
+            if y:
+                out[y] = out.get(y, 0) + int(b.get("count", 0))
+        return out
 
     def photos_between(self, start_iso: str, end_iso: str) -> list[Photo]:
         out, page = [], 1

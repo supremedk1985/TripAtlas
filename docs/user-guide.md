@@ -81,6 +81,10 @@ for children.
 
 ## Where I've been
 
+The row of years at the top of the panel answers *where were we in 2015?*: choose a year and the globe shows only
+the places, countries and flights of that year (*All years* shows everything again); a place's photos are then those
+of that year too.
+
 ![The globe with every place and the visited countries](images/en/visited.png)
 
 A globe with a pin for every place you have been — overnight stays and every town in your photos — and the visited

@@ -13,9 +13,12 @@
 		style,
 		onpin,
 		onflight,
-		onloaded
+		onloaded,
+		year = null
 	}: {
 		style?: MapStyleId;
+		/** only what happened in this year; null = everything */
+		year?: number | null;
 		onpin: (pin: Pin) => void;
 		onflight?: (f: Flight) => void;
 		onloaded?: (v: Visited) => void;
@@ -39,16 +42,32 @@
 		flightMarkers = installFlights(map, visited.flights ?? [], colors().pin, (f) => onflight?.(f));
 	}
 
-	function onReady(map: maplibregl.Map) {
-		api.get<Visited>('/api/visited').then((v) => {
-			if (!alive) return;
+	let mapRef: maplibregl.Map | undefined = $state();
+	let loading = 0;
+	let asked: number | null | undefined;
+
+	function load(map: maplibregl.Map, y: number | null, animate: boolean) {
+		asked = y;
+		const ticket = ++loading;
+		api.get<Visited>(y ? `/api/visited?year=${y}` : '/api/visited').then((v) => {
+			if (!alive || ticket !== loading) return;   // a later choice of year wins
 			visited = v;
 			onloaded?.(v);
 			draw(map);
 			// Show the part of the world that has pins, not the whole globe.
 			const b = boundsOf(v.pins);
-			if (b) map.fitBounds(b, { padding: 60, maxZoom: 5, duration: 0 });
+			if (b) map.fitBounds(b, { padding: 60, maxZoom: 5, duration: animate ? 900 : 0 });
 		});
+	}
+
+	$effect(() => {
+		const y = year;
+		if (mapRef && y !== asked) load(mapRef, y, true);
+	});
+
+	function onReady(map: maplibregl.Map) {
+		load(map, year, false);
+		mapRef = map;
 		map.on('click', 'pins', (e) => {
 			const i = e.features?.[0]?.properties?.i;
 			if (visited && i !== undefined) onpin(visited.pins[Number(i)]);

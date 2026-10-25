@@ -6,6 +6,8 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- *Where I've been* by year: a row of years (all years, 2026, 2025, …) limits pins, countries, flights and a
+  place's photos to that year (household time zone); `GET /api/visited?year=` and `years` in the answer
 - Diary: a third view next to *Map* and *Where I've been* — every trip as a picture card by year, opened as a story
   with the route, one chapter per place (notes, photos, videos, *All n photos*, text about the place); the same
   presentation as the children's view, which now shares it. *As diary* on a trip and *On the map* switch between them

@@ -27,6 +27,11 @@ export function installPins(map: maplibregl.Map, pins: Pin[], countries: string[
 			},
 			firstSymbol
 		);
+	} else {
+		// drawn again for another year: other countries
+		const filter: maplibregl.FilterSpecification = ['in', ['get', 'iso'], ['literal', countries]];
+		map.setFilter('countries-visited', filter);
+		map.setFilter('countries-outline', filter);
 	}
 	const data: GeoJSON.FeatureCollection = {
 		type: 'FeatureCollection',

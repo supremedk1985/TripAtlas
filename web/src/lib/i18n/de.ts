@@ -43,6 +43,8 @@ const de: Dictionary = {
 	diary_open: 'Als Tagebuch',
 	diary_all_photos: 'Alle {n} Fotos',
 	diary_the_end: 'Und dann ging es wieder nach Hause.',
+	visited_year: 'Jahr',
+	visited_all_years: 'Alle Jahre',
 	nav_visited: 'Wo war ich schon',
 	nav_settings: 'Einstellungen',
 	logout: 'Abmelden',

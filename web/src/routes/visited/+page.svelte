@@ -15,10 +15,13 @@
 	import type { Flight, Pin, Visited } from '$lib/types';
 
 	let visited = $state<Visited | null>(null);
+	// "Where were we in year X": null = all years; the list of years comes with every answer
+	let year = $state<number | null>(null);
+	const years = $derived(visited?.years ?? []);
 	let pin = $state<Pin | null>(null);
 	let viewer = $state<{ ids: string[]; index: number; overview?: boolean } | null>(null);
 	async function openPinPhotos(p: Pin) {
-		const v = await pinPhotos(p, p.cover_asset);
+		const v = await pinPhotos(p, p.cover_asset, year);
 		if (v.ids.length) viewer = { ...v, overview: true };
 	}
 	let listOpen = $state(false);
@@ -29,6 +32,7 @@
 
 <div class="page" class:has-pin={pin !== null || flight !== null}>
 	<VisitedMap
+		{year}
 		onpin={(p) => ((pin = p), (flight = null))}
 		onflight={(f) => ((flight = f), (pin = null))}
 		onloaded={(v) => (visited = v)}
@@ -36,6 +40,14 @@
 	<AppHeader floating />
 
 	<div class="stats card" class:open={listOpen}>
+		{#if years.length > 1}
+			<div class="years" role="group" aria-label={t('visited_year')}>
+				<button class="chip" class:on={year === null} onclick={() => ((year = null), (pin = null), (flight = null))}>{t('visited_all_years')}</button>
+				{#each years as y (y)}
+					<button class="chip" class:on={year === y} onclick={() => ((year = y), (pin = null), (flight = null))}>{y}</button>
+				{/each}
+			</div>
+		{/if}
 		{#if visited}
 			<button class="summary" onclick={() => (listOpen = !listOpen)} aria-expanded={listOpen}>
 				<span class="numbers">
@@ -109,6 +121,17 @@
 		overflow-y: auto;
 		padding: 12px 16px;
 		z-index: 3;
+	}
+	.years {
+		display: flex;
+		gap: 6px;
+		overflow-x: auto;
+		scrollbar-width: none;
+		margin: -2px -4px 8px;
+		padding: 2px 4px;
+	}
+	.years .chip {
+		flex: none;
 	}
 	.summary {
 		display: grid;

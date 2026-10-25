@@ -83,6 +83,10 @@ Darstellung in ihrer Ansicht, mit Texten für Kinder.
 
 ## Wo war ich schon
 
+Die Jahresleiste oben im Feld beantwortet *wo waren wir 2015?*: ein Jahr antippen, dann zeigt die Weltkarte nur die
+Orte, Länder und Flüge dieses Jahres (*Alle Jahre* zeigt wieder alles); die Fotos eines Ortes sind dann ebenfalls
+die aus diesem Jahr.
+
 ![Der Globus mit allen Orten und den besuchten Ländern](../images/de/visited.png)
 
 Ein Globus mit einem Punkt für jeden Ort, an dem ihr wart – Übernachtungen und jeder Ort aus euren Fotos – und den

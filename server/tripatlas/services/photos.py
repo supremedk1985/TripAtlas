@@ -63,20 +63,35 @@ def key_id(db: Session, user: User | None) -> str:
     return hashlib.sha256(api_key_for(db, user).encode()).hexdigest()[:16]
 
 
-def markers(db: Session, user: User) -> list[dict]:
+def markers(db: Session, user: User, span: tuple[float, float] | None = None) -> list[dict]:
+    """Geotagged photos the user may see; with `span` (start, end) only those taken in that time."""
     # Without live access a fresh photo would tell where someone is right now: only photos older than the live
     # delay (in steps of 10 minutes, so the cache still works)
     before = None if user.can_see_live else int((time.time() - LIVE_DELAY_S) // 600 * 600)
+    after = None
+    if span:
+        after = span[0]
+        before = min(before, span[1]) if before else span[1]
 
     def fetch():
         with client_for(db, user) as c:
             return [
                 {"id": m["id"], "lat": m["lat"], "lon": m["lon"], "city": m.get("city"), "country": m.get("country")}
-                for m in c.map_markers(taken_before=ts_to_iso(before) if before else None)
+                for m in c.map_markers(
+                    taken_before=ts_to_iso(before) if before else None, taken_after=ts_to_iso(after) if after else None
+                )
                 if m.get("lat") is not None and m.get("lon") is not None
             ]
 
-    return cached(("markers", key_id(db, user), before), 300, fetch)
+    return cached(("markers", key_id(db, user), before, after), 300, fetch)
+
+
+def photo_years(db: Session, user: User) -> dict[int, int]:
+    def fetch():
+        with client_for(db, user) as c:
+            return c.photo_years()
+
+    return cached(("photo-years", key_id(db, user)), 3600, fetch)
 
 
 def photos_between(db: Session, user: User | None, start: float, end: float) -> list[Photo]:

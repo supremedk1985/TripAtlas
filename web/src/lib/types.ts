@@ -153,6 +153,8 @@ export interface Visited {
 	pins: Pin[];
 	flights: Flight[];
 	countries: { country: string; places: number; photos: number; nights: number }[];
+	/** every year with something to show, newest first */
+	years?: number[];
 }
 
 export interface MapNote {

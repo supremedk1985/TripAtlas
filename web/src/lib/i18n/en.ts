@@ -44,6 +44,8 @@ export default {
 	diary_open: 'As diary',
 	diary_all_photos: 'All {n} photos',
 	diary_the_end: 'And then home again.',
+	visited_year: 'Year',
+	visited_all_years: 'All years',
 	nav_visited: "Where I've been",
 	nav_settings: 'Settings',
 	logout: 'Sign out',
