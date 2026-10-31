@@ -28,6 +28,8 @@ interface Bridge {
 	/** the app verifies the user (fingerprint) and then calls window.tripAtlasSignIn */
 	signIn(username: string): void;
 	forget(username: string): void;
+	/** optional (TripAtlas for Android 1.0+): the app shows its own screen for choosing another server */
+	changeServer?(): void;
 }
 
 type Entry = { username: string; display_name: string; avatar?: string; avatar_version?: number | null; id?: number };
@@ -37,6 +39,9 @@ const MAX_RECENT = 6;
 
 const bridge = (): Bridge | undefined => (window as unknown as { TripAtlasApp?: Bridge }).TripAtlasApp;
 export const hasApp = () => !!bridge();
+/** Only an app that knows several servers can offer to switch; a browser just opens another address. */
+export const canChangeServer = () => typeof bridge()?.changeServer === 'function';
+export const changeServer = () => bridge()?.changeServer?.();
 
 function readRecent(): Entry[] {
 	try {

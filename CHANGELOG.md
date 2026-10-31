@@ -6,6 +6,11 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 ## [Unreleased]
 
 ### Added
+- Android app (`android/`, Google Play `de.korte_daniel.tripatlas`): connects to your own server (checks
+  `/api/health`, https first, warns about plain http), shows the web interface, switches accounts with the
+  fingerprint, file picker for imports, full screen; privacy policy in `docs/privacy.md`
+- *Change server…* in the account menu and on the sign-in page, only inside an app whose bridge offers
+  `changeServer()`
 - Automatic import: a tracker gets an import key (*Settings → Trackers → Automatic import*, shown once, only its
   hash is kept); an app sends each recording to `POST /api/imports/push` with `Authorization: Bearer <key>` — no
   sign-in, only to that tracker, wrong keys are slowed down (migration 0008)

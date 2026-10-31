@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Who is signed in, the other accounts known on this device (one tap to switch) and signing out.
-	import { forget, knownAccounts, signOut, switchTo, type KnownAccount } from '$lib/accounts';
+	import { canChangeServer, changeServer, forget, knownAccounts, signOut, switchTo, type KnownAccount } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
 	import { avatarUrl } from '$lib/avatar';
 	import { session } from '$lib/stores/session.svelte';
@@ -78,6 +78,9 @@
 			{/if}
 			<button role="menuitem" class="plain" onclick={() => ((open = false), switchTo(null))}>{t('account_other')}</button>
 			<button role="menuitem" class="plain" onclick={() => ((open = false), signOut())}>{t('logout')}</button>
+			{#if canChangeServer()}
+				<button role="menuitem" class="plain" onclick={() => ((open = false), changeServer())}>{t('change_server')}</button>
+			{/if}
 		</div>
 	{/if}
 </div>

@@ -132,6 +132,7 @@ export default {
 	account_menu: 'Account',
 	account_switch: 'Switch account',
 	account_other: 'Another account…',
+	change_server: 'Change server…',
 	account_forget: 'Remove from this device',
 	account_fingerprint: 'signs in with your fingerprint',
 	login_saved_failed: 'The saved password no longer works. Please sign in again.',

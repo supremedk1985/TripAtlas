@@ -23,6 +23,11 @@ every trip you have taken: where you drove, where you slept, what you saw, and w
 
 ![TripAtlas: all trips on one map, photos on top](docs/images/en/map.png)
 
+## Android app
+
+[TripAtlas for Android](android/README.md) connects to your server and adds fingerprint sign-in for switching
+accounts. It needs a running TripAtlas server — the app is a window onto yours, not a replacement for it.
+
 ## Documentation
 
 | | English | Deutsch |

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The mark as on the login page: road and sun on the teal circle (web/static/favicon.svg) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp" android:viewportWidth="64" android:viewportHeight="64">
+    <path android:pathData="M32,2a30,30 0,1 1,0 60a30,30 0,1 1,0 -60z" android:fillColor="#0F766E" />
+    <path android:pathData="M14,40c8,-2 10,-14 18,-14s10,10 18,6"
+        android:strokeColor="#FFFFFF" android:strokeWidth="5" android:strokeLineCap="round" android:fillColor="#00000000" />
+    <path android:pathData="M46,22m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" android:fillColor="#FBBF24" />
+</vector>

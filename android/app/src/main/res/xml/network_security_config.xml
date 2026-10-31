@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TripAtlas runs on the user's own server, often at home without a certificate (http://192.168.x.y:8097) or with
+     a certificate of their own. So plain http is allowed (the setup screen warns), and certificate authorities the
+     user installed on the phone are trusted besides the system ones. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

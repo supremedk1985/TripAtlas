@@ -71,8 +71,9 @@ passwords behind the fingerprint. The page looks for an optional object `window.
 | `offerSave(json)` | after a sign-in with a typed password: `{username, password, display_name}`; the app asks the user |
 | `signIn(username)` | the app verifies the user (fingerprint or screen lock), then calls `window.tripAtlasSignIn(username, password)` |
 | `forget(username)` | remove a saved account |
+| `changeServer()` | optional: the app shows its own screen for another server; the account menu and the sign-in page offer "Change server…" only when it exists |
 
-An app should expose the bridge only while its own TripAtlas address is loaded. Without the bridge the account menu
+The Android app in `android/` implements it. An app should expose the bridge only while its own TripAtlas address is loaded. Without the bridge the account menu
 still lists the accounts recently used in this browser; the browser's password manager fills in passwords.
 
 ## Storage on the device

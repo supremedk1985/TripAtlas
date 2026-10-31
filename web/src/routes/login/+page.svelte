@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { ApiError } from '$lib/api';
-	import { homeOf, knownAccounts, offerSave, signIn, switchTo, type KnownAccount } from '$lib/accounts';
+	import { canChangeServer, changeServer, homeOf, knownAccounts, offerSave, signIn, switchTo, type KnownAccount } from '$lib/accounts';
 	import { t } from '$lib/i18n/index.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import { session } from '$lib/stores/session.svelte';
@@ -78,6 +78,9 @@
 		</label>
 		{#if error}<p class="error">{error}</p>{/if}
 		<button class="btn primary" disabled={busy}>{t('login')}</button>
+		{#if canChangeServer()}
+			<button type="button" class="server" onclick={() => changeServer()}>{t('change_server')}</button>
+		{/if}
 	</form>
 </main>
 
@@ -133,5 +136,16 @@
 		stroke: var(--accent);
 		stroke-width: 1.8;
 		stroke-linecap: round;
+	}
+	.server {
+		justify-self: center;
+		margin-top: 14px;
+		border: 0;
+		background: none;
+		color: var(--text-2);
+		font: inherit;
+		font-size: 0.88em;
+		text-decoration: underline;
+		cursor: pointer;
 	}
 </style>

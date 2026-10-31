@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long press on the app icon: choose another server -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="change_server"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_server"
+        android:shortcutShortLabel="@string/change_server_short"
+        android:shortcutLongLabel="@string/change_server">
+        <intent
+            android:action="de.korte_daniel.tripatlas.CHANGE_SERVER"
+            android:targetPackage="de.korte_daniel.tripatlas"
+            android:targetClass="de.korte_daniel.tripatlas.MainActivity" />
+    </shortcut>
+</shortcuts>

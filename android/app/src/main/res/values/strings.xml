@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">TripAtlas</string>
+    <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
+    <string name="change_server">Change server</string>
+    <string name="change_server_short">Server</string>
+
+    <string name="setup_title">Connect to your TripAtlas</string>
+    <string name="setup_text">TripAtlas runs on your own server and turns your GPS tracks (Traccar) and photos (Immich) into a map of every trip. Enter the address of your TripAtlas server.</string>
+    <string name="setup_address">Server address</string>
+    <string name="setup_address_hint">e.g. tripatlas.example.com or http://192.168.1.10:8097</string>
+    <string name="setup_connect">Connect</string>
+    <string name="setup_invalid">That is not a web address.</string>
+    <string name="setup_unreachable">No answer from this address. Is the server running, and is the phone in the right network?</string>
+    <string name="setup_not_tripatlas">%1$s answers, but it is not TripAtlas.</string>
+    <string name="setup_http_warning">%1$s is reachable without encryption (http). That works at home, but passwords travel unencrypted and the app cannot keep maps and photos for offline use. With https (a reverse proxy) both work.</string>
+    <string name="setup_http_continue">Use anyway</string>
+    <string name="setup_no_server">No server yet?</string>
+    <string name="setup_no_server_text">TripAtlas is free, open-source software (AGPL). You install it yourself with Docker next to Traccar and Immich; the guide explains every step.</string>
+    <string name="install_url">https://github.com/supremedk1985/TripAtlas/blob/main/docs/installation.md</string>
+    <string name="setup_install_guide">Installation guide on GitHub</string>
+
+    <string name="error_title">TripAtlas cannot be reached</string>
+    <string name="error_text">The app could not load %1$s.</string>
+    <string name="error_retry">Try again</string>
+
+    <string name="vault_offer_title">Save password?</string>
+    <string name="vault_offer_text">Then %1$s signs in on this phone with the fingerprint, also when switching accounts. The password stays encrypted on the phone.</string>
+    <string name="vault_offer_save">Save</string>
+    <string name="vault_offer_later">Not now</string>
+    <string name="vault_save_title">Save password for %1$s</string>
+    <string name="vault_sign_in_title">Sign in as %1$s</string>
+    <string name="vault_saved">Saved. %1$s now signs in with the fingerprint.</string>
+    <string name="vault_none">No password saved for %1$s.</string>
+    <string name="vault_no_lock">This phone has neither a fingerprint nor a screen lock set up.</string>
+    <string name="vault_invalidated">A new fingerprint was added, so the saved passwords were deleted. Please sign in once again.</string>
+    <string name="vault_failed">Unlocking failed: %1$s</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The page background of the web interface (web/src/app.css) -->
+    <color name="background">#F6F7F9</color>
+    <color name="icon_background">#0F766E</color>
+</resources>

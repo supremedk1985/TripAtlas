@@ -130,6 +130,7 @@ const de: Dictionary = {
 	account_menu: 'Konto',
 	account_switch: 'Konto wechseln',
 	account_other: 'Anderes Konto …',
+	change_server: 'Server wechseln …',
 	account_forget: 'Von diesem Gerät entfernen',
 	account_fingerprint: 'meldet sich mit Fingerabdruck an',
 	login_saved_failed: 'Das gespeicherte Passwort passt nicht mehr. Bitte neu anmelden.',

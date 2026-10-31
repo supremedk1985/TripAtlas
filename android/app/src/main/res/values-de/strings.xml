@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cancel">Abbrechen</string>
+    <string name="back">Zurück</string>
+    <string name="change_server">Server wechseln</string>
+    <string name="change_server_short">Server</string>
+
+    <string name="setup_title">Mit deinem TripAtlas verbinden</string>
+    <string name="setup_text">TripAtlas läuft auf deinem eigenen Server und macht aus GPS-Spuren (Traccar) und Fotos (Immich) eine Karte all eurer Reisen. Gib die Adresse deines TripAtlas-Servers ein.</string>
+    <string name="setup_address">Serveradresse</string>
+    <string name="setup_address_hint">z. B. tripatlas.example.com oder http://192.168.1.10:8097</string>
+    <string name="setup_connect">Verbinden</string>
+    <string name="setup_invalid">Das ist keine Webadresse.</string>
+    <string name="setup_unreachable">Unter dieser Adresse antwortet nichts. Läuft der Server, und ist das Handy im richtigen Netz?</string>
+    <string name="setup_not_tripatlas">%1$s antwortet, ist aber kein TripAtlas.</string>
+    <string name="setup_http_warning">%1$s ist ohne Verschlüsselung (http) erreichbar. Zu Hause geht das, aber Passwörter gehen unverschlüsselt durchs Netz, und die App kann Karten und Fotos nicht für unterwegs ohne Netz vorhalten. Mit https (Reverse Proxy) geht beides.</string>
+    <string name="setup_http_continue">Trotzdem verwenden</string>
+    <string name="setup_no_server">Noch kein Server?</string>
+    <string name="setup_no_server_text">TripAtlas ist freie, quelloffene Software (AGPL). Du installierst sie selbst mit Docker neben Traccar und Immich; die Anleitung erklärt jeden Schritt.</string>
+    <string name="install_url">https://github.com/supremedk1985/TripAtlas/blob/main/docs/de/installation.md</string>
+    <string name="setup_install_guide">Installationsanleitung auf GitHub</string>
+
+    <string name="error_title">TripAtlas ist nicht erreichbar</string>
+    <string name="error_text">Die App konnte %1$s nicht laden.</string>
+    <string name="error_retry">Nochmal versuchen</string>
+
+    <string name="vault_offer_title">Passwort speichern?</string>
+    <string name="vault_offer_text">Dann meldet sich %1$s auf diesem Handy mit dem Fingerabdruck an, auch beim Wechseln zwischen Konten. Das Passwort bleibt verschlüsselt auf dem Handy.</string>
+    <string name="vault_offer_save">Speichern</string>
+    <string name="vault_offer_later">Nicht jetzt</string>
+    <string name="vault_save_title">Passwort für %1$s speichern</string>
+    <string name="vault_sign_in_title">Als %1$s anmelden</string>
+    <string name="vault_saved">Gespeichert. %1$s meldet sich ab jetzt mit dem Fingerabdruck an.</string>
+    <string name="vault_none">Für %1$s ist kein Passwort gespeichert.</string>
+    <string name="vault_no_lock">Auf diesem Handy ist weder Fingerabdruck noch Displaysperre eingerichtet.</string>
+    <string name="vault_invalidated">Ein neuer Fingerabdruck wurde eingerichtet, deshalb sind die gespeicherten Passwörter gelöscht. Bitte einmal neu anmelden.</string>
+    <string name="vault_failed">Entsperren fehlgeschlagen: %1$s</string>
+</resources>
